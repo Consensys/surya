@@ -1,0 +1,35 @@
+{
+  "name": "soli",
+  "description": "A set of utilities for inspecting the structure of Solidity contracts.",
+  "version": "0.1.0",
+  "main": "lib/index.js",
+  "author": "federicobond",
+  "repository": "federicobond/soli",
+  "license": "GPL-3.0",
+  "bin": "./bin/soli",
+  "scripts": {
+    "compile": "babel src --out-dir lib",
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "prepare": "npm run compile",
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "babel-cli": "*",
+    "babel-preset-env": "^1.6.1",
+    "chai": "*",
+    "coveralls": "*",
+    "isparta": "*",
+    "mocha": "^5.0.4",
+    "sinon": "*"
+  },
+  "dependencies": {
+    "c3-linearization": "^0.1.0",
+    "colors": "^1.2.1",
+    "graphlib": "^2.1.5",
+    "graphlib-dot": "^0.6.2",
+    "graphviz": "0.0.8",
+    "npm": "^5.7.1",
+    "solidity-parser-antlr": "^0.2.8",
+    "yargs": "^11.0.0"
+  }
+}

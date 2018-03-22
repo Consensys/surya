@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+
+const { describe, graph } = require('../lib/index')
+
+require('yargs') // eslint-disable-line
+  .usage('$0 <cmd> [args]')
+  .command('describe [files..]', 'show file contracts structure', (yargs) => {
+    yargs
+      .positional('files', {
+        describe: 'files to analyze',
+        type: 'string'
+      })
+  }, (argv) => {
+    describe(argv.files)
+  })
+  .command('graph [files..]', 'generate graph of contract function calls', (yargs) => {
+    yargs
+      .positional('files', {
+        describe: 'files to analyze',
+        type: 'string'
+      })
+  }, (argv) => {
+    graph(argv.files)
+  })
+  .help()
+  .version()
+  .argv
