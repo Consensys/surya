@@ -1,5 +1,8 @@
-language: node_js
+dist: trusty
 sudo: false
+language: node_js
 node_js:
-  - stable
-  - 4
+  - "node"
+cache:
+  directories:
+    - "node_modules"
