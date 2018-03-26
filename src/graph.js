@@ -26,13 +26,23 @@ function isMemberAccess(node) {
 }
 
 export function graph(files) {
-    for (let file of files) {
-      const content = fs.readFileSync(file).toString('utf-8')
-      const ast = parser.parse(content)
+    const digraph = graphviz.digraph('G')
+    digraph.set('ratio', 'auto')
+    digraph.set('page', '11,17')
 
-      const digraph = graphviz.digraph('G')
-      digraph.set('ratio', 'auto')
-      digraph.set('page', '11,17')
+    for (let file of files) {
+
+      let content
+      try {
+        content = fs.readFileSync(file).toString('utf-8')
+      } catch (e) {
+        if (e.code === 'EISDIR') {
+          console.error(`Skipping directory ${file}`)
+          continue
+        } else throw e;
+      }
+
+      const ast = parser.parse(content)
 
       let contractName = null
       let cluster = null
@@ -110,7 +120,7 @@ export function graph(files) {
           digraph.addEdge(callingScope, nodeName(name))
         }
       })
-
-      console.log(digraph.to_dot())
     }
+
+    console.log(digraph.to_dot())
 }
