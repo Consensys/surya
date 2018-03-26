@@ -3,7 +3,6 @@
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const graphviz = require('graphviz')
-const dot = require('graphlib-dot')
 const { linearize } = require('c3-linearization')
 
 const BUILTINS = [
@@ -87,7 +86,16 @@ export function graph(files) {
           callingScope = nodeName(node.name)
         },
 
+        'FunctionDefinition:exit': function(node) {
+          callingScope = null
+        },
+
         FunctionCall(node) {
+          if (!callingScope) {
+            // this must be a function call inside a modifier, ignore for now
+            return
+          }
+
           const expr = node.expression
 
           let name
