@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { describe, graph } = require('../lib/index')
+const { describe, graph, inheritance } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
@@ -21,6 +21,15 @@ require('yargs') // eslint-disable-line
       })
   }, (argv) => {
     graph(argv.files)
+  })
+  .command('inheritance [files..]', 'generate graph of contract inheritance tree', (yargs) => {
+    yargs
+      .positional('files', {
+        describe: 'files to analyze',
+        type: 'string'
+      })
+  }, (argv) => {
+    inheritance(argv.files)
   })
   .help()
   .version()
