@@ -8,7 +8,7 @@ const { linearize } = require('c3-linearization')
 export function inheritance(files) {
     const digraph = graphviz.digraph('G')
     digraph.set('ratio', 'auto')
-    digraph.set('page', '11,17')
+    digraph.set('page', '40')
 
     for (let file of files) {
 
