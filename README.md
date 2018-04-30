@@ -59,7 +59,7 @@ surya parse MyContract.sol
 The `ftrace` command outputs a "treefied" AST object coming from the parser.
 
 ```shell
-surya ftrace MyContract.sol
+surya ftrace APMRegistry::_newRepo all MyContract.sol
 ```
 
 
