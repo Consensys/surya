@@ -1,103 +1,111 @@
 "use strict";
 
+const utils = require('./utils')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const colors = require('colors')
+const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
 
-const BUILTINS = [
-  'gasleft', 'require', 'assert', 'revert', 'addmod', 'mulmod', 'keccak256',
-  'sha256', 'sha3', 'ripemd160', 'ecrecover',
-]
 
-function isLowerCase(str) {
-  return str === str.toLowerCase()
-}
+export function ftrace(functionId, accepted_visibility, files) {
 
-function isRegularFunctionCall(node) {
-  const expr = node.expression
-  // @TODO: replace lowercase for better filtering
-  return expr.type === 'Identifier' && isLowerCase(expr.name[0]) && !BUILTINS.includes(expr.name)
-}
+    const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
-function isMemberAccess(node) {
-  const expr = node.expression
-  return expr.type === 'MemberAccess' && !['push', 'send'].includes(expr.memberName)
-}
+    if (contractToTraverse === undefined || functionToTraverse === undefined) {
+      console.log('You didn not provide the function identifier in the right format "CONTRACT::FUNCTION"'.yellow)
+      return
+    }
 
-function isMemberAccessOfAddress(node) {
-  const expr = node.expression.expression
-  return expr.type === 'FunctionCall'
-      && expr.expression.hasOwnProperty('typeName')
-      && expr.expression.typeName.name === 'address'
-}
+    if (accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
+      console.log(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`.yellow)
+      return
+    }
 
-function isUserDefinedDeclaration(node) {
-  return node.hasOwnProperty('typeName') && node.typeName.hasOwnProperty('type') && node.typeName.type === 'UserDefinedTypeName'
-}
+    let functionCallsTree = {}
 
-export function ftrace(functionId, files) {
-    // let definitionTree = {}
-    let callTree = {}
+    // initialize vars that persist over file parsing loops
+    let userDefinedStateVars = {}
+    let dependencies = {}
+    let modifiers = {}
+    let fileASTs = new Array()
 
     for (let file of files) {
-      const content = fs.readFileSync(file).toString('utf-8')
+
+      let content
+      try {
+        content = fs.readFileSync(file).toString('utf-8')
+      } catch (e) {
+        if (e.code === 'EISDIR') {
+          console.error(`Skipping directory ${file}`)
+          continue
+        } else throw e;
+      }
+
       const ast = parser.parse(content)
 
-      let contractName = null
-      let functionName = null
-      let userDefinedStateVars = {}
-      let userDefinedLocalVars = {}
+      fileASTs.push(ast)
 
-      parser.visit(ast, {
-        StateVariableDeclaration(node) {
-          for (let variable of node.variables) {
-            if (isUserDefinedDeclaration(variable)) {
-              userDefinedStateVars[variable.name] = variable.typeName.namePath
-            }
-          }
-        }
-      })
+      let contractName = null
+      let cluster = null
 
       parser.visit(ast, {
         ContractDefinition(node) {
           contractName = node.name
 
-          // definitionTree[contractName] = {}
-          callTree[contractName] = {}
+          userDefinedStateVars[contractName] = {}
+
+          dependencies[contractName] = node.baseContracts.map(spec =>
+            spec.baseName.namePath
+          )
+        },
+
+        StateVariableDeclaration(node) {
+          for (let variable of node.variables) {
+            if (utils.isUserDefinedDeclaration(variable)) {
+              userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath
+            }
+          }
+        }
+      })
+    }
+
+    dependencies = linearize(dependencies)
+
+    for (let ast of fileASTs) {
+
+      let contractName = null
+      let functionName = null
+      let cluster = null
+
+      let userDefinedLocalVars = {}
+      let tempUserDefinedStateVars = {}
+
+
+      parser.visit(ast, {
+        ContractDefinition(node) {
+          contractName = node.name
+
+          functionCallsTree[contractName] = {}
+          modifiers[contractName] = {}
+
+          for (let dep of dependencies[contractName]) {
+            Object.assign(tempUserDefinedStateVars, userDefinedStateVars[dep])
+          }
+
+          Object.assign(tempUserDefinedStateVars, userDefinedStateVars[contractName])
         },
 
         'ContractDefinition:exit': function(node) {
-          contractName = null
+          contractName = null 
+          tempUserDefinedStateVars = {}
         },
 
         FunctionDefinition(node) {
           functionName = node.name || '<fallback>'
 
-          console.log(`${functionName} - ${contractName}`)
-
-          callTree[contractName][functionName] = {}
-
-          // let spec = ''
-          // if (node.visibility === 'public' || node.visibility === 'default') {
-          //   spec += '[Pub]'.red
-          // } else if (node.visibility === 'external') {
-          //   spec += '[Ext]'.orange
-          // } else if (node.visibility === 'private') {
-          //   spec += '[Prv]'.blue
-          // } else if (node.visibility === 'internal') {
-          //   spec += '[Int]'.gray
-          // }
-
-          // let payable = ''
-          // if (node.stateMutability === 'payable') {
-          //   payable = '($)'.green
-          // }
-
-          // definitionTree[contractName][nodeName(functionName)] = {
-          //   label: `${spec} ${functionName} ${payable}`,
-          //   visibility: node.visibility
-          // }
+          functionCallsTree[contractName][functionName] = {}
+          modifiers[contractName][functionName] = new Array()
         },
 
         'FunctionDefinition:exit': function(node) {
@@ -106,32 +114,36 @@ export function ftrace(functionId, files) {
         },
 
         ModifierDefinition(node) {
-          functionName = node.name || '<fallback>'
+          functionName = node.name
 
-          callTree[contractName][functionName] = {}
+          functionCallsTree[contractName][functionName] = {}
         },
 
         'ModifierDefinition:exit': function(node) {
           functionName = null
         },
 
+        ModifierInvocation(node) {
+          modifiers[contractName][functionName].push(node.name)
+        },
+
         ParameterList(node) {
           for (let parameter of node.parameters) {
-            if (isUserDefinedDeclaration(parameter)) {
+            if (utils.isUserDefinedDeclaration(parameter)) {
               userDefinedLocalVars[parameter.name] = parameter.typeName.name
             }
           }
         },
 
         VariableDeclaration(node) {
-          if (functionName && isUserDefinedDeclaration(node)) {
+          if (functionName && utils.isUserDefinedDeclaration(node)) {
             userDefinedLocalVars[node.name] = node.typeName.namePath
           }
         },
 
         FunctionCall(node) {
           if (!functionName) {
-            // this is a function call outside of functions and modifiers, ignore for now
+            // this is a function call outside of functions and modifiers, ignore if exists
             return
           }
 
@@ -139,50 +151,140 @@ export function ftrace(functionId, files) {
 
           let name
           let localContractName
+          let visibility
 
-          if (isRegularFunctionCall(node)) {
+          if (utils.isRegularFunctionCall(node)) {
             name = expr.name
-            localContractName = 'this'
-          } else if (isMemberAccess(node)) {
-            name = expr.memberName
-            localContractName = expr.expression.name
+            localContractName = contractName
+            visibility = 'internal'
+          } else if (utils.isMemberAccess(node)) {
+            let object
+
+            visibility = 'external'
 
             if (expr.expression.hasOwnProperty('name')) {
-              localContractName = expr.expression.name
-            } else if (isMemberAccessOfAddress(node)) {
+              object = expr.expression.name
+
+              name = expr.memberName
+
+            // checking if it is a member of `address` and pass along it's contents
+            } else if (utils.isMemberAccessOfAddress(node)) {
               if(expr.expression.arguments[0].hasOwnProperty('name')) {
                 object = expr.expression.arguments[0].name
               } else {
                 object = JSON.stringify(expr.expression.arguments)
               }
+
+            // checking if it is a typecasting to a user-defined contract type
+            } else if (utils.isAContractTypecast(node)) {
+              if(expr.expression.expression.hasOwnProperty('name')) {
+                object = expr.expression.expression.name
+              } else {
+                return
+              }
             } else {
               return
             }
 
-            if (localContractName === 'super' || localContractName === 'this') {
-              opts.color = 'green'
-            } else if (userDefinedStateVars[localContractName] !== undefined) {
-              localContractName = userDefinedStateVars[localContractName]
-            } else if (userDefinedLocalVars[localContractName] !== undefined) {
-              localContractName = userDefinedLocalVars[localContractName]
+            if (object === 'super' || object === 'this') {
+              localContractName = contractName
+            } else if (tempUserDefinedStateVars[object] !== undefined) {
+              localContractName = tempUserDefinedStateVars[object]
+            } else if (userDefinedLocalVars[object] !== undefined) {
+              localContractName = userDefinedLocalVars[object]
+            } else {
+              localContractName = object
             }
-
           } else {
             return
           }
 
-          if(!callTree[contractName][functionName].hasOwnProperty(name)) {
-            callTree[contractName][functionName][name] = {
+          if(!functionCallsTree[contractName][functionName].hasOwnProperty(name)) {
+            functionCallsTree[contractName][functionName][name] = {
               contract: localContractName,
-              numberOfCalls: 1
+              numberOfCalls: 1,
+              visibility: visibility
             }
           } else {
-            callTree[contractName][functionName][name].numberOfCalls++
+            functionCallsTree[contractName][functionName][name].numberOfCalls++
           }
         }
       })
     }
     // END of file traversing
 
-    console.log( treeify.asTree(callTree, true) )
+    let touched = {}
+    let callTree = {}
+
+    if(!functionCallsTree.hasOwnProperty(contractToTraverse)) {
+      console.log(`The ${contractToTraverse} contract is not present in the codebase.`.yellow)
+      return
+    } else if (!functionCallsTree[contractToTraverse].hasOwnProperty(functionToTraverse)) {
+      console.log(`The ${functionToTraverse} function is not present in ${contractToTraverse}.`.yellow)
+      return
+    }
+
+    const seedKeyString = `${contractToTraverse}::${functionToTraverse}`.green
+    touched[seedKeyString] = true
+    callTree[seedKeyString] = {}
+
+    function modifierCalls(modifierName, contractName) {
+      if (dependencies.hasOwnProperty(contractName)) {
+        for (let dep of dependencies[contractName]) {
+          if (functionCallsTree[dep].hasOwnProperty(modifierName)) {
+            return functionCallsTree[dep][modifierName]
+          }
+        }
+      }
+
+      return functionCallsTree[contractName].hasOwnProperty(modifierName) ?
+              functionCallsTree[contractName][modifierName] : {}
+    }
+
+    let queue = new Array()
+
+    // Function to recursively generate the tree to show in the console
+    function constructCallTree(reduceJobContractName, reduceJobFunctionName, parentObject) {
+      let tempIterable
+
+      if (functionCallsTree[reduceJobContractName][reduceJobFunctionName] === undefined) {
+        return
+      }
+
+      tempIterable = functionCallsTree[reduceJobContractName][reduceJobFunctionName]
+
+      for (const modifier of modifiers[reduceJobContractName][reduceJobFunctionName]) {
+        Object.assign(tempIterable, modifierCalls(modifier, reduceJobContractName))
+      }
+
+      Object.entries(tempIterable).forEach(([functionCallName, functionCallObject]) => {
+
+        if (
+          functionCallName !== 'undefined' && (
+            accepted_visibility == 'all' ||
+            functionCallObject.visibility == accepted_visibility
+          )
+        ) {
+          let keyString = `${functionCallObject.contract}::${functionCallName}`
+
+          // console.log(`Logging ${functionCallObject.contract} - ${functionCallName} : ${functionCallObject.visibility}`.yellow)
+
+          keyString = functionCallObject.visibility === 'external' && accepted_visibility !== 'external'
+                      ? keyString.yellow : keyString
+
+          if(touched[keyString] === undefined) {
+            parentObject[keyString] = {}
+            touched[keyString] = true
+            constructCallTree(functionCallObject.contract, functionCallName, parentObject[keyString])
+          } else {
+            parentObject[keyString] = '..[Circular Ref]..'.red
+          }
+        }
+      })
+    }
+
+    // Call with seed
+    constructCallTree(contractToTraverse, functionToTraverse, callTree[seedKeyString])
+
+    console.log(treeify.asTree(callTree, true))
 }

@@ -1,13 +1,15 @@
 {
-  "name": "soli",
-  "description": "A set of utilities for inspecting the structure of Solidity contracts.",
+  "name": "surya",
+  "description": "Sūrya, The Sun God: A set of utilities for inspecting the structure of Solidity contracts.",
   "version": "0.1.1",
   "main": "lib/index.js",
-  "author": "federicobond",
-  "contributor": "gnsps",
-  "repository": "federicobond/soli",
+  "author": [
+    "federicobond",
+    "GNSPS"
+  ],
+  "repository": "GNSPS/soli",
   "license": "GPL-3.0",
-  "bin": "./bin/soli",
+  "bin": "./bin/surya",
   "scripts": {
     "compile": "babel src --out-dir lib",
     "coveralls": "cat ./coverage/lcov.info | coveralls",

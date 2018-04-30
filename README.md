@@ -1,24 +1,23 @@
-# Solidity Inspector (soli)
+<img src="https://user-images.githubusercontent.com/4008213/39437435-bed48266-4c98-11e8-834d-1de152667231.jpg" height="236">
+
+# Sūrya, The Sun God: A Solidity Inspector 
 
 #### 
 
-![Build Status](https://img.shields.io/travis/federicobond/soli.svg)
-![Coverage](https://img.shields.io/coveralls/federicobond/soli.svg)
-![Downloads](https://img.shields.io/npm/dm/soli.svg)
-![Downloads](https://img.shields.io/npm/dt/soli.svg)
-![npm version](https://img.shields.io/npm/v/soli.svg)
-![dependencies](https://img.shields.io/david/federicobond/soli.svg)
-![dev dependencies](https://img.shields.io/david/dev/federicobond/soli.svg)
-![License](https://img.shields.io/npm/l/soli.svg)
+Created by @federicobond extended by @GNSPS
 
-A set of utilities (currently in alpha) for inspecting the structure of Solidity contracts.
+A set of utilities for inspecting the structure of Solidity contracts.
+
+The name stems from the sun deity [Surya](https://en.wikipedia.org/wiki/Surya)
+
+Why the sun, you ask? Because "sun" in latin and portuguese is [*Sol*](https://en.wikipedia.org/wiki/Solar_deity).
 
 ## Getting Started
 
 Install it via npm:
 
 ```shell
-npm install -g soli
+npm install -g surya
 ```
 
 ## Command List
@@ -28,18 +27,44 @@ npm install -g soli
 The `describe` command shows a summary of the contracts and methods in the files provided.
 
 ```shell
-soli describe MyContract.sol
+surya describe MyContract.sol
 ```
 
 <img src="https://user-images.githubusercontent.com/138426/37748729-b6c42ab2-2d63-11e8-9255-8c30693f8a26.png" width="336" height="236">
 
 ### graph
 
-The `graph` command generates a DOT-formatted graph of the control flow.
+The `graph` command outputs a DOT-formatted graph of the control flow.
 
 ```shell
-soli graph MyContract.sol
+surya graph MyContract.sol | dot -Tpng > MyContract.png
 ```
+
+
+<img src="https://user-images.githubusercontent.com/4008213/39415345-fbac4e3a-4c39-11e8-8260-0d9670c352d6.png" height="236">
+
+### parse
+
+The `parse` command outputs a "treefied" AST object coming from the parser.
+
+```shell
+surya parse MyContract.sol
+```
+
+
+<img src="https://user-images.githubusercontent.com/4008213/39415303-87df40de-4c39-11e8-8e03-ead72e88f1e3.png" height="236">
+
+### ftrace
+
+The `ftrace` command outputs a "treefied" AST object coming from the parser.
+
+```shell
+surya ftrace MyContract.sol
+```
+
+
+<img src="https://user-images.githubusercontent.com/4008213/39437466-d5dc5be6-4c98-11e8-8352-31bc8dadd2b8.png" width="336" height="236">
+
 
 ## License
 

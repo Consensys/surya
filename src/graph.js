@@ -1,46 +1,23 @@
 "use strict";
 
+const utils = require('./utils')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
+const treeify = require('treeify')
 
-const BUILTINS = [
-  'gasleft', 'require', 'assert', 'revert', 'addmod', 'mulmod', 'keccak256',
-  'sha256', 'sha3', 'ripemd160', 'ecrecover',
-]
-
-function isLowerCase(str) {
-  return str === str.toLowerCase()
-}
-
-function isRegularFunctionCall(node) {
-  const expr = node.expression
-  // @TODO: replace lowercase for better filtering
-  return expr.type === 'Identifier' && isLowerCase(expr.name[0]) && !BUILTINS.includes(expr.name)
-}
-
-function isMemberAccess(node) {
-  const expr = node.expression
-  return expr.type === 'MemberAccess' && !['push', 'send'].includes(expr.memberName)
-}
-
-function isMemberAccessOfAddress(node) {
-  const expr = node.expression.expression
-  return expr.type === 'FunctionCall'
-      && expr.expression.hasOwnProperty('typeName')
-      && expr.expression.typeName.name === 'address'
-}
-
-function isUserDefinedDeclaration(node) {
-  return node.hasOwnProperty('typeName') && node.typeName.hasOwnProperty('type') && node.typeName.type === 'UserDefinedTypeName'
-}
 
 export function graph(files) {
     const digraph = graphviz.digraph('G')
     digraph.set('ratio', 'auto')
     digraph.set('page', '100')
     digraph.set('compound', 'true')
+
+    // initialize vars that persist over file parsing loops
+    let userDefinedStateVars = {}
+    let dependencies = {}
+    let fileASTs = new Array()
 
     for (let file of files) {
 
@@ -56,32 +33,23 @@ export function graph(files) {
 
       const ast = parser.parse(content)
 
+      fileASTs.push(ast)
+
       let contractName = null
       let cluster = null
-      let dependencies = {}
-      let userDefinedStateVars = {}
-
-      function nodeName(functionName, contractName) {
-        if (dependencies.hasOwnProperty(contractName)) {
-          for (let dep of dependencies[contractName]) {
-            const name = `${dep}.${functionName}`
-            if (digraph.getNode(name)) {
-              return name
-            }
-          }
-        }
-
-        return `${contractName}.${functionName}`
-      }
 
       parser.visit(ast, {
         ContractDefinition(node) {
+          contractName = node.name
+
+          userDefinedStateVars[contractName] = {}
+
           let opts = {}
 
-          if(!(cluster = digraph.getCluster('cluster' + node.name))) {
-            cluster = digraph.addCluster('cluster' + node.name)
+          if(!(cluster = digraph.getCluster('cluster' + contractName))) {
+            cluster = digraph.addCluster('cluster' + contractName)
 
-            cluster.set('label', node.name)
+            cluster.set('label', contractName)
             cluster.set('color', 'lightgray')
             cluster.set('style', 'filled')
 
@@ -89,16 +57,16 @@ export function graph(files) {
             //   style: 'invis'
             // }
 
-            // cluster.addNode('anchor' + node.name, opts)
+            // cluster.addNode('anchor' + contractName, opts)
           } else {
             cluster.set('style', 'filled')
           }
 
-          dependencies[node.name] = node.baseContracts.map(spec =>
+          dependencies[contractName] = node.baseContracts.map(spec =>
             spec.baseName.namePath
           )
 
-          // for (let dep of dependencies[node.name]) {
+          // for (let dep of dependencies[contractName]) {
           //   if (!(cluster = digraph.getCluster(dep))) {
 
           //     cluster = digraph.addCluster('cluster' + dep, opts)
@@ -114,7 +82,7 @@ export function graph(files) {
           //   }
 
           //   opts = {
-          //     ltail: 'cluster' + node.name,
+          //     ltail: 'cluster' + contractName,
           //     lhead: 'cluster' + dep,
           //     color: 'gray'
           //   }
@@ -125,14 +93,33 @@ export function graph(files) {
 
         StateVariableDeclaration(node) {
           for (let variable of node.variables) {
-            if (isUserDefinedDeclaration(variable)) {
-              userDefinedStateVars[variable.name] = variable.typeName.namePath
+            if (utils.isUserDefinedDeclaration(variable)) {
+              userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath
             }
           }
         }
       })
+    }
 
-      dependencies = linearize(dependencies)
+    dependencies = linearize(dependencies)
+
+    for (let ast of fileASTs) {
+
+      let contractName = null
+      let cluster = null
+
+      function nodeName(functionName, contractName) {
+        if (dependencies.hasOwnProperty(contractName)) {
+          for (let dep of dependencies[contractName]) {
+            const name = `${dep}.${functionName}`
+            if (digraph.getNode(name)) {
+              return name
+            }
+          }
+        }
+
+        return `${contractName}.${functionName}`
+      }
 
       parser.visit(ast, {
         ContractDefinition(node) {
@@ -167,10 +154,22 @@ export function graph(files) {
 
       let callingScope = null
       let userDefinedLocalVars = {}
+      let tempUserDefinedStateVars = {}
 
       parser.visit(ast, {
         ContractDefinition(node) {
           contractName = node.name
+
+          for (let dep of dependencies[contractName]) {
+            Object.assign(tempUserDefinedStateVars, userDefinedStateVars[dep])
+          }
+
+          Object.assign(tempUserDefinedStateVars, userDefinedStateVars[contractName])
+        },
+
+        'ContractDefinition:exit': function(node) {
+          contractName = null 
+          tempUserDefinedStateVars = {}
         },
 
         FunctionDefinition(node) {
@@ -192,15 +191,21 @@ export function graph(files) {
 
         ParameterList(node) {
           for (let parameter of node.parameters) {
-            if (isUserDefinedDeclaration(parameter)) {
-              userDefinedLocalVars[parameter.name] = parameter.typeName.name
+            if (utils.isUserDefinedDeclaration(parameter)) {
+              userDefinedLocalVars[parameter.name] = parameter.typeName.namePath
             }
           }
         },
 
         VariableDeclaration(node) {
-          if (callingScope && isUserDefinedDeclaration(node)) {
+          if (callingScope && utils.isUserDefinedDeclaration(node)) {
             userDefinedLocalVars[node.name] = node.typeName.namePath
+          }
+        },
+
+        ModifierInvocation(node) {
+          if (callingScope) {
+            // digraph.addEdge(callingScope, nodeName(node.name, contractName), { color: 'yellow' })
           }
         },
 
@@ -217,21 +222,32 @@ export function graph(files) {
           let opts = {
             color: 'orange'
           }
-          if (isRegularFunctionCall(node)) {
+          
+          if (utils.isRegularFunctionCall(node)) {
             opts.color = 'green'
             name = expr.name
-          } else if (isMemberAccess(node)) {
+          } else if (utils.isMemberAccess(node)) {
             let object
 
             if (expr.expression.hasOwnProperty('name')) {
               object = expr.expression.name
 
               name = expr.memberName
-            } else if (isMemberAccessOfAddress(node)) {
+
+            // checking if it is a member of `address` and pass along it's contents
+            } else if (utils.isMemberAccessOfAddress(node)) {
               if(expr.expression.arguments[0].hasOwnProperty('name')) {
                 object = expr.expression.arguments[0].name
               } else {
                 object = JSON.stringify(expr.expression.arguments)
+              }
+
+            // checking if it is a typecasting to a user-defined contract type
+            } else if (utils.isAContractTypecast(node)) {
+              if(expr.expression.expression.hasOwnProperty('name')) {
+                object = expr.expression.expression.name
+              } else {
+                return
               }
             } else {
               return
@@ -239,8 +255,8 @@ export function graph(files) {
 
             if (object === 'super' || object === 'this') {
               opts.color = 'green'
-            } else if (userDefinedStateVars[object] !== undefined) {
-              localContractName = userDefinedStateVars[object]
+            } else if (tempUserDefinedStateVars[object] !== undefined) {
+              localContractName = tempUserDefinedStateVars[object]
             } else if (userDefinedLocalVars[object] !== undefined) {
               localContractName = userDefinedLocalVars[object]
             } else {
