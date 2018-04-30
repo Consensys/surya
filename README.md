@@ -56,7 +56,7 @@ surya parse MyContract.sol
 
 ### ftrace
 
-The `ftrace` command outputs a "treefied" AST object coming from the parser.
+The `ftrace` command outputs a "treefied" function call trace stemming from the defined "CONTRACT::FUNCTION" and traversing "all|internal|external" types of calls.
 
 ```shell
 surya ftrace APMRegistry::_newRepo all MyContract.sol
