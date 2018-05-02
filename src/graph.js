@@ -133,7 +133,14 @@ export function graph(files) {
           const internal = node.visibility === 'internal'
 
           let opts = { label: name }
-          if (internal) {
+
+          if (node.visibility === 'public' || node.visibility === 'default') {
+            opts.color = 'green'
+          } else if (node.visibility === 'external') {
+            opts.color = 'blue'
+          } else if (node.visibility === 'private') {
+            opts.color = 'red'
+          } else if (node.visibility === 'internal') {
             opts.color = 'white'
           }
 
@@ -229,10 +236,10 @@ export function graph(files) {
           } else if (utils.isMemberAccess(node)) {
             let object
 
+            name = expr.memberName
+
             if (expr.expression.hasOwnProperty('name')) {
               object = expr.expression.name
-
-              name = expr.memberName
 
             // checking if it is a member of `address` and pass along it's contents
             } else if (utils.isMemberAccessOfAddress(node)) {

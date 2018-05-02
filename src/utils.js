@@ -18,7 +18,7 @@ const utils = {
 
   isMemberAccess: node => {
     const expr = node.expression
-    return expr.type === 'MemberAccess' && !['push', 'send', 'transfer'].includes(expr.memberName)
+    return expr.type === 'MemberAccess' && !['push', 'pop'].includes(expr.memberName)
   },
 
   isMemberAccessOfAddress: node => {

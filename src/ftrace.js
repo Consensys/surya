@@ -162,10 +162,10 @@ export function ftrace(functionId, accepted_visibility, files) {
 
             visibility = 'external'
 
+            name = expr.memberName
+
             if (expr.expression.hasOwnProperty('name')) {
               object = expr.expression.name
-
-              name = expr.memberName
 
             // checking if it is a member of `address` and pass along it's contents
             } else if (utils.isMemberAccessOfAddress(node)) {
@@ -177,6 +177,7 @@ export function ftrace(functionId, accepted_visibility, files) {
 
             // checking if it is a typecasting to a user-defined contract type
             } else if (utils.isAContractTypecast(node)) {
+
               if(expr.expression.expression.hasOwnProperty('name')) {
                 object = expr.expression.expression.name
               } else {
