@@ -49,10 +49,15 @@ export function describe(files) {
 
           let payable = ''
           if (node.stateMutability === 'payable') {
-            payable = '($)'.yellow
+            payable = ' ($)'.yellow
           }
 
-          console.log(`    - ${spec} ${name} ${payable}`)
+          let mutating = ''
+          if (!node.stateMutability) {
+            mutating = ' #'.red
+          }
+
+          console.log(`    - ${spec} ${name}${payable}${mutating}`)
         }
       })
     }
