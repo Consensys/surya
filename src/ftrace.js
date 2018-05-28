@@ -268,8 +268,6 @@ export function ftrace(functionId, accepted_visibility, files) {
         ) {
           let keyString = `${functionCallObject.contract}::${functionCallName}`
 
-          // console.log(`Logging ${functionCallObject.contract} - ${functionCallName} : ${functionCallObject.visibility}`.yellow)
-
           keyString = functionCallObject.visibility === 'external' && accepted_visibility !== 'external'
                       ? keyString.yellow : keyString
 
@@ -278,7 +276,9 @@ export function ftrace(functionId, accepted_visibility, files) {
             touched[keyString] = true
             constructCallTree(functionCallObject.contract, functionCallName, parentObject[keyString])
           } else {
-            parentObject[keyString] = '..[Circular Ref]..'.red
+            parentObject[keyString] = Object.keys(functionCallsTree[functionCallObject.contract][functionCallName]).length === 0 ?
+                                      {} :
+                                      '..[Repeated Ref]..'.red
           }
         }
       })
