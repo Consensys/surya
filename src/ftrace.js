@@ -187,8 +187,10 @@ export function ftrace(functionId, accepted_visibility, files) {
               return
             }
 
-            if (object === 'super' || object === 'this') {
+            if (object === 'this') {
               localContractName = contractName
+            } else if (object === 'super') {
+              localContractName = dependencies[contractName][1]
             } else if (tempUserDefinedStateVars[object] !== undefined) {
               localContractName = tempUserDefinedStateVars[object]
             } else if (userDefinedLocalVars[object] !== undefined) {
