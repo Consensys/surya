@@ -260,8 +260,12 @@ export function graph(files) {
               return
             }
 
-            if (object === 'super' || object === 'this') {
+            if (object === 'this') {
               opts.color = 'green'
+            } else if (object === 'super') {
+              // "super" in this context is gonna be the 2nd element of the dependencies array
+              // since the first is the contract itself
+              localContractName = dependencies[localContractName][1]
             } else if (tempUserDefinedStateVars[object] !== undefined) {
               localContractName = tempUserDefinedStateVars[object]
             } else if (userDefinedLocalVars[object] !== undefined) {

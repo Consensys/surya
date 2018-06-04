@@ -32,6 +32,17 @@ surya describe MyContract.sol
 
 <img src="https://user-images.githubusercontent.com/138426/37748729-b6c42ab2-2d63-11e8-9255-8c30693f8a26.png" width="336" height="236">
 
+### inheritance
+
+The `inheritance` command outputs a DOT-formatted graph of the inheritance tree.
+
+```shell
+surya inheritance MyContract.sol | dot -Tpng > MyContract.png
+```
+
+
+<img src="https://user-images.githubusercontent.com/23033765/39249140-f50d2828-486b-11e8-81b8-8c4ffb7b1b54.png" height="236">
+
 ### graph
 
 The `graph` command outputs a DOT-formatted graph of the control flow.
