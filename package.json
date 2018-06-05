@@ -7,7 +7,7 @@
     "federicobond",
     "GNSPS"
   ],
-  "repository": "GNSPS/soli",
+  "repository": "ConsenSys/surya",
   "license": "GPL-3.0",
   "bin": "./bin/surya",
   "scripts": {
