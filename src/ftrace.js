@@ -70,7 +70,7 @@ export function ftrace(functionId, accepted_visibility, files) {
       })
     }
 
-    dependencies = linearize(dependencies)
+    dependencies = linearize(dependencies, {reverse: true})
 
     for (let ast of fileASTs) {
 

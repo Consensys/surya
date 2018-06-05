@@ -101,7 +101,7 @@ export function graph(files) {
       })
     }
 
-    dependencies = linearize(dependencies)
+    dependencies = linearize(dependencies, {reverse: true})
 
     for (let ast of fileASTs) {
 
