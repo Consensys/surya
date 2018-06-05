@@ -13,7 +13,7 @@ export function ftrace(functionId, accepted_visibility, files) {
     const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
     if (contractToTraverse === undefined || functionToTraverse === undefined) {
-      console.log('You didn not provide the function identifier in the right format "CONTRACT::FUNCTION"'.yellow)
+      console.log('You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'.yellow)
       return
     }
 
