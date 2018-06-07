@@ -39,6 +39,13 @@ const utils = {
   isUserDefinedDeclaration: node => {
     return node.hasOwnProperty('typeName') && node.typeName.hasOwnProperty('type') && node.typeName.type === 'UserDefinedTypeName'
   },
+
+  isAddressDeclaration: node => {
+    return node.hasOwnProperty('typeName')
+        && node.typeName.hasOwnProperty('type')
+        && node.typeName.type === 'ElementaryTypeName'
+        && node.typeName.name === 'address'
+  },
 }
 
 module.exports = utils

@@ -131,6 +131,9 @@ export function ftrace(functionId, accepted_visibility, files) {
           for (let parameter of node.parameters) {
             if (utils.isUserDefinedDeclaration(parameter)) {
               userDefinedLocalVars[parameter.name] = parameter.typeName.name
+            } else if (utils.isAddressDeclaration(parameter)) {
+              // starting name with  "#" because it's an illegal character for naming vars in Solidity
+              userDefinedLocalVars[parameter.name] = `#address [${parameter.name}]`
             }
           }
         },
@@ -138,6 +141,9 @@ export function ftrace(functionId, accepted_visibility, files) {
         VariableDeclaration(node) {
           if (functionName && utils.isUserDefinedDeclaration(node)) {
             userDefinedLocalVars[node.name] = node.typeName.namePath
+          } else if (functionName && utils.isAddressDeclaration(parameter)) {
+            // starting name with  "#" because it's an illegal character for naming vars in Solidity
+            userDefinedLocalVars[parameter.name] = `#address [${parameter.name}]`
           }
         },
 
@@ -153,6 +159,8 @@ export function ftrace(functionId, accepted_visibility, files) {
           let localContractName
           let visibility
 
+          // The following block is a nested switch statement for creation of the call tree
+          // START BLOCK
           if (utils.isRegularFunctionCall(node)) {
             name = expr.name
             localContractName = contractName
@@ -187,10 +195,12 @@ export function ftrace(functionId, accepted_visibility, files) {
               return
             }
 
+            // Special keywords cases: this, super
             if (object === 'this') {
               localContractName = contractName
             } else if (object === 'super') {
               localContractName = dependencies[contractName][1]
+            // the next two cases are checking if any user defined contract variable members were accessed
             } else if (tempUserDefinedStateVars[object] !== undefined) {
               localContractName = tempUserDefinedStateVars[object]
             } else if (userDefinedLocalVars[object] !== undefined) {
@@ -201,6 +211,7 @@ export function ftrace(functionId, accepted_visibility, files) {
           } else {
             return
           }
+          // END BLOCK
 
           if(!functionCallsTree[contractName][functionName].hasOwnProperty(name)) {
             functionCallsTree[contractName][functionName][name] = {
@@ -276,7 +287,12 @@ export function ftrace(functionId, accepted_visibility, files) {
           if(touched[keyString] === undefined) {
             parentObject[keyString] = {}
             touched[keyString] = true
-            constructCallTree(functionCallObject.contract, functionCallName, parentObject[keyString])
+
+            // Test if the call is really to a contract or rather an address variable member access
+            // If it is not a contract we should stop here
+            if(functionCallObject.contract.substring(0,8) !== '#address') {
+              constructCallTree(functionCallObject.contract, functionCallName, parentObject[keyString])
+            }
           } else {
             parentObject[keyString] = Object.keys(functionCallsTree[functionCallObject.contract][functionCallName]).length === 0 ?
                                       {} :
