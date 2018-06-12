@@ -1,6 +1,6 @@
 "use strict";
 
-const utils = require('./utils')
+const parserHelpers = require('./parserHelpers')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const colors = require('colors')
@@ -62,7 +62,7 @@ export function ftrace(functionId, accepted_visibility, files) {
 
         StateVariableDeclaration(node) {
           for (let variable of node.variables) {
-            if (utils.isUserDefinedDeclaration(variable)) {
+            if (parserHelpers.isUserDefinedDeclaration(variable)) {
               userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath
             }
           }
@@ -129,9 +129,9 @@ export function ftrace(functionId, accepted_visibility, files) {
 
         ParameterList(node) {
           for (let parameter of node.parameters) {
-            if (utils.isUserDefinedDeclaration(parameter)) {
+            if (parserHelpers.isUserDefinedDeclaration(parameter)) {
               userDefinedLocalVars[parameter.name] = parameter.typeName.name
-            } else if (utils.isAddressDeclaration(parameter)) {
+            } else if (parserHelpers.isAddressDeclaration(parameter)) {
               // starting name with  "#" because it's an illegal character for naming vars in Solidity
               userDefinedLocalVars[parameter.name] = `#address [${parameter.name}]`
             }
@@ -139,9 +139,9 @@ export function ftrace(functionId, accepted_visibility, files) {
         },
 
         VariableDeclaration(node) {
-          if (functionName && utils.isUserDefinedDeclaration(node)) {
+          if (functionName && parserHelpers.isUserDefinedDeclaration(node)) {
             userDefinedLocalVars[node.name] = node.typeName.namePath
-          } else if (functionName && utils.isAddressDeclaration(parameter)) {
+          } else if (functionName && parserHelpers.isAddressDeclaration(parameter)) {
             // starting name with  "#" because it's an illegal character for naming vars in Solidity
             userDefinedLocalVars[parameter.name] = `#address [${parameter.name}]`
           }
@@ -161,11 +161,11 @@ export function ftrace(functionId, accepted_visibility, files) {
 
           // The following block is a nested switch statement for creation of the call tree
           // START BLOCK
-          if (utils.isRegularFunctionCall(node)) {
+          if (parserHelpers.isRegularFunctionCall(node)) {
             name = expr.name
             localContractName = contractName
             visibility = 'internal'
-          } else if (utils.isMemberAccess(node)) {
+          } else if (parserHelpers.isMemberAccess(node)) {
             let object
 
             visibility = 'external'
@@ -176,7 +176,7 @@ export function ftrace(functionId, accepted_visibility, files) {
               object = expr.expression.name
 
             // checking if it is a member of `address` and pass along it's contents
-            } else if (utils.isMemberAccessOfAddress(node)) {
+            } else if (parserHelpers.isMemberAccessOfAddress(node)) {
               if(expr.expression.arguments[0].hasOwnProperty('name')) {
                 object = expr.expression.arguments[0].name
               } else {
@@ -184,7 +184,7 @@ export function ftrace(functionId, accepted_visibility, files) {
               }
 
             // checking if it is a typecasting to a user-defined contract type
-            } else if (utils.isAContractTypecast(node)) {
+            } else if (parserHelpers.isAContractTypecast(node)) {
 
               if(expr.expression.expression.hasOwnProperty('name')) {
                 object = expr.expression.expression.name
