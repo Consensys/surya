@@ -23,13 +23,13 @@
     "coveralls": "^3.0.1",
     "isparta": "*",
     "mocha": "^5.2.0",
-    "sinon": "^5.0.10"
+    "sinon": "^5.1.1"
   },
   "dependencies": {
     "c3-linearization": "^0.2.1",
     "colors": "^1.3.0",
     "graphviz": "0.0.8",
-    "solidity-parser-antlr": "^0.2.11",
+    "solidity-parser-antlr": "^0.2.12",
     "treeify": "^1.1.0",
     "yargs": "^11.1.0"
   }
