@@ -79,6 +79,7 @@ surya parse MyContract.sol
 ### ftrace
 
 The `ftrace` command outputs a "treefied" function call trace stemming from the defined "CONTRACT::FUNCTION" and traversing "all|internal|external" types of calls.
+External calls are marked in `orange` and internal calls are `uncolored`.
 
 ```shell
 surya ftrace APMRegistry::_newRepo all MyContract.sol
