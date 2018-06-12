@@ -1,5 +1,6 @@
 "use strict";
 
+const parserHelpers = require('./parserHelpers')
 const utils = require('./utils')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
@@ -93,7 +94,7 @@ export function graph(files) {
 
         StateVariableDeclaration(node) {
           for (let variable of node.variables) {
-            if (utils.isUserDefinedDeclaration(variable)) {
+            if (parserHelpers.isUserDefinedDeclaration(variable)) {
               userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath
             }
           }
@@ -101,7 +102,7 @@ export function graph(files) {
       })
     }
 
-    dependencies = linearize(dependencies)
+    dependencies = linearize(dependencies, {reverse: true})
 
     for (let ast of fileASTs) {
 
@@ -198,14 +199,14 @@ export function graph(files) {
 
         ParameterList(node) {
           for (let parameter of node.parameters) {
-            if (utils.isUserDefinedDeclaration(parameter)) {
+            if (parserHelpers.isUserDefinedDeclaration(parameter)) {
               userDefinedLocalVars[parameter.name] = parameter.typeName.namePath
             }
           }
         },
 
         VariableDeclaration(node) {
-          if (callingScope && utils.isUserDefinedDeclaration(node)) {
+          if (callingScope && parserHelpers.isUserDefinedDeclaration(node)) {
             userDefinedLocalVars[node.name] = node.typeName.namePath
           }
         },
@@ -230,10 +231,10 @@ export function graph(files) {
             color: 'orange'
           }
           
-          if (utils.isRegularFunctionCall(node)) {
+          if (parserHelpers.isRegularFunctionCall(node)) {
             opts.color = 'green'
             name = expr.name
-          } else if (utils.isMemberAccess(node)) {
+          } else if (parserHelpers.isMemberAccess(node)) {
             let object
 
             name = expr.memberName
@@ -242,7 +243,7 @@ export function graph(files) {
               object = expr.expression.name
 
             // checking if it is a member of `address` and pass along it's contents
-            } else if (utils.isMemberAccessOfAddress(node)) {
+            } else if (parserHelpers.isMemberAccessOfAddress(node)) {
               if(expr.expression.arguments[0].hasOwnProperty('name')) {
                 object = expr.expression.arguments[0].name
               } else {
@@ -250,7 +251,7 @@ export function graph(files) {
               }
 
             // checking if it is a typecasting to a user-defined contract type
-            } else if (utils.isAContractTypecast(node)) {
+            } else if (parserHelpers.isAContractTypecast(node)) {
               if(expr.expression.expression.hasOwnProperty('name')) {
                 object = expr.expression.expression.name
               } else {
@@ -298,5 +299,42 @@ export function graph(files) {
       })
     }
 
-    console.log(digraph.to_dot())
+    // This next block's purpose is to create a legend on the lower left corner
+    // of the graph with color information.
+    // We'll do it in dot, by hand, because it's overkill to do it programatically.
+    // 
+    // We'll have to take the last curly bracket of the diagram out before
+    // pasting this subgraph and hence the unbalanced brackets
+    
+    let legendDotString = `
+
+rankdir=LR
+node [shape=plaintext]
+subgraph cluster_01 { 
+  label = "Legend";
+  key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+    <tr><td align="right" port="i1">Internal Call</td></tr>
+    <tr><td align="right" port="i2">External Call</td></tr>
+    <tr><td align="right" port="i3">Defined Contract</td></tr>
+    <tr><td align="right" port="i4">Undefined Contract</td></tr>
+    </table>>]
+  key2 [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+    <tr><td port="i1">&nbsp;&nbsp;&nbsp;</td></tr>
+    <tr><td port="i2">&nbsp;&nbsp;&nbsp;</td></tr>
+    <tr><td port="i3" bgcolor="lightgray">&nbsp;&nbsp;&nbsp;</td></tr>
+    <tr><td port="i4">
+      <table border="1" cellborder="0" cellspacing="0" cellpadding="7" bordercolor="lightgray">
+        <tr>
+         <td></td>
+        </tr>
+       </table>
+    </td></tr>
+    </table>>]
+  key:i1:e -> key2:i1:w [color=green]
+  key:i2:e -> key2:i2:w [color=orange]
+}
+`
+    let finalDigraph = utils.insertBeforeLastOccurrence(digraph.to_dot(), '}', legendDotString)
+
+    console.log(finalDigraph)
 }

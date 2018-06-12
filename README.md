@@ -32,6 +32,17 @@ surya describe MyContract.sol
 
 <img src="https://user-images.githubusercontent.com/138426/37748729-b6c42ab2-2d63-11e8-9255-8c30693f8a26.png" width="336" height="236">
 
+Functions will be listed as:
+
+* `[Pub]` public
+* `[Ext]` external
+* `[Prv]` private
+* `[Int]` internal
+
+A yellow `($)`denotes a function is `payable`.
+
+A red `#` indicates that it's able to modify state.
+
 ### inheritance
 
 The `inheritance` command outputs a DOT-formatted graph of the inheritance tree.
@@ -68,6 +79,7 @@ surya parse MyContract.sol
 ### ftrace
 
 The `ftrace` command outputs a "treefied" function call trace stemming from the defined "CONTRACT::FUNCTION" and traversing "all|internal|external" types of calls.
+External calls are marked in `orange` and internal calls are `uncolored`.
 
 ```shell
 surya ftrace APMRegistry::_newRepo all MyContract.sol

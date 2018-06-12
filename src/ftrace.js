@@ -1,6 +1,6 @@
 "use strict";
 
-const utils = require('./utils')
+const parserHelpers = require('./parserHelpers')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const colors = require('colors')
@@ -13,7 +13,7 @@ export function ftrace(functionId, accepted_visibility, files) {
     const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
     if (contractToTraverse === undefined || functionToTraverse === undefined) {
-      console.log('You didn not provide the function identifier in the right format "CONTRACT::FUNCTION"'.yellow)
+      console.log('You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'.yellow)
       return
     }
 
@@ -62,7 +62,7 @@ export function ftrace(functionId, accepted_visibility, files) {
 
         StateVariableDeclaration(node) {
           for (let variable of node.variables) {
-            if (utils.isUserDefinedDeclaration(variable)) {
+            if (parserHelpers.isUserDefinedDeclaration(variable)) {
               userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath
             }
           }
@@ -70,7 +70,7 @@ export function ftrace(functionId, accepted_visibility, files) {
       })
     }
 
-    dependencies = linearize(dependencies)
+    dependencies = linearize(dependencies, {reverse: true})
 
     for (let ast of fileASTs) {
 
@@ -129,15 +129,21 @@ export function ftrace(functionId, accepted_visibility, files) {
 
         ParameterList(node) {
           for (let parameter of node.parameters) {
-            if (utils.isUserDefinedDeclaration(parameter)) {
+            if (parserHelpers.isUserDefinedDeclaration(parameter)) {
               userDefinedLocalVars[parameter.name] = parameter.typeName.name
+            } else if (parserHelpers.isAddressDeclaration(parameter)) {
+              // starting name with  "#" because it's an illegal character for naming vars in Solidity
+              userDefinedLocalVars[parameter.name] = `#address [${parameter.name}]`
             }
           }
         },
 
         VariableDeclaration(node) {
-          if (functionName && utils.isUserDefinedDeclaration(node)) {
+          if (functionName && parserHelpers.isUserDefinedDeclaration(node)) {
             userDefinedLocalVars[node.name] = node.typeName.namePath
+          } else if (functionName && parserHelpers.isAddressDeclaration(parameter)) {
+            // starting name with  "#" because it's an illegal character for naming vars in Solidity
+            userDefinedLocalVars[parameter.name] = `#address [${parameter.name}]`
           }
         },
 
@@ -153,11 +159,13 @@ export function ftrace(functionId, accepted_visibility, files) {
           let localContractName
           let visibility
 
-          if (utils.isRegularFunctionCall(node)) {
+          // The following block is a nested switch statement for creation of the call tree
+          // START BLOCK
+          if (parserHelpers.isRegularFunctionCall(node)) {
             name = expr.name
             localContractName = contractName
             visibility = 'internal'
-          } else if (utils.isMemberAccess(node)) {
+          } else if (parserHelpers.isMemberAccess(node)) {
             let object
 
             visibility = 'external'
@@ -168,7 +176,7 @@ export function ftrace(functionId, accepted_visibility, files) {
               object = expr.expression.name
 
             // checking if it is a member of `address` and pass along it's contents
-            } else if (utils.isMemberAccessOfAddress(node)) {
+            } else if (parserHelpers.isMemberAccessOfAddress(node)) {
               if(expr.expression.arguments[0].hasOwnProperty('name')) {
                 object = expr.expression.arguments[0].name
               } else {
@@ -176,7 +184,7 @@ export function ftrace(functionId, accepted_visibility, files) {
               }
 
             // checking if it is a typecasting to a user-defined contract type
-            } else if (utils.isAContractTypecast(node)) {
+            } else if (parserHelpers.isAContractTypecast(node)) {
 
               if(expr.expression.expression.hasOwnProperty('name')) {
                 object = expr.expression.expression.name
@@ -187,10 +195,12 @@ export function ftrace(functionId, accepted_visibility, files) {
               return
             }
 
+            // Special keywords cases: this, super
             if (object === 'this') {
               localContractName = contractName
             } else if (object === 'super') {
               localContractName = dependencies[contractName][1]
+            // the next two cases are checking if any user defined contract variable members were accessed
             } else if (tempUserDefinedStateVars[object] !== undefined) {
               localContractName = tempUserDefinedStateVars[object]
             } else if (userDefinedLocalVars[object] !== undefined) {
@@ -201,6 +211,7 @@ export function ftrace(functionId, accepted_visibility, files) {
           } else {
             return
           }
+          // END BLOCK
 
           if(!functionCallsTree[contractName][functionName].hasOwnProperty(name)) {
             functionCallsTree[contractName][functionName][name] = {
@@ -276,7 +287,12 @@ export function ftrace(functionId, accepted_visibility, files) {
           if(touched[keyString] === undefined) {
             parentObject[keyString] = {}
             touched[keyString] = true
-            constructCallTree(functionCallObject.contract, functionCallName, parentObject[keyString])
+
+            // Test if the call is really to a contract or rather an address variable member access
+            // If it is not a contract we should stop here
+            if(functionCallObject.contract.substring(0,8) !== '#address') {
+              constructCallTree(functionCallObject.contract, functionCallName, parentObject[keyString])
+            }
           } else {
             parentObject[keyString] = Object.keys(functionCallsTree[functionCallObject.contract][functionCallName]).length === 0 ?
                                       {} :

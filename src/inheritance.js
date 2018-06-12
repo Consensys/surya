@@ -61,7 +61,7 @@ export function inheritance(files) {
         }
       })
 
-      dependencies = linearize(dependencies)
+      dependencies = linearize(dependencies, {reverse: true})
     }
 
     console.log(digraph.to_dot())
