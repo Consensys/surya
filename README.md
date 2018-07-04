@@ -88,6 +88,22 @@ surya ftrace APMRegistry::_newRepo all MyContract.sol
 
 <img src="https://user-images.githubusercontent.com/4008213/39437466-d5dc5be6-4c98-11e8-8352-31bc8dadd2b8.png" width="336" height="236">
 
+### mdreport
+
+The `mdreport` command creates a markdown description report with tables comprising information about the system's files, contracts and their functions.
+
+```shell
+surya mdreport report_outfile.md MyContract.sol
+```
+
+
+## Usage Tips
+
+If you want to run Surya over all the contracts in your Truffle project at once use this command at its root directory:
+
+```shell
+find contracts -name "*.sol" -print | xargs surya [some sub-command ...]
+```
 
 ## License
 
