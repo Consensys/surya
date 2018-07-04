@@ -4,9 +4,9 @@
 
 #### 
 
-Created by @federicobond extended by @GNSPS
+Surya is an utility tool for smart contract systems. It provides a number of visual outputs and information about the contracts' structure. Also supports querying the function call graph in multiple ways to aid in the manual inspection of contracts.
 
-A set of utilities for inspecting the structure of Solidity contracts.
+Currently only supports Solidity but we hope to extend the tool to encompass other languages.
 
 The name stems from the sun deity [Surya](https://en.wikipedia.org/wiki/Surya)
 
@@ -92,3 +92,7 @@ surya ftrace APMRegistry::_newRepo all MyContract.sol
 ## License
 
 GPL-3.0
+
+## Kudos
+
+Created by @federicobond extended by @GNSPS
