@@ -101,7 +101,7 @@ ${contractsTable}
 ### Legend
 
 |  Symbol  |  Meaning  |
-|----------|-----------|
+|:--------:|-----------|
 |    🛑    | Function can modify state |
 |    💵    | Function is payable |
 `
