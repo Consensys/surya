@@ -4,9 +4,9 @@
 
 #### 
 
-Created by @federicobond extended by @GNSPS
+Surya is an utility tool for smart contract systems. It provides a number of visual outputs and information about the contracts' structure. Also supports querying the function call graph in multiple ways to aid in the manual inspection of contracts.
 
-A set of utilities for inspecting the structure of Solidity contracts.
+Currently only supports Solidity but we hope to extend the tool to encompass other languages.
 
 The name stems from the sun deity [Surya](https://en.wikipedia.org/wiki/Surya)
 
@@ -88,7 +88,27 @@ surya ftrace APMRegistry::_newRepo all MyContract.sol
 
 <img src="https://user-images.githubusercontent.com/4008213/39437466-d5dc5be6-4c98-11e8-8352-31bc8dadd2b8.png" width="336" height="236">
 
+### mdreport
+
+The `mdreport` command creates a markdown description report with tables comprising information about the system's files, contracts and their functions.
+
+```shell
+surya mdreport report_outfile.md MyContract.sol
+```
+
+
+## Usage Tips
+
+If you want to run Surya over all the contracts in your Truffle project at once use this command at its root directory:
+
+```shell
+find contracts -name "*.sol" -print | xargs surya [some sub-command ...]
+```
 
 ## License
 
 GPL-3.0
+
+## Kudos
+
+Created by @federicobond extended by @GNSPS
