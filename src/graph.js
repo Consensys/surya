@@ -135,7 +135,16 @@ export function graph(files) {
       },
 
       FunctionDefinition(node) {
-        const name = node.name || '<fallback>'
+        let name
+
+        if (node.isConstructor) {
+          name = '<Constructor>'
+        } else if (!node.name) {
+          name = '<Fallback>'
+        } else {
+          name = node.name
+        }
+        
         const internal = node.visibility === 'internal'
 
         let opts = { label: name }

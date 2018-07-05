@@ -34,7 +34,15 @@ export function describe(files) {
       },
 
       FunctionDefinition(node) {
-        const name = node.name || '<fallback>'.gray
+        let name
+
+        if (node.isConstructor) {
+          name = '<Constructor>'.gray
+        } else if (!node.name) {
+          name = '<Fallback>'.gray
+        } else {
+          name = node.name
+        }
 
         let spec = ''
         if (node.visibility === 'public' || node.visibility === 'default') {
