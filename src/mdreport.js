@@ -50,7 +50,15 @@ export function mdreport(outfile, infiles) {
       },
 
       FunctionDefinition(node) {
-        const name = node.name || '<fallback>'
+        let name
+
+        if (node.isConstructor) {
+          name = '<Constructor>'
+        } else if (!node.name) {
+          name = '<Fallback>'
+        } else {
+          name = node.name
+        }
 
 
         let spec = ''
