@@ -17,8 +17,9 @@ export function mdreport(outfile, infiles) {
 `
 
   let contractsTable = `
-|  Smart Contract Name  |  Type  |  Bases  |  Function Name  |  Visibility  |  Mutability  |  Modifiers  |
-|:---------------------:|:------:|:-------:|----------------:|:------------:|:------------:|:-----------:|
+|  Contract  |         Type        |       Bases      |                  |                 |
+|:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
+|     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 `
 
   for (let file of infiles) {
@@ -45,7 +46,8 @@ export function mdreport(outfile, infiles) {
           specs += 'Implementation'
         }
 
-        contractsTable += `| ${name} | ${specs} | ${bases} |||||
+        contractsTable += `||||||
+| **${name}** | ${specs} | ${bases} |||
 `
       },
 
@@ -53,9 +55,9 @@ export function mdreport(outfile, infiles) {
         let name
 
         if (node.isConstructor) {
-          name = '<Constructor>'
+          name = '\\<Constructor\\>'
         } else if (!node.name) {
-          name = '<Fallback>'
+          name = '\\<Fallback\\>'
         } else {
           name = node.name
         }
@@ -82,7 +84,7 @@ export function mdreport(outfile, infiles) {
           mutating = '🛑'
         }
 
-        contractsTable += `| └ | - | - | ${name} | ${spec} | ${payable} ${mutating} |`
+        contractsTable += `| └ | ${name} | ${spec} | ${payable} ${mutating} |`
       },
 
       'FunctionDefinition:exit': function(node) {
