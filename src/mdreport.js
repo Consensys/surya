@@ -65,13 +65,13 @@ export function mdreport(outfile, infiles) {
 
         let spec = ''
         if (node.visibility === 'public' || node.visibility === 'default') {
-          spec += 'Public'
+          spec += 'Public ❗️'
         } else if (node.visibility === 'external') {
-          spec += 'External'
+          spec += 'External ❗️'
         } else if (node.visibility === 'private') {
-          spec += 'Private'
+          spec += 'Private 🔐'
         } else if (node.visibility === 'internal') {
-          spec += 'Internal'
+          spec += 'Internal 🔒'
         }
 
         let payable = ''
@@ -84,7 +84,7 @@ export function mdreport(outfile, infiles) {
           mutating = '🛑'
         }
 
-        contractsTable += `| └ | ${name} | ${spec} | ${payable} ${mutating} |`
+        contractsTable += `| └ | ${name} | ${spec} | ${mutating} ${payable} |`
       },
 
       'FunctionDefinition:exit': function(node) {
