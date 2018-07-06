@@ -108,6 +108,38 @@ export function ftrace(functionId, accepted_visibility, files) {
       FunctionDefinition(node) {
         functionName = node.name || '<fallback>'
 
+        if (node.isConstructor) {
+          functionName = '<Constructor>'
+        } else if (!node.name) {
+          functionName = '<Fallback>'
+        } else {
+          functionName = node.name
+        }
+
+
+        let spec = ''
+        if (node.visibility === 'public' || node.visibility === 'default') {
+          spec += '[Pub] ❗️'
+        } else if (node.visibility === 'external') {
+          spec += '[Ext] ❗️'
+        } else if (node.visibility === 'private') {
+          spec += '[Priv] 🔐'
+        } else if (node.visibility === 'internal') {
+          spec += '[Int] 🔒'
+        }
+
+        let payable = ''
+        if (node.stateMutability === 'payable') {
+          payable = '💵'
+        }
+
+        let mutating = ''
+        if (!node.stateMutability) {
+          mutating = '🛑'
+        }
+
+        functionName += ` | ${spec}  ${mutating} ${payable}`
+
         functionCallsTree[contractName][functionName] = {}
         modifiers[contractName][functionName] = new Array()
       },
