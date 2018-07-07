@@ -32,6 +32,8 @@ export function ftrace(functionId, accepted_visibility, files) {
   let userDefinedStateVars = {}
   let dependencies = {}
   let modifiers = {}
+  let functionDecorators = {}
+
   let fileASTs = new Array()
 
   for (let file of files) {
@@ -106,8 +108,6 @@ export function ftrace(functionId, accepted_visibility, files) {
       },
 
       FunctionDefinition(node) {
-        functionName = node.name || '<fallback>'
-
         if (node.isConstructor) {
           functionName = '<Constructor>'
         } else if (!node.name) {
@@ -138,7 +138,7 @@ export function ftrace(functionId, accepted_visibility, files) {
           mutating = '🛑'
         }
 
-        functionName += ` | ${spec}  ${mutating} ${payable}`
+        functionDecorators[functionName] = ` | ${spec}  ${mutating} ${payable}`
 
         functionCallsTree[contractName][functionName] = {}
         modifiers[contractName][functionName] = new Array()
@@ -177,9 +177,9 @@ export function ftrace(functionId, accepted_visibility, files) {
       VariableDeclaration(node) {
         if (functionName && parserHelpers.isUserDefinedDeclaration(node)) {
           userDefinedLocalVars[node.name] = node.typeName.namePath
-        } else if (functionName && parserHelpers.isAddressDeclaration(parameter)) {
+        } else if (functionName && parserHelpers.isAddressDeclaration(node)) {
           // starting name with  "#" because it's an illegal character for naming vars in Solidity
-          userDefinedLocalVars[parameter.name] = `#address [${parameter.name}]`
+          userDefinedLocalVars[node.name] = `#address [${node.name}]`
         }
       },
 
@@ -316,6 +316,8 @@ export function ftrace(functionId, accepted_visibility, files) {
         )
       ) {
         let keyString = `${functionCallObject.contract}::${functionCallName}`
+
+        keyString += functionDecorators[functionCallName] === undefined ? '' : functionDecorators[functionCallName]
 
         keyString = functionCallObject.visibility === 'external' && accepted_visibility !== 'external'
                     ? keyString.yellow : keyString
