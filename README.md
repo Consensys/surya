@@ -86,7 +86,7 @@ surya ftrace APMRegistry::_newRepo all MyContract.sol
 ```
 
 
-<img src="https://user-images.githubusercontent.com/4008213/39437466-d5dc5be6-4c98-11e8-8352-31bc8dadd2b8.png" width="336" height="236">
+<img src="https://user-images.githubusercontent.com/4008213/42409007-61473d12-81f1-11e8-8fee-1867cfd66822.png" height="236">
 
 ### mdreport
 
