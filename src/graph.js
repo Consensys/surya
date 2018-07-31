@@ -52,8 +52,8 @@ export function graph(files) {
 
         let opts = {}
 
-        if(!(cluster = digraph.getCluster('cluster' + contractName))) {
-          cluster = digraph.addCluster('cluster' + contractName)
+        if(!(cluster = digraph.getCluster(`"cluster${contractName}"`))) {
+          cluster = digraph.addCluster(`"cluster${contractName}"`)
 
           cluster.set('label', contractName)
           cluster.set('color', 'lightgray')
@@ -131,7 +131,7 @@ export function graph(files) {
       ContractDefinition(node) {
         contractName = node.name
 
-        cluster = digraph.getCluster('cluster' + contractName)
+        cluster = digraph.getCluster(`"cluster${contractName}"`)
       },
 
       FunctionDefinition(node) {
@@ -295,8 +295,8 @@ export function graph(files) {
 
         let externalCluster
 
-        if(!(externalCluster = digraph.getCluster('cluster' + localContractName))) {
-          externalCluster = digraph.addCluster('cluster' + localContractName)
+        if(!(externalCluster = digraph.getCluster(`"cluster${localContractName}"`))) {
+          externalCluster = digraph.addCluster(`"cluster${localContractName}"`)
 
           externalCluster.set('label', localContractName)
           externalCluster.set('color', 'lightgray')
