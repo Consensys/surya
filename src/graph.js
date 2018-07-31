@@ -349,12 +349,6 @@ key:i2:e -> key2:i2:w [color=orange]
 }
 `
   let finalDigraph = utils.insertBeforeLastOccurrence(digraph.to_dot(), '}', legendDotString)
-  
-  // wraps subgraph names in quotes so periods can be used without breaking dot
-  // i.e. subgraph clusterContractName.VariableName
-  // becomes
-  // subgraph "clusterContractName.VariableName"
-  finalDigraph = finalDigraph.replace(/(cluster\S+)/ig, '"$&"')
 
   console.log(finalDigraph)
 }
