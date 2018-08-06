@@ -7,9 +7,14 @@ const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
 
 
-export function dependencies(files) {
+export function dependencies(files, childContract) {
   if (files.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
+    return
+  }
+
+  if (!childContract) {
+    console.log('No child contract specified in the arguments. Bailing.. ')
     return
   }
 
@@ -44,11 +49,28 @@ export function dependencies(files) {
     })
   }
 
-  dependencies = linearize(dependencies, {reverse: true})
-
-  for (let contractDependencies of dependencies) {
-    console.log(contractDependencies[0].orange)
-
-    console.log(contractDependencies)
+  if (!dependencies[childContract]) {
+    console.log('Specified child contract not found. Bailing.. ')
   }
+
+  // the c3-linearize package's reverse feature doesn't seem to work for deeper levels of inheritance
+  // so we'll reverse the order first
+  for (let property in dependencies) {
+    dependencies[property] =  dependencies[property].reverse()
+  }
+  // dependencies = linearize(dependencies, {reverse: true})
+  dependencies = linearize(dependencies)
+
+  let derivedLinearization = dependencies[childContract]
+  console.log(derivedLinearization[0].yellow)
+  
+  if (derivedLinearization.length < 2) {
+    console.log('No Dependencies Found')
+    return
+  }
+  derivedLinearization.shift()
+
+  const reducer = (accumulator, currentValue) => `${accumulator} <- ${currentValue}`
+  console.log(`└─ ${derivedLinearization.reduce(reducer)}`)
+
 }
