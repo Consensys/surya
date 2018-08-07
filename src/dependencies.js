@@ -55,8 +55,8 @@ export function dependencies(files, childContract) {
 
   // the c3-linearize package's reverse feature doesn't seem to work for deeper levels of inheritance
   // so we'll reverse the order first
-  for (let property in dependencies) {
-    dependencies[property] =  dependencies[property].reverse()
+  for (let contractName in dependencies) {
+    dependencies[contractName] =  dependencies[contractName].reverse()
   }
   // dependencies = linearize(dependencies, {reverse: true})
   dependencies = linearize(dependencies)
