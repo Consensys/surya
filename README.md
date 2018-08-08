@@ -88,6 +88,17 @@ surya ftrace APMRegistry::_newRepo all MyContract.sol
 
 <img src="https://user-images.githubusercontent.com/4008213/42409007-61473d12-81f1-11e8-8fee-1867cfd66822.png" height="236">
 
+## dependencies
+
+The `dependencies` command outputs the [c3-linearization](https://en.wikipedia.org/wiki/C3_linearization) of a given contract's inheirtance graph. Contracts will be listed starting with most-derived, ie. if the same function is defined in more than one contract, the solidity compiler will use the definition in whichever contract is listed first. 
+
+```shell
+surya dependencies Exchange Exchange.sol
+```
+
+<img src="https://user-images.githubusercontent.com/23033765/43811687-cbb312f4-9a8b-11e8-9d8e-98be09fcd2d4.png" height="300">
+
+
 ### mdreport
 
 The `mdreport` command creates a markdown description report with tables comprising information about the system's files, contracts and their functions.

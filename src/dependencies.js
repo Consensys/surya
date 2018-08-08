@@ -64,7 +64,7 @@ export function dependencies(files, childContract) {
   }
   derivedLinearization.shift()
 
-  const reducer = (accumulator, currentValue) => `${accumulator} <- ${currentValue}`
-  console.log(`└─ ${derivedLinearization.reduce(reducer)}`)
+  const reducer = (accumulator, currentValue) => `${accumulator}\n  ↖ ${currentValue}`
+  console.log(`  ↖ ${derivedLinearization.reduce(reducer)}`)
 
 }
