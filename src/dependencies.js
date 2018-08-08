@@ -53,13 +53,7 @@ export function dependencies(files, childContract) {
     console.log('Specified child contract not found. Bailing.. ')
   }
 
-  // the c3-linearize package's reverse feature doesn't seem to work for deeper levels of inheritance
-  // so we'll reverse the order first
-  for (let contractName in dependencies) {
-    dependencies[contractName] =  dependencies[contractName].reverse()
-  }
-  // dependencies = linearize(dependencies, {reverse: true})
-  dependencies = linearize(dependencies)
+  dependencies = linearize(dependencies, {reverse: true})
 
   let derivedLinearization = dependencies[childContract]
   console.log(derivedLinearization[0].yellow)
