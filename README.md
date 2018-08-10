@@ -27,7 +27,7 @@ npm install -g surya
 The `describe` command shows a summary of the contracts and methods in the files provided.
 
 ```shell
-surya describe MyContract.sol
+surya describe *.sol
 ```
 
 <img src="https://user-images.githubusercontent.com/138426/37748729-b6c42ab2-2d63-11e8-9255-8c30693f8a26.png" width="336" height="236">
@@ -59,7 +59,7 @@ surya inheritance MyContract.sol | dot -Tpng > MyContract.png
 The `graph` command outputs a DOT-formatted graph of the control flow.
 
 ```shell
-surya graph MyContract.sol | dot -Tpng > MyContract.png
+surya graph contracts/**/*.sol | dot -Tpng > MyContract.png
 ```
 
 
@@ -88,6 +88,17 @@ surya ftrace APMRegistry::_newRepo all MyContract.sol
 
 <img src="https://user-images.githubusercontent.com/4008213/42409007-61473d12-81f1-11e8-8fee-1867cfd66822.png" height="236">
 
+## dependencies
+
+The `dependencies` command outputs the [c3-linearization](https://en.wikipedia.org/wiki/C3_linearization) of a given contract's inheirtance graph. Contracts will be listed starting with most-derived, ie. if the same function is defined in more than one contract, the solidity compiler will use the definition in whichever contract is listed first. 
+
+```shell
+surya dependencies Exchange Exchange.sol
+```
+
+<img src="https://user-images.githubusercontent.com/23033765/43811687-cbb312f4-9a8b-11e8-9d8e-98be09fcd2d4.png" height="300">
+
+
 ### mdreport
 
 The `mdreport` command creates a markdown description report with tables comprising information about the system's files, contracts and their functions.
@@ -97,13 +108,6 @@ surya mdreport report_outfile.md MyContract.sol
 ```
 
 
-## Usage Tips
-
-If you want to run Surya over all the contracts in your Truffle project at once use this command at its root directory:
-
-```shell
-find contracts -name "*.sol" -print | xargs surya [some sub-command ...]
-```
 
 ## License
 
