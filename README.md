@@ -27,7 +27,7 @@ npm install -g surya
 The `describe` command shows a summary of the contracts and methods in the files provided.
 
 ```shell
-surya describe MyContract.sol
+surya describe *.sol
 ```
 
 <img src="https://user-images.githubusercontent.com/138426/37748729-b6c42ab2-2d63-11e8-9255-8c30693f8a26.png" width="336" height="236">
@@ -59,7 +59,7 @@ surya inheritance MyContract.sol | dot -Tpng > MyContract.png
 The `graph` command outputs a DOT-formatted graph of the control flow.
 
 ```shell
-surya graph MyContract.sol | dot -Tpng > MyContract.png
+surya graph contracts/**/*.sol | dot -Tpng > MyContract.png
 ```
 
 
@@ -108,13 +108,6 @@ surya mdreport report_outfile.md MyContract.sol
 ```
 
 
-## Usage Tips
-
-If you want to run Surya over all the contracts in your Truffle project at once use this command at its root directory:
-
-```shell
-find contracts -name "*.sol" -print | xargs surya [some sub-command ...]
-```
 
 ## License
 
