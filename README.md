@@ -108,13 +108,6 @@ surya mdreport report_outfile.md MyContract.sol
 ```
 
 
-## Usage Tips
-
-If you want to run Surya over all the contracts in your project at once use this command at its root directory:
-
-```shell
-surya [some sub-command ...] **/*.sol
-```
 
 ## License
 
