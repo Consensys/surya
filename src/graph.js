@@ -1,7 +1,7 @@
 "use strict";
 
-const parserHelpers = require('./parserHelpers')
-const utils = require('./utils')
+const parserHelpers = require('./utils/parserHelpers')
+const utils = require('./utils/utils')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const graphviz = require('graphviz')
