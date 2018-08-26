@@ -10,22 +10,17 @@ const parser = require('solidity-parser-antlr')
  * @returns    {array}    contractProfiles A list of objects with details about a given contract
  */ 
 function contractProfilesFromFile(file) {
-  let contractProfiles = new Array()
-  let contractProfile = new Object()
-  let functionProfile = new Object()
-  let functionProfiles = new Array()
+  let contractProfiles = new Array() // Info about a contract
+  let contractProfile = new Object() // List of contractProfiles defined in a file
+  let functionProfile = new Object() // Info about a function
+  let functionProfiles = new Array() // List of functionsProfiles defined in a contract
 
 
   const content = fs.readFileSync(file).toString('utf-8')
   const ast = parser.parse(content)
-
-  // Object to track which contract definition we are in.
   
-
   parser.visit(ast, {
     ContractDefinition(node) {
-      // functionProfile = new Object() // Info about the current function definition 
-      // functionProfiles = new Array() // list of functions defined in this contract
 
       let name = node.name
       
