@@ -10,15 +10,15 @@ const parser = require('solidity-parser-antlr')
  * @returns    {array}    contractProfiles A list of objects with details about a given contract
  */ 
 function contractProfilesFromFile(file) {
-  let contractProfiles = new Array() // Info about a contract
-  let contractProfile = new Object() // List of contractProfiles defined in a file
+  let contractProfile = new Object() // Info about a contract
+  let contractProfiles = new Array() // List of contractProfiles defined in a file
   let functionProfile = new Object() // Info about a function
   let functionProfiles = new Array() // List of functionsProfiles defined in a contract
-
+  let stateVarProfiles = new Array() // List of stateVarProfiles defined in a contract
 
   const content = fs.readFileSync(file).toString('utf-8')
   const ast = parser.parse(content)
-  
+
   parser.visit(ast, {
     ContractDefinition(node) {
 
@@ -29,18 +29,44 @@ function contractProfilesFromFile(file) {
       })
 
       let kind = node.kind
-      
+
       Object.assign(contractProfile, {name, bases, kind})
     },
 
     'ContractDefinition:exit': function(node) {
       // Done visiting this contract
-      Object.assign(contractProfile, { functionProfiles }) // record function details
+      Object.assign(contractProfile, { stateVarProfiles, functionProfiles }) // record function details
+
       contractProfiles.push(contractProfile) // add to list of contractProfiles
       contractProfile = new Object() // reset the contractProfile object
     },
+
+    StateVariableDeclaration(node) {
+      
+      // The parser returns a 'variables' array here. But is it possible there could ever be 
+      // more than one entry? I don't see how.
+      let {name, visibility, typeName} = node.variables[0]
+      /*"typeName": {
+                  "type": "ElementaryTypeName",
+                  "name": "address"
+                }
+      */
+
+      // if (typeName.type === 'Mapping') {
+
+      // } else if (typeName.type === 'userDefinedTypeName') {
+      //   // don't think there's anything to do here.
+      // } else if (typeName.type === typeName '[' expression? ']') { // how to check for array pattern in name?
+
+      // } else if (typeName.type.indexof('function')) {
+
+      // } else if (typeName.)
+
+      stateVarProfiles.push({name, visibility, type: typeName.type})
+    },
     
     FunctionDefinition(node) {
+
       let name = ''
 
       // decided to not add any formatting to constructor or fallback
@@ -61,9 +87,12 @@ function contractProfilesFromFile(file) {
       Object.assign(functionProfile, {name, visibility, mutability})
 
     }, 
+    
     'FunctionDefinition:exit': function(node) {
+      // Note: I think this can all just be moved up to FunctionDefinition, and then the 
+      // profile Object wouldn't even be necessary.
       functionProfiles.push(functionProfile)
-      functionProfile = new Object() //
+      functionProfile = new Object()
     }
   })
 
