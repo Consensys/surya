@@ -9,7 +9,7 @@ export function describe(files) {
   for (let file of files) {
 
     const profiles = profiler.contractProfilesFromFile(file)
-
+    console.log(JSON.stringify(profiles, null, 2))
     for (let profile of profiles) {
 
       const name = profile.name
