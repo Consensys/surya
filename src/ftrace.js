@@ -291,8 +291,6 @@ export function ftrace(functionId, accepted_visibility, files) {
             functionCallsTree[contractName][modifierName] : {}
   }
 
-  let queue = new Array()
-
   // Function to recursively generate the tree to show in the console
   function constructCallTree(reduceJobContractName, reduceJobFunctionName, parentObject) {
     let tempIterable
