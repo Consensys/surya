@@ -50,7 +50,6 @@ function contractProfilesFromFile(file) {
       })
 
       let kind = node.kind
-
       Object.assign(contractProfile, {name, bases, kind, ast})
     },
 
@@ -94,7 +93,7 @@ function contractProfilesFromFile(file) {
     },
     'FunctionDefinition:exit': function(node) {
       functionProfiles.push(functionProfile)
-      functionProfile = new Object() //
+      functionProfile = new Object()
     },
 
     UsingForDeclaration(node) {
@@ -103,7 +102,7 @@ function contractProfilesFromFile(file) {
     },
     'UsingForDeclaration:exit': function(node) {
       usingForProfiles.push(usingForProfile)
-      usingForProfile = new Object() //
+      usingForProfile = new Object()
     },
 
     ImportDirective: function(node) {
@@ -111,22 +110,22 @@ function contractProfilesFromFile(file) {
       const [libName, libExt] = filename.split('.', 2)
       const [conPath, conName] = file.split('/', 2)
       let lib = conPath+"/"+node.path
-      let content1;
+      let content;
       try {
-        content1 = fs.readFileSync(lib).toString('utf-8')
+        content = fs.readFileSync(lib).toString('utf-8')
       } catch (e) {
         if (e.code === 'EISDIR') {
           console.error(`Skipping directory ${lib}`)
         } else throw e;
       }
 
-      const astImport = parser.parse(content1)
+      const astImport = parser.parse(content)
 
       Object.assign(importProfile, {astImport})
     },
     'ImportDirective:exit': function(node) {
       importProfiles.push(importProfile)
-      importProfile = new Object() //
+      importProfile = new Object()
     },
 
     StateVariableDeclaration(node) {
@@ -135,7 +134,7 @@ function contractProfilesFromFile(file) {
     },
     'StateVariableDeclaration:exit': function(node) {
       stateVariableProfiles.push(stateVariableProfile)
-      stateVariableProfile = new Object() //
+      stateVariableProfile = new Object()
     },
 
     ModifierDefinition(node) {
@@ -144,7 +143,7 @@ function contractProfilesFromFile(file) {
     },
     'ModifierDefinition:exit': function(node) {
       modifierDefProfiles.push(modifierDefProfile)
-      modifierDefProfile = new Object() //
+      modifierDefProfile = new Object()
     },
 
     ModifierInvocation(node) {
@@ -153,7 +152,7 @@ function contractProfilesFromFile(file) {
     },
     'ModifierInvocation:exit': function(node) {
       modifierInvocProfiles.push(modifierInvocProfile)
-      modifierInvocProfile = new Object() //
+      modifierInvocProfile = new Object()
     },
 
     ParameterList(node) {
@@ -162,7 +161,7 @@ function contractProfilesFromFile(file) {
     },
     'ParameterList:exit': function(node) {
       paramListProfiles.push(paramListProfile)
-      paramListProfile = new Object() //
+      paramListProfile = new Object()
     },
 
     VariableDeclaration(node) {
@@ -172,9 +171,10 @@ function contractProfilesFromFile(file) {
     },
     'VariableDeclaration:exit': function(node) {
       varProfiles.push(varProfile)
-      varProfile = new Object() //
+      varProfile = new Object()
     },
 
+// TODO:Need to re-check this functionlity
     FunctionCall(node) {
       let expr = node.expression
 
@@ -182,7 +182,7 @@ function contractProfilesFromFile(file) {
     },
     'FunctionCall:exit': function(node) {
       funCallProfiles.push(funCallProfile)
-      funCallProfile = new Object() //
+      funCallProfile = new Object()
     },
 
   })
