@@ -3,6 +3,7 @@
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 
+
 /**
  * Given a solidity file, returns an array of objects, each one representing a contract
  *
@@ -12,7 +13,8 @@ const parser = require('solidity-parser-antlr')
 function contractProfilesFromFile(file) {
   let contractProfile = new Object() // Info about a contract
   let contractProfiles = new Array() // List of contractProfiles defined in a file
-  let functionProfiles = new Array() // List of functionsProfiles defined in a contract
+  let modifierProfiles = new Array() // List of modifierProfiles defined in a contract
+  let functionProfiles = new Array() // List of functionProfiles defined in a contract
   let stateVarProfiles = new Array() // List of stateVarProfiles defined in a contract
 
   const content = fs.readFileSync(file).toString('utf-8')
@@ -32,45 +34,70 @@ function contractProfilesFromFile(file) {
     },
 
     'ContractDefinition:exit': function(node){
-      Object.assign(contractProfile, {stateVarProfiles, functionProfiles})
+      Object.assign(contractProfile, {stateVarProfiles, functionProfiles, modifierProfiles})
       contractProfiles.push(contractProfile)
+      contractProfile = new Object()
+      stateVarProfiles = new Array()
+      functionProfiles = new Array()
+      modifierProfiles = new Array()
     },
 
     StateVariableDeclaration(node) {
-      let statVarProfile = new Object();
-      // The parser returns a 'variables' array here. But is it possible there could ever be 
-      // more than one entry? I don't see how.
+      let statVarProfile = new Object()
       let {name, visibility, typeName} = node.variables[0]
+      let typeInfo = new Object()
 
-      // typeName grammar:
-      // https://github.com/solidityj/solidity-antlr4/blob/master/Solidity.g4#L126
-      // typeName
-      //  : elementaryTypeName // done
-      //  | userDefinedTypeName // make visitor
-      //  | mapping // tricky, can be nested
-      //  | typeName '[' expression? ']' // how to identify this?
-      //  | functionTypeName ; // make visitor
-
-      // TODO: create a test contract with a wide range of type declarations. Use that for testing.
+      // Define a parser within the parser... 
       parser.visit(typeName, {
-        Mapping(subNode){
+        ElementaryTypeName(subNode) {
+          typeInfo.type = subNode.name
+        },
+        Mapping(subNode) { 
+          typeInfo.type = 'mapping'
+          typeInfo.keyType = subNode.keyType.name // keys are always simple types (uint256, etc)
+          typeInfo.valueType = new Object()
 
-          let keyType = subNode.keyType.name
-          let valueType
-          if (subNode.valueType !== 'Mapping') {
-            valueType = subNode.valueType.name
+          // value in a mapping can be fairly complex, we might not handle all of them here... 
+          if (subNode.valueType.type === 'ElementaryTypeName') {
+            
+            typeInfo.valueType = subNode.valueType.name
+
+          } else if (subNode.valueType.type === 'ArrayTypeName'){
+            
+            typeInfo.valueType.type = 'array'
+            typeInfo.valueType.baseType = subNode.valueType.baseTypeName.name
+            typeInfo.valueType.fixed = !!subNode.valueType.length
+          
+          } else if (subNode.valueType.type === 'Mapping'){
+            // We make the (reasonable, but not guaranteed) assumption that a nested mapping has
+            // only two levels, and eventually resolves to a simple type
+            
+            typeInfo.valueType.type = 'mapping'
+            typeInfo.valueType.keyType = subNode.valueType.keyType.name
+            
+            typeInfo.valueType.valueType = subNode.valueType.valueType.name
           }
-
+          // stop the parser from visiting subNodes of this Mapping, which could trigger other visitors
+          return false; 
+        },
+        ArrayTypeName(subNode) {
+          typeInfo.type = 'array'
+          typeInfo.fixed = !!subNode.length
+          typeInfo.baseType = subNode.baseTypeName.type
+          return false; 
         },
         userDefinedTypeName(subNode){
-          console.log('userDefinedTypeName')
+          // not sure this actually comes up at the same ast level, I think it's more like where you'd
+          // have the 'uint256', or 'bytes32'
+          typeInfo.type = 'userDefined'
         }, 
-        functionTypeName(subNode){
+        functionTypeName(subNode) {
+          typeInfo.type = subNode.type
 
         }
       })
 
-      stateVarProfiles.push({name, visibility, type: typeName.type})
+      stateVarProfiles.push({name, visibility, typeInfo})
     },
     
     FunctionDefinition(node) {
@@ -92,8 +119,25 @@ function contractProfilesFromFile(file) {
       // only one mutability keyword is allowed: pure, view, constant, payable
       let mutability = node.stateMutability
 
-      functionProfiles.push({name, visibility, mutability})
+      let modifierInvocations = []
+      if (node.modifiers) {
+        for (let subNode of node.modifiers){
+          if (subNode.type === 'ModifierInvocation') {
+            modifierInvocations.push(subNode.name)
+          }
+        }
+      }
 
+      let profile = modifierInvocations.length > -1 ? 
+        {name, visibility, mutability, modifierInvocations} : {name, visibility, mutability}
+
+      functionProfiles.push(profile)
+
+    },
+
+    ModifierDefinition(node) {
+      let name = node.name
+      modifierProfiles.push({name})
     }
   })
 
