@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { describe, graph, inheritance, dependencies, parse, ftrace, mdreport } = require('../lib/index')
+const { describe, graph, inheritance, dependencies, parse, ftrace, mdreport, inherianddepen } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
@@ -83,6 +83,19 @@ require('yargs') // eslint-disable-line
       })
   }, (argv) => {
     mdreport(argv.outfile, argv.infiles)
+  })
+  .command('inherianddepen <truffleRootDirPath> <solidityFilePath>', 'generate draggable graph of both of the inheritance tree and import dependencies.', (yargs) => {
+    yargs
+      .positional('truffleRootDirPath', {
+        describe: 'truffle project root path',
+        type: 'string'
+      })
+      .positional('solidityFilePath', {
+        describe: 'solidity file\'s relative path from truffle project root to analyze',
+        type: 'string'
+      })
+  }, (argv) => {
+    inherianddepen(argv.truffleRootDirPath, argv.solidityFilePath)
   })
   .help()
   .alias('h', 'help')
