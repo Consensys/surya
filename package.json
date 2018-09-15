@@ -32,6 +32,10 @@
     "sha1-file": "^1.0.1",
     "solidity-parser-antlr": "^0.2.15",
     "treeify": "^1.1.0",
-    "yargs": "^11.1.0"
+    "yargs": "^11.1.0",
+    "dot-object": "^1.7.0",
+    "jquery": "^3.3.1",
+    "jsplumb": "^2.7.13",
+    "moment": "^2.22.2"
   }
 }
