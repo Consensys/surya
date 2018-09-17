@@ -14,7 +14,7 @@ export function describe(files) {
 
       const name = profile.name
       let bases = profile.bases.join(', ')
-      bases = bases.length ? `(${bases})`.gray : ''
+      bases = bases.length ? `is (${bases})`.gray : ''
 
       let specs = ''
       if (profile.kind === 'library') {
