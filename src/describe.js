@@ -5,7 +5,7 @@ const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const colors = require('colors')
 
-export function describe(files) {
+export function describe(files, options) {
   for (let file of files) {
 
     const profiles = profiler.contractProfilesFromFile(file)
@@ -33,9 +33,11 @@ export function describe(files) {
       }
     
       // Loop over and print modifiers:
-      for (let modifierProfile of profile.modifierProfiles) {
-        let prefix = '(Mod)'.cyan
-        console.log(`    - ${prefix} ${modifierProfile.name}`)
+      if(options.modifiers) {
+        for (let modifierProfile of profile.modifierProfiles) {
+          let prefix = '(Mod)'.cyan
+          console.log(`    - ${prefix} ${modifierProfile.name}`)
+        }
       }
 
 
@@ -70,25 +72,29 @@ export function describe(files) {
         if (!functionProfile.mutability) {
           // no mutability keyword present, function allows state mutations, but not eth transfers
           mutating = ' #'.red
-        } 
-        let modifiers = ''
-        if (functionProfile.modifierInvocations.length > 0){
-          for (let modifierInvocation of functionProfile.modifierInvocations) {
-            if (!modifiers) {
-              modifiers += `${modifierInvocation.cyan}`
-            } else {
-              modifiers += `, ${modifierInvocation.cyan}`
-            }
-          }
-          // modifiers = `mods( ${modifiers} )` 
         }
-        let modifierSignifier = '{'.cyan + '_' + '}'.cyan
-       
         console.log(`    - ${visibility} ${name}${payable}${mutating}`)
-        if(!!modifiers) {
-          console.log(`        - ${modifiers} ${modifierSignifier}`)
-        }  
-      }
+        
+        if(options.modifiers){
+          let modifiers = ''
+          if (functionProfile.modifierInvocations.length > 0){
+            for (let modifierInvocation of functionProfile.modifierInvocations) {
+              if (!modifiers) {
+                modifiers += `${modifierInvocation.cyan}`
+              } else {
+                modifiers += `, ${modifierInvocation.cyan}`
+              }
+            }
+            // modifiers = `mods( ${modifiers} )` 
+          }
+          let modifierSignifier = '{'.cyan + '_' + '}'.cyan
+         
+          if(!!modifiers) {
+            console.log(`        - ${modifiers} ${modifierSignifier}`)
+          }  
+        }
+          
+      } 
 
       console.log('') // space between contracts
     }
