@@ -1,11 +1,12 @@
 /*
 Scenario to test:
-  contract function importing 2 different libraries
+  contract function importing 2 different libraries,
+  out of which 1 is taken from locally installed module
 */
 pragma solidity ^0.4.24;
 
 import "./test/contracts/Message.sol";
-import "./test/contracts/lib/SafeMath.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract SomeContract {
 

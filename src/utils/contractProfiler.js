@@ -2,7 +2,9 @@
 
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const path = require('path');
+const path = require('path')
+const detectInstalled = require('detect-installed')
+const { getInstalledPathSync } = require('get-installed-path')
 
 /**
  * Given a solidity file, returns an array of objects, each one representing a contract
@@ -106,10 +108,28 @@ function contractProfilesFromFile(file) {
     },
 
     ImportDirective: function(node) {
-      let filename = path.parse(node.path).base;
-      const [libName, libExt] = filename.split('.', 2)
-      const [conPath, conName] = file.split('/', 2)
-      let lib = conPath+"/"+node.path
+      let [moduleName, restPart] = node.path.split('/', 2)
+      let modulesPath=''
+
+      // check module locally
+      if (detectInstalled.sync(moduleName, { local: true })) { // => true
+        let localPath = getInstalledPathSync(moduleName, { local: true })
+        modulesPath = localPath.replace(moduleName,"")
+      // check module globally
+      } else if (detectInstalled.sync(moduleName)) { // => true
+        const globalPath = getInstalledPathSync(moduleName)
+        modulesPath = globalPath.replace(moduleName,"")
+      } else {
+        console.error(`${moduleName} module is not installed`)
+      }
+
+      let [dirName,restDir] = path.dirname(node.path).split('/', 2)
+      let lib=''
+        if (dirName !== '.' && dirName === moduleName)
+          lib = modulesPath+"/"+node.path
+        else
+          lib = node.path
+
       let content;
       try {
         content = fs.readFileSync(lib).toString('utf-8')
@@ -172,17 +192,6 @@ function contractProfilesFromFile(file) {
     'VariableDeclaration:exit': function(node) {
       varProfiles.push(varProfile)
       varProfile = new Object()
-    },
-
-// TODO:Need to re-check this functionlity
-    FunctionCall(node) {
-      let expr = node.expression
-
-      Object.assign(funCallProfile, {expr, node})
-    },
-    'FunctionCall:exit': function(node) {
-      funCallProfiles.push(funCallProfile)
-      funCallProfile = new Object()
     },
 
   })
