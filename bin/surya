@@ -11,12 +11,17 @@ require('yargs') // eslint-disable-line
         type: 'boolean',
         default: false
       })
+      .option('s', {
+        alias: 'storage',
+        type: 'boolean',
+        default: false
+      })
       .positional('files', {
         describe: 'files to analyze',
         type: 'string'
       })
   }, (argv) => {
-    describe(argv.files, {modifiers: argv.m})
+    describe(argv.files, {modifiers: argv.m, storage: argv.s})
   })
   .command('graph <files..>', 'generate graph of contract function calls.', (yargs) => {
     yargs
