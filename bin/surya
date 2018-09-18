@@ -6,12 +6,17 @@ require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
   .command('describe <files..>', 'show file contracts structure.', (yargs) => {
     yargs
+      .option('m', {
+        alias: 'modifiers',
+        type: 'boolean',
+        default: false
+      })
       .positional('files', {
         describe: 'files to analyze',
         type: 'string'
       })
   }, (argv) => {
-    describe(argv.files)
+    describe(argv.files, {modifiers: argv.m})
   })
   .command('graph <files..>', 'generate graph of contract function calls.', (yargs) => {
     yargs
