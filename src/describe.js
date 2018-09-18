@@ -27,11 +27,12 @@ export function describe(files, options) {
       console.log(` + ${specs} ${name} ${bases}`)
 
       // Loop over and print state variable details
-      for (let stateVarProfile of profile.stateVarProfiles) {
-        let prefix = `<${stateVarProfile.typeInfo.type}>`.red
-        console.log(`    - ${prefix} ${stateVarProfile.name}`)
-      }
-    
+      if(options.storage) {
+        for (let stateVarProfile of profile.stateVarProfiles) {
+          let prefix = `<${stateVarProfile.typeInfo.type}>`.red
+          console.log(`    - ${prefix} ${stateVarProfile.name}`)
+        }
+      }    
       // Loop over and print modifiers:
       if(options.modifiers) {
         for (let modifierProfile of profile.modifierProfiles) {
