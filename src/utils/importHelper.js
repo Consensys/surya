@@ -10,16 +10,16 @@ const parser = require('solidity-parser-antlr')
 /// @param      {string}  filePath  The file
 /// @param      {Array}   paths     The paths
 /// @return     {array}  importPaths A list of importPaths
-function importPathsFromFile(filePath, paths = []) {
-  paths.push(filePath)
+function importPathsFromFile(filePath, paths = new Set()) {
 
   const content = fs.readFileSync(filePath).toString('utf-8')
-  const ast = parser.parse(content)
+  const ast = parser.parse(content, {tolerant: true})
   
   parser.visit(ast, {
     ImportDirective(node) {
-      paths.push(resolveImportPath(filePath, node.path))
-      importPathsFromFile(`${workingDir}/${node.path}`, paths)
+      let importPath = resolveImportPath(filePath, node.path)
+      paths.add(importPath)
+      importPathsFromFile(importPath, paths)
     }
   })
   return paths
@@ -77,5 +77,6 @@ function findNodeModules(currentPath){
   }
 }
 
-let paths = importPathsFromFile(process.argv[2]);
-console.log(paths)
+module.exports = {
+  importPathsFromFile 
+}
