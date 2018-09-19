@@ -9,7 +9,6 @@ export function describe(files, options) {
   for (let file of files) {
 
     const profiles = profiler.contractProfilesFromFile(file)
-    // console.log(JSON.stringify(profiles, null, 2))
     for (let profile of profiles) {
 
       const name = profile.name
@@ -28,11 +27,41 @@ export function describe(files, options) {
 
       // Loop over and print state variable details
       if(options.storage) {
-        for (let stateVarProfile of profile.stateVarProfiles) {
-          let prefix = `<${stateVarProfile.typeInfo.type}>`.red
-          console.log(`    - ${prefix} ${stateVarProfile.name}`)
+        for (let varProfile of profile.stateVarProfiles) {
+          let prefix 
+          
+          if (varProfile.typeInfo.type === 'mapping') {
+            let keyType = varProfile.typeInfo.keyType
+            let valueType = varProfile.typeInfo.valueType
+            
+            if(typeof valueType === 'string') {
+              prefix = `map(${keyType} -> ${valueType}`
+
+            } else if(valueType.type === 'array') {
+              let length = !valueType.length ? '' : valueType.length 
+              prefix = `map(${keyType} -> ${valueType.baseType}[${length}])`
+            
+            } else if(valueType.type === 'mapping') {
+              prefix = `map(${keyType} -> map(${valueType.keyType} -> ${valueType.valueType}))`
+            
+            }
+          
+          } else if(varProfile.typeInfo.type === 'array') {
+            // console.log(JSON.stringify(varProfile.typeInfo))
+            let length = varProfile.typeInfo.length ? 
+              varProfile.typeInfo.length.number : ''
+            prefix = `${varProfile.typeInfo.baseType}[${length}]`
+          
+          } else {
+            prefix = varProfile.typeInfo.type
+          }
+
+          prefix = `${prefix}`.red
+          console.log(`    - ${prefix} ${varProfile.name}`)
         }
       }    
+
+
       // Loop over and print modifiers:
       if(options.modifiers) {
         for (let modifierProfile of profile.modifierProfiles) {
@@ -88,7 +117,7 @@ export function describe(files, options) {
             }
             // modifiers = `mods( ${modifiers} )` 
           }
-          let modifierSignifier = '{'.cyan + '_' + '}'.cyan
+          let modifierSignifier = '{'.cyan + '_;' + '}'.cyan
          
           if(!!modifiers) {
             console.log(`        - ${modifiers} ${modifierSignifier}`)

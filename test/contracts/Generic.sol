@@ -22,6 +22,8 @@ contract Generic is Boring {
   bytes32 a;
   uint256 public blerg;
   bytes32 constant ARGGG_GGGH = 0x02;
+  MyType aStruct;
+
   
   bytes32[21] fixedArray;
   MyType[] dynArray;

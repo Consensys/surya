@@ -66,6 +66,7 @@ module.exports.contractProfilesFromFile = function contractProfilesFromFile(file
             typeInfo.valueType.type = 'array'
             typeInfo.valueType.baseType = subNode.valueType.baseTypeName.name
             typeInfo.valueType.fixed = !!subNode.valueType.length
+            typeInfo.valueType.length = subNode.valueType.length
           
           } else if (subNode.valueType.type === 'Mapping'){
             // We make the (reasonable, but not guaranteed) assumption that a nested mapping has
@@ -82,17 +83,16 @@ module.exports.contractProfilesFromFile = function contractProfilesFromFile(file
         ArrayTypeName(subNode) {
           typeInfo.type = 'array'
           typeInfo.fixed = !!subNode.length
-          typeInfo.baseType = subNode.baseTypeName.type
+          typeInfo.length = subNode.length
+          typeInfo.baseType = !! subNode.baseTypeName.name ? 
+            subNode.baseTypeName.name : subNode.baseTypeName.namePath
           return false; 
         },
-        userDefinedTypeName(subNode){
-          // not sure this actually comes up at the same ast level, I think it's more like where you'd
-          // have the 'uint256', or 'bytes32'
-          typeInfo.type = 'userDefined'
+        UserDefinedTypeName(subNode){
+          typeInfo.type = subNode.namePath
         }, 
         functionTypeName(subNode) {
-          typeInfo.type = subNode.type
-
+          typeInfo.type = 'function'
         }
       })
 
