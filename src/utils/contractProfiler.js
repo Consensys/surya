@@ -3,21 +3,20 @@
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 
-
 /**
- * Given a solidity file, returns an array of objects, each one representing a contract
- *
- * @param      {string}  file    The file
- * @returns    {array}    contractProfiles A list of objects with details about a given contract
- */ 
-function contractProfilesFromFile(file) {
+  * Given a solidity file, returns an array of objects, each one representing a contract
+  *
+  * @param      {string}  filePath  The file
+  * @return     {array}  contractProfiles A list of objects with details about a given contract
+  */ 
+module.exports.contractProfilesFromFile = function contractProfilesFromFile(filePath) {
   let contractProfile = new Object() // Info about a contract
   let contractProfiles = new Array() // List of contractProfiles defined in a file
   let modifierProfiles = new Array() // List of modifierProfiles defined in a contract
   let functionProfiles = new Array() // List of functionProfiles defined in a contract
   let stateVarProfiles = new Array() // List of stateVarProfiles defined in a contract
 
-  const content = fs.readFileSync(file).toString('utf-8')
+  const content = fs.readFileSync(filePath).toString('utf-8')
   const ast = parser.parse(content)
 
   parser.visit(ast, {
@@ -143,5 +142,3 @@ function contractProfilesFromFile(file) {
 
   return contractProfiles
 }
-
-module.exports.contractProfilesFromFile = contractProfilesFromFile
