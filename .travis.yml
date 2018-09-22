@@ -7,11 +7,13 @@ cache:
   directories:
   - node_modules
 
+
 -: &npm_deploy
     provider: npm
     email: goncalo05@gmail.com
     api_key:
       secure: nRoIp8X+N3Jnen+Sf8RFsgO+iXjAfqofowdjdQ8Lz+XFo7ojrVEp6V3x4KCM5yCXbbAlflXCM3WoXdSccqXFGh573206UE/iIHKKNvQna6WtfpM1U7cZv9YVCIpY8AZECVs/Wr1PQMDpKQwRb9um+8dc6nIFKAR+NANBms5sIFfltv+v7tcdIkL+CLx+8VSZmsvbv3GLlCXP2wZLehfmOBOMfTNmkwgZQxmPhIMG1cUsjbF02Y9Wfbt5D0l3mi/OIqCLS18pHGd3rrSsGBHys/vCAuViSECgWfskW1LOQcE3Hw6myZiI2ob2HGTZE20S+rZaN4SDBYeV5m8DSqH0eWOEyIiIkRQ89ulrTjSY5gJjXiTAta37XoxsnlOgbrvPK9ZulVDYNkiBXQhTowFcOnKnljoZd2vfqdBWbm4X41z0fdTjf5xWfmCmCp1BwGoznp0JtnapvXHwus95VtDra3ugA3AUdyJHQ6Y9GwY3K1pR2CCKvGBe+Gc+wM6bT0Skc6Tu09UooiJmSndFajN9OrmpmT9GazoA/FUkkl3U0uhdtBWGpeLhs6ovxYcV8G6WQ3m6nSzGGuXSYVZUALvHudMIXBXBQObyTOJonuXrcyQPSEB8QxbvIfJLnny7SsXinOOCWncCh/8pRUN0iCg39Re3v6C6V9Yp88+BEC8L7+c=
+    skip_cleanup: true
 
 deploy:
   - <<: *npm_deploy
