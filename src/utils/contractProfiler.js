@@ -52,6 +52,7 @@ function contractProfilesFromFile(file) {
       })
 
       let kind = node.kind
+      console.log("-- "+name)
       Object.assign(contractProfile, {name, bases, kind, ast})
     },
 
@@ -123,21 +124,16 @@ function contractProfilesFromFile(file) {
         console.error(`${moduleName} module is not installed`)
       }
 
-      let [dirName,restDir] = path.dirname(node.path).split('/', 2)
+      const [dirName,restDir] = path.dirname(node.path).split('/', 2)
+      const [conPath, conName] = file.split('/', 2)
+
       let lib=''
         if (dirName !== '.' && dirName === moduleName)
-          lib = modulesPath+"/"+node.path
+          lib = path.join(modulesPath, node.path)
         else
-          lib = node.path
-
-      let content;
-      try {
-        content = fs.readFileSync(lib).toString('utf-8')
-      } catch (e) {
-        if (e.code === 'EISDIR') {
-          console.error(`Skipping directory ${lib}`)
-        } else throw e;
-      }
+          lib = path.join(conPath, node.path)
+      
+      const content = fs.readFileSync(lib).toString('utf-8')
 
       const astImport = parser.parse(content)
 
