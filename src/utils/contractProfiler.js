@@ -127,13 +127,13 @@ function contractProfilesFromFile(file) {
       const [dirName,restDir] = path.dirname(node.path).split('/', 2)
       const [conPath, conName] = file.split('/', 2)
 
-      let lib=''
+      let importPath=''
         if (dirName !== '.' && dirName === moduleName)
-          lib = path.join(modulesPath, node.path)
+          importPath = path.join(modulesPath, node.path)
         else
-          lib = path.join(conPath, node.path)
+          importPath = path.join(conPath, node.path)
       
-      const content = fs.readFileSync(lib).toString('utf-8')
+      const content = fs.readFileSync(importPath).toString('utf-8')
 
       const astImport = parser.parse(content)
 
