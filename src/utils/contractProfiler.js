@@ -52,7 +52,7 @@ function contractProfilesFromFile(file) {
       })
 
       let kind = node.kind
-      console.log("-- "+name)
+
       Object.assign(contractProfile, {name, bases, kind, ast})
     },
 
