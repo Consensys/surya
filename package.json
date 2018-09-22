@@ -8,7 +8,7 @@
     "federicobond"
   ],
   "repository": "ConsenSys/surya",
-  "license": "GPL-3.0",
+  "license": "Apache-2.0",
   "bin": "./bin/surya",
   "scripts": {
     "compile": "babel src --out-dir lib",
