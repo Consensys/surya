@@ -1,12 +1,12 @@
 "use strict";
 
+const profiler = require('./utils/contractProfiler')
 const parserHelpers = require('./utils/parserHelpers')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const colors = require('colors')
 const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
-
 
 export function ftrace(functionId, accepted_visibility, files) {
   if (files.length === 0) {
@@ -33,64 +33,74 @@ export function ftrace(functionId, accepted_visibility, files) {
   let dependencies = {}
   let modifiers = {}
   let functionDecorators = {}
+  let libraryName = null
 
   let fileASTs = new Array()
+  let profiles = null
 
   for (let file of files) {
-
-    let content
-    try {
-      content = fs.readFileSync(file).toString('utf-8')
-    } catch (e) {
-      if (e.code === 'EISDIR') {
-        console.error(`Skipping directory ${file}`)
-        continue
-      } else throw e;
-    }
-
-    const ast = parser.parse(content)
-
-    fileASTs.push(ast)
-
     let contractName = null
-    let cluster = null
+    profiles = profiler.contractProfilesFromFile(file)
 
-    parser.visit(ast, {
-      ContractDefinition(node) {
-        contractName = node.name
+   for (let profile of profiles) {
+       const ast = profile.ast
+       fileASTs.push(ast)
 
-        userDefinedStateVars[contractName] = {}
+      // For ContractDefinition
+      let bases = profile.bases
+      contractName = profile.name
+      userDefinedStateVars[contractName] = {}
+      dependencies[contractName] = bases
+      // For ContractDefinition
 
-        dependencies[contractName] = node.baseContracts.map(spec =>
-          spec.baseName.namePath
-        )
-      },
+      // For ImportDirective
+      for (let importProfile of profile.importProfiles) {
+        const astImport = importProfile.astImport
+        fileASTs.push(astImport)
+      }
+      // For ImportDirective
 
-      StateVariableDeclaration(node) {
-        for (let variable of node.variables) {
-          if (parserHelpers.isUserDefinedDeclaration(variable)) {
-            userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath
-          }
+      // For StateVariableDeclaration
+      for (let stateVariableProfile of profile.stateVariableProfiles) {
+        for (let variable of stateVariableProfile.variables) {
+           if (parserHelpers.isUserDefinedDeclaration(variable))
+             userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath
         }
       }
-    })
+      // For StateVariableDeclaration
+   }
   }
 
   dependencies = linearize(dependencies, {reverse: true})
 
   for (let ast of fileASTs) {
-
     let contractName = null
+    let libraryName = null
     let functionName = null
     let cluster = null
 
     let userDefinedLocalVars = {}
     let tempUserDefinedStateVars = {}
 
+    for (let profile of profiles) {
+      // For UsingForDeclaration
+      for (let usingForProfile of profile.usingForProfiles) {
+        libraryName = usingForProfile.libraryName
+      }
+      // For UsingForDeclaration
+    }
 
     parser.visit(ast, {
       ContractDefinition(node) {
         contractName = node.name
+
+        if(node.kind === "library") {
+          dependencies[contractName] = node.name
+        } else {
+          dependencies[contractName] = node.baseContracts.map(spec =>
+            spec.baseName.namePath
+          )
+        }
 
         functionCallsTree[contractName] = {}
         modifiers[contractName] = {}
@@ -103,7 +113,7 @@ export function ftrace(functionId, accepted_visibility, files) {
       },
 
       'ContractDefinition:exit': function(node) {
-        contractName = null 
+        contractName = null
         tempUserDefinedStateVars = {}
       },
 
@@ -115,7 +125,6 @@ export function ftrace(functionId, accepted_visibility, files) {
         } else {
           functionName = node.name
         }
-
 
         let spec = ''
         if (node.visibility === 'public' || node.visibility === 'default') {
@@ -151,7 +160,6 @@ export function ftrace(functionId, accepted_visibility, files) {
 
       ModifierDefinition(node) {
         functionName = node.name
-
         functionCallsTree[contractName][functionName] = {}
       },
 
@@ -203,7 +211,6 @@ export function ftrace(functionId, accepted_visibility, files) {
           visibility = 'internal'
         } else if (parserHelpers.isMemberAccess(node)) {
           let object
-
           visibility = 'external'
 
           name = expr.memberName
@@ -241,6 +248,8 @@ export function ftrace(functionId, accepted_visibility, files) {
             localContractName = tempUserDefinedStateVars[object]
           } else if (userDefinedLocalVars[object] !== undefined) {
             localContractName = userDefinedLocalVars[object]
+          } else if (libraryName !== undefined) {
+            localContractName = libraryName
           } else {
             localContractName = object
           }
@@ -306,7 +315,6 @@ export function ftrace(functionId, accepted_visibility, files) {
     }
 
     Object.entries(tempIterable).forEach(([functionCallName, functionCallObject]) => {
-
       if (
         functionCallName !== 'undefined' && (
           accepted_visibility == 'all' ||
