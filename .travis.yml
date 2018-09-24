@@ -11,8 +11,7 @@ cache:
 -: &npm_deploy
     provider: npm
     email: goncalo05@gmail.com
-    api_key:
-      secure: FRCiaYn69fCDJPoDUuAmXYyR0eqWvj4vH4r1UPXjrVdil83Sxf/61/VXu8SCDVNZK8pmgSi6YFCU9t5xdKq8Xy1QmaWgC46fHdz3COYNWMWunukckC1gZGXfkWrL6pl+7Eiip03GQ7V6JVw3sT/cHSWTIMgP/J/PmNuUHx0/yFTZJ7sG2T5nCuyW0eUfqSTzLMrva8t9GfFXkbk+tmf+zOWJOZyEGekVft2Z7aRJBbMoHaQEYhvdGoqs3+Pv03AnOISHgcDFNCRFTk+Ga64/lNalOJrBZkWcNd2EF+hR4QHIC6NlhXbM2gvvkjQMcLQEZTnzef9i20zZJjiUghEyKbd4I9+1D1mCw3H5e0YQaX5JAijrQdd6Fyr7jgRN/tMbnlr1CuvZ7xUZ66uUm0StyR8ZVbJK+OlfhoRCcpeYqB9Vd22ukmP/g+CO9JE6q/wQDgmSroz+1dFzSfAzfRAtXQtebBGy8stjalth+KcqiyMztFn0I7YpP4jxkkyDF359VjNaQFNTvnEyUwoeZHN/c/Suz159HbtN2vMQlwmYO7TB9SVp5vT19Fm+XNomLYbqtODZOz8M0ZQYt1MBraS1d0TmVEDF05dhKveeWbM9B6t5XzbygNXXOWqQETQT54Pz1sH6DxtJWuwwx/DarVigd6oRY0l1rGmduW4MgVQEsLo=
+    api_key: $NPM_TOKEN
     skip_cleanup: true
 
 deploy:
