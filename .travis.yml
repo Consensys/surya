@@ -21,7 +21,7 @@ deploy:
       repo: ConsenSys/surya
       branch: master
   - <<: *npm_deploy
+    tag: next
     on:
       repo: ConsenSys/surya
       branch: develop
-      tag: next
