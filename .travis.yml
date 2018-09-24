@@ -17,9 +17,9 @@ cache:
 deploy:
   - <<: *npm_deploy
     on:
-      tags: true
       repo: ConsenSys/surya
       branch: master
+      tags: true
   - <<: *npm_deploy
     tag: next
     on:
