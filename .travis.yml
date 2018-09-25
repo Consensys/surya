@@ -20,9 +20,13 @@ deploy:
       repo: ConsenSys/surya
       branch: master
       tags: true
+  - provider: script
+    script: .travis/prerelease_pu.sh
+    on:
+      repo: ConsenSys/surya
+      branch: develop
   - <<: *npm_deploy
     tag: next
-    script: .travis/prerelease_pu.sh
     on:
       repo: ConsenSys/surya
       branch: develop
