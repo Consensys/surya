@@ -1,5 +1,8 @@
 <img src="https://user-images.githubusercontent.com/4008213/39437435-bed48266-4c98-11e8-834d-1de152667231.jpg" height="236">
 
+[![npm](https://img.shields.io/npm/v/surya.svg)](https://www.npmjs.com/package/surya)
+[![Build Status](https://travis-ci.com/ConsenSys/surya.svg?branch=master)](https://travis-ci.com/ConsenSys/surya)
+
 # Sūrya, The Sun God: A Solidity Inspector 
 
 #### 
