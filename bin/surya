@@ -84,18 +84,14 @@ require('yargs') // eslint-disable-line
   }, (argv) => {
     mdreport(argv.outfile, argv.infiles)
   })
-  .command('inherianddepen <truffleRootDirPath> <solidityFilePath>', 'generate draggable graph of both of the inheritance tree and import dependencies.', (yargs) => {
+  .command('inherianddepen <files..>', 'generate draggable graph of tree for both of inheritance and using dependencies.', (yargs) => {
     yargs
-      .positional('truffleRootDirPath', {
-        describe: 'truffle project root path',
-        type: 'string'
-      })
-      .positional('solidityFilePath', {
-        describe: 'solidity file\'s relative path from truffle project root to analyze',
+      .positional('files', {
+        describe: 'files to analyze',
         type: 'string'
       })
   }, (argv) => {
-    inherianddepen(argv.truffleRootDirPath, argv.solidityFilePath)
+    inherianddepen(argv.files)
   })
   .help()
   .alias('h', 'help')
