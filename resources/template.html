@@ -6,8 +6,8 @@
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
     <style type="text/css">
-    /** jsplumbtoolkit-defaults.css **/
-    {{jsplumbtoolkit-defaults.css}}
+        /** jsplumbtoolkit-defaults.css **/
+        {{jsplumbtoolkit-defaults.css}}
     </style>
     <style type="text/css">
         *,
@@ -120,7 +120,7 @@
             <h4>Description</h4>
             <p>This visualizes relationship of Inheritances and Import Dependencies among solidity contracts.</p>
             <p>If you cannot see a diagram on the above, you should open this file in Chrome or Firefox.</p>
-            <p>solid arrow shows inheritance relationship, and dotted arrow shows import dependencies.</p> 
+            <p>solid arrow shows inheritance relationship, and dotted arrow shows import dependencies.</p>
         </div>
         <!-- /explanation -->
     </div>
@@ -147,20 +147,22 @@
                 var superRelationList = [];
                 var usesRelationList = [];
 
-                // start add node.
-                addNode(def, 0);
 
-                function addNode(jsonObj, level) {
-                    if (nodeList.indexOf(jsonObj.name) > -1) {
+                for (let contractName of def.contracts) {
+                    addNode(contractName, 0);
+                }
+
+                function addNode(contractName, level) {
+                    if (nodeList.indexOf(contractName) > -1) {
                         // if already exists.
                         return;
                     }
 
                     // push to node list
-                    nodeList.push(jsonObj.name);
+                    nodeList.push(contractName);
 
                     $('#canvas').append('<div class="window" style="left:' + (20 * level + 2) +
-                        'em; top:' + (10 * levels[level] + 3) + 'em" id="' + jsonObj.name + '">' + jsonObj.name + '</div>');
+                        'em; top:' + (10 * levels[level] + 3) + 'em" id="' + contractName + '">' + contractName + '</div>');
 
                     // if element of this level, push the element.
                     if (levels.length == level + 1) {
@@ -173,21 +175,30 @@
                     // increment level for next.
                     level++;
 
-                    // process supers.
-                    jsonObj.supers.forEach(element => {
-                        var relation = { "from": jsonObj.name, "to": element.name };
-                        superRelationList.push(relation);
-                        addNode(element, level);
+                    // process inheritances.
+                    def.inheritances.forEach(element => {
+                        var inheri = element.split('=>')
+                        var from = inheri[0]
+                        var to = inheri[1]
+                        if (from === contractName) {
+                            var relation = { "from": from, "to": to };
+                            superRelationList.push(relation);
+                            addNode(to, level);
+                        }
                     });
 
                     // process uses.
-                    jsonObj.uses.forEach(element => {
-                        var relation = { "from": jsonObj.name, "to": element.name };
-                        usesRelationList.push(relation);
-                        addNode(element, level);
+                    def.uses.forEach(element => {
+                        var use = element.split('=>')
+                        var from = use[0]
+                        var to = use[1]
+                        if (from === contractName) {
+                            var relation = { "from": from, "to": to };
+                            usesRelationList.push(relation);
+                            addNode(to, level);
+                        }
                     });
                 }
-
 
                 jsPlumb.batch(function () {
                     // for Super Relation
@@ -248,6 +259,7 @@
                             maxConnections: -1
                         });
                     }
+
 
                     // connect nodes for uses relation.
                     usesRelationList.forEach(element => {

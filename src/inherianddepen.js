@@ -1,238 +1,175 @@
 "use strict";
 
-// require section
-const parser = require('solidity-parser-antlr');
-const fs = require('fs');
-const path = require('path');
-const dot = require("dot-object");
-const moment = require('moment');
+const fs = require('fs')
+const parser = require('solidity-parser-antlr')
+const path = require('path')
+const detectInstalled = require('detect-installed')
+const { getInstalledPathSync } = require('get-installed-path')
+const moment = require('moment')
+//const graphviz = require('graphviz')
+//const { linearize } = require('c3-linearization')
 
-// global variables section
-let definition;
-let projectDir;
+let definition = { "contracts": new Array(), "inheritances": new Array(), "uses": new Array() }
 
-// function as entry point
-export function inherianddepen(truffleRootDirPath, solidityFilePath) {
-  console.log(truffleRootDirPath);
-  console.log(solidityFilePath);
+export function inherianddepen(files) {
+  if (files.length === 0) {
+    console.log('No files were specified for analysis in the arguments. Bailing...')
+    return
+  }
+
   try {
-    // generate definition
-    const definition = parse(truffleRootDirPath, solidityFilePath);
+    for (let file of files) {
+      // analyze file
+      if (!analyze(file)) continue
+    }
 
-    // generate report html
-    const targetFilePathObj = path.parse(path.resolve(projectDir + path.sep + solidityFilePath));
-    const outputFileName = reportGenerate(targetFilePathObj, definition);
+    // generate report
+    const outputFileName = reportGenerate(definition)
 
-    console.log("successfully generated!");
-    console.log("open " + outputFileName + " in browser");
-
+    console.log(JSON.stringify(definition, null, 2))
+    console.log()
+    console.log("successfully generated!")
+    console.log("open " + outputFileName + " in browser")
   } catch (e) {
-    console.error(e);
-    process.exit(1);
+    console.error(e)
+    process.exit(1)
   }
 }
 
-function parse(projectDirPath, solFilePath) {
-  // truffle path is not set, then throw.
-  if (!projectDirPath) throw new Error("Truffle path is required.");
-
-  // truffle project does not exist, then throw
+function analyze(file) {
+  let content
+  let dependencies = {}
   try {
-    fs.accessSync(path.resolve(projectDirPath), fs.constants.F_OK);
-  } catch (error) {
-    throw new Error(path.resolve(projectDirPath) + " does not exist.");
+    content = fs.readFileSync(file).toString('utf-8')
+  } catch (e) {
+    if (e.code === 'EISDIR') {
+      console.error(`Skipping directory ${file}`)
+      return false
+    } else throw e
   }
 
-  // soliditiy file is not set, then throw.
-  if (!solFilePath) throw new Error("Solidity file path is required.");
+  const ast = parser.parse(content)
+  let imports = new Map()
 
-  // solidity absolute path.
-  const solAbsPath = projectDirPath + path.sep + solFilePath;
-
-
-  // solidity file does not exit, then throw
-  try {
-    fs.accessSync(path.resolve(solAbsPath), fs.constants.F_OK);
-  } catch (error) {
-    throw new Error(path.resolve(solAbsPath) + " does not exist.");
-  }
-
-  // Evaculate projectDirpath
-  projectDir = projectDirPath;
-
-  // parse targeFilePath
-  const targetFilePathObj = path.parse(path.resolve(solAbsPath));
-
-  // initialize definition
-  definition = {};
-
-  // start generating definition
-  genDefinition(targetFilePathObj, 0, "");
-
-  return definition;
-}
-
-function genDefinition(pathObj, level, prevJsonPath) {
-
-  // read solidity file.
-  const input = fs.readFileSync(pathObj.dir + path.sep + pathObj.base, { encoding: 'utf-8' });
-
-  // parse solidity file.
-  const result = parser.parse(input);
-
-  // get contract name
-  // *Note this tool assume one contract within one solidity file.
-  let num = 0;  // if num > 1, error 
-  let contractInd;
-  for (let i = 0; i < result.children.length; i++) {
-    if (result.children[i].type === "ContractDefinition") {
-      num++;
-      contractInd = i;
-    }
-  }
-  const currentConName = result.children[contractInd].name; // contract name which is being parsed.
-
-  if (num > 1) {
-    throw new Error('two definitnions for contracts on ' + currentConName);
-  }
-
-  // generate import file paths.
-  const importFilePathList = genImportFilePathList(result.children, pathObj);
-
-  // generate super contract list
-  const superConList = genSuperConList(result.children)
-
-  // add json to list.
-  addJsonToDefinition(prevJsonPath, currentConName, result.children[contractInd], superConList.length, importFilePathList.length);
-
-  // recursive process for super and using contract.
-  recursiveProcess(importFilePathList, superConList, level, prevJsonPath);
-}
-
-// recursive process for super and using contract.
-function recursiveProcess(importFilePathList, superConList, level, prevJsonPath) {
-  let usesNum = 0;
-  for (let i = 0; i < importFilePathList.length; i++) {
-    let isSuper = false;
-    for (let j = 0; j < superConList.length; j++) {
-      // if this contract is super
-      if (importFilePathList[i].name === superConList[j]) {
-        let tab = "";
-        for (let k = 0; k < level; k++) {
-          tab = tab + "  ";
-        }
-
-        // recursive for super.
-        const supersPath = prevJsonPath === "" ? "supers" : prevJsonPath + ".supers";
-        genDefinition(importFilePathList[i].path_obj, level + 1, supersPath + "." + j);
-
-        isSuper = true;
-        break;
-      }
-    }
-
-    // recursive for uses.
-    if (isSuper) continue;
-    const usesPath = prevJsonPath === "" ? "uses" : prevJsonPath + ".uses";
-    genDefinition(importFilePathList[i].path_obj, level + 1, usesPath + "." + usesNum++);
-  }
-}
-
-function addJsonToDefinition(prevJsonPath, currentConName, target, superConListLen, importFilePathListLen) {
-  const addedJSON = {
-    "name": currentConName,
-    "type": target.type,
-    "supers": new Array(superConListLen),
-    "uses": new Array(importFilePathListLen - superConListLen)
-  };
-
-  if (prevJsonPath === "") {
-    definition = addedJSON;
-  } else {
-    dot.str(prevJsonPath, addedJSON, definition);
-  }
-}
-
-function genSuperConList(target) {
-  let superConList = [];
-  target.forEach(ele => {
-    if (ele.type === "ContractDefinition") {
-      ele.baseContracts.forEach(base => {
-        superConList.push(base.baseName.namePath);
-      });
-    }
-  });
-
-  return superConList;
-}
-
-function genImportFilePathList(target, path_obj) {
-  let importFilePathList = [];
-  target.forEach(ele => {
-    if (ele.type === "ImportDirective") {
-      const ind = ele.path.lastIndexOf('/');
-      const conName = ele.path.slice(ind + 1, ele.path.length - 4);
-      const d = ele.path.slice(0, ind + 1); // directory path
-      let next_abs_path;
-
-      if (d.startsWith(".")) {
-        next_abs_path = path.parse(path.resolve(path_obj.dir + path.sep + ele.path));
+  parser.visit(ast, {
+    ImportDirective(node) {
+      let contractName = path.parse(node.path).name
+      let absPath
+      if (node.path.startsWith(".")) {
+        let currentDir = path.resolve(path.parse(file).dir)
+        absPath = path.resolve(path.join(currentDir, node.path))
       } else {
-        const installed_project_name_index = ele.path.indexOf('/');
-        next_abs_path = path.parse(path.resolve(projectDir + path.sep + "installed_contracts"
-          + path.sep
-          + ele.path.substr(0,
-            installed_project_name_index)
-          + path.sep + 'contracts' + path.sep
-          + ele.path.substr(installed_project_name_index)));
+        let modulesInstalledPath = getModulesInstalledPath(node.path)
+        let absPathObj = path.parse(modulesInstalledPath + node.path)
+        absPath = absPathObj.dir + path.sep + absPathObj.base
+      }
 
-        // file exist check for installed_contracts.
-        try {
-          fs.accessSync(next_abs_path.dir + path.sep + next_abs_path.base,
-            fs.constants.F_OK,
-            (error) => {
-              if (error) throw error;
-            });
-        } catch (e) {
-          next_abs_path = path.parse(path.resolve(projectDir + path.sep + "node_modules"
-            + path.sep
-            + ele.path.substr(0,
-              installed_project_name_index)
-            + path.sep
-            + ele.path.substr(installed_project_name_index)));
+      imports.set(contractName, absPath)
+    },
+
+    ContractDefinition(node) {
+      let contractName = node.name
+      if (definition.contracts.indexOf(contractName) === -1) {
+        definition.contracts.push(contractName)
+      }
+
+      dependencies[contractName] = node.baseContracts.map(spec =>
+        spec.baseName.namePath
+      )
+
+      for (let i = dependencies[contractName].length - 1; i >= 0; i--) {
+        let dep = dependencies[contractName][i]
+        if (definition.contracts.indexOf(dep) === -1) {
+          definition.contracts.push(dep)
         }
 
+        if (definition.inheritances.indexOf(contractName + "=>" + dep) === -1) {
+          definition.inheritances.push(contractName + "=>" + dep)
+          if (imports.has(dep)) {
+            // recursive
+            analyze(imports.get(dep))
+          }
+        }
       }
-      importFilePathList.push({ "name": conName, "fileName": conName + ".sol", "path_obj": next_abs_path });
-    }
-  });
 
-  return importFilePathList;
+      // using list
+      let using = []
+
+      // visit contract body
+      parser.visit(node.subNodes, {
+        // add using declaration
+        UsingForDeclaration(node) {
+          let libraryName = node.libraryName
+          using.push(libraryName)
+        },
+
+        // add user defined type contract
+        UserDefinedTypeName(node) {
+          let namePath = node.namePath
+          using.push(namePath)
+        }
+      })
+
+      for (let dep of using) {
+        if (definition.contracts.indexOf(dep) === -1) {
+          definition.contracts.push(dep)
+        }
+
+        if (definition.uses.indexOf(contractName + "=>" + dep) === -1) {
+          definition.uses.push(contractName + "=>" + dep)
+          if (imports.has(dep)) {
+            // recursive
+            analyze(imports.get(dep))
+          }
+        }
+      }
+    }
+  })
+  return true
 }
 
-function reportGenerate(targetFilePathObj, definition) {
+function getModulesInstalledPath(solidityPathStr) { // solidityPathStr is like "openzeppelin-solidity/contracts/crowdsale/validation/CappedCrowdsale.sol"
+  let [moduleName] = solidityPathStr.split('/', 1)
+  let modulesPath = ''
+
+  // check module locally
+  if (detectInstalled.sync(moduleName, { local: true })) {
+    let localPath = getInstalledPathSync(moduleName, { local: true })
+    modulesPath = localPath.replace(moduleName, "")
+    // check module globally
+  } else if (detectInstalled.sync(moduleName)) {
+    const globalPath = getInstalledPathSync(moduleName)
+    modulesPath = globalPath.replace(moduleName, "")
+  } else {
+    throw new Error(`${moduleName} module is not installed`)
+  }
+
+  return modulesPath // eg: "/mytruffle_project/node_modules/"
+}
+
+function reportGenerate(definition) {
   // remove CR, LE, and space from definition
-  const outputJSON = JSON.stringify(definition).replace(/\r|\n|\s/g, '');
+  const outputJSON = JSON.stringify(definition).replace(/\r|\n|\s/g, '')
 
   // load jspulub and jquery
-  const jsplumbDefaultsCss = fs.readFileSync(__dirname + '/../node_modules/jsplumb/css/jsplumbtoolkit-defaults.css').toString();
-  const jsPlumbJs = fs.readFileSync(__dirname + '/../node_modules/jsplumb/dist/js/jsplumb.min.js').toString();
-  const jquery = fs.readFileSync(__dirname + '/../node_modules/jquery/dist/jquery.min.js').toString();
+  const jsplumbDefaultsCss = fs.readFileSync(__dirname + '/../node_modules/jsplumb/css/jsplumbtoolkit-defaults.css').toString()
+  const jsPlumbJs = fs.readFileSync(__dirname + '/../node_modules/jsplumb/dist/js/jsplumb.min.js').toString()
+  const jquery = fs.readFileSync(__dirname + '/../node_modules/jquery/dist/jquery.min.js').toString()
 
   // load template html
-  const template = fs.readFileSync(__dirname + '/../resources/template.html').toString();
+  const template = fs.readFileSync(__dirname + '/../resources/template.html').toString()
 
   // generate file name.
-  const m = moment();
-  const timestamp = m.format('YYYYMMDDHHmmss');
-  const outputFileName = targetFilePathObj.name + '_' + timestamp + '.html';
+  const m = moment()
+  const timestamp = m.format('YYYYMMDDHHmmss')
+  const outputFileName = 'inherianddepen_' + timestamp + '.html'
 
   // generate report
-  let output = template.replace(/{{definition}}/g, outputJSON);
-  output = output.replace(/{{jsplumbtoolkit-defaults.css}}/g, jsplumbDefaultsCss);
-  output = output.replace(/{{jsplumb.min.js}}/g, jsPlumbJs);
-  output = output.replace(/{{jquery.min.js}}/g, jquery);
-  fs.writeFileSync(process.cwd() + path.sep + outputFileName, output);
+  let output = template.replace(/{{definition}}/g, outputJSON)
+  output = output.replace(/{{jsplumbtoolkit-defaults.css}}/g, jsplumbDefaultsCss)
+  output = output.replace(/{{jsplumb.min.js}}/g, jsPlumbJs)
+  output = output.replace(/{{jquery.min.js}}/g, jquery)
+  fs.writeFileSync(process.cwd() + path.sep + outputFileName, output)
 
-  return outputFileName;
+  return outputFileName
 }
