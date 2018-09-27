@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { describe, graph, inheritance, dependencies, parse, ftrace, mdreport } = require('../lib/index')
+const { describe, graph, inheritance, dependencies, parse, profile, ftrace, mdreport } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
@@ -67,6 +67,15 @@ require('yargs') // eslint-disable-line
       })
   }, (argv) => {
     parse(argv.file)
+  })
+  .command('profile <file>', 'output the contract profile objects used by Surya in analysis.', (yargs) => {
+    yargs
+      .positional('file', {
+        describe: 'file to profile',
+        type: 'string'
+      })
+  }, (argv) => {
+    profile(argv.file)
   })
   .command('ftrace <function_identifier> <function_visibility_restrictor> <files..>', 'output the selected function call trace in a textual tree format. External calls are marked in `orange` and internal calls are `uncolored`.', (yargs) => {
     yargs
