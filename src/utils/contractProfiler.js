@@ -15,9 +15,8 @@ module.exports.contractProfilesFromFile = function contractProfilesFromFile(file
   let modifierProfiles = new Array() // List of modifierProfiles defined in a contract
   let functionProfiles = new Array() // List of functionProfiles defined in a contract
   let stateVarProfiles = new Array() // List of stateVarProfiles defined in a contract
-
   const content = fs.readFileSync(filePath).toString('utf-8')
-  const ast = parser.parse(content)
+  const ast = parser.parse(content, {tolerant: true})
 
   parser.visit(ast, {
     ContractDefinition(node) {
