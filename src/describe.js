@@ -1,6 +1,6 @@
 "use strict";
 
-const profiler = require('./utils/contractProfiler')
+const profiler = require('./profilers/contractProfiler')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const colors = require('colors')
