@@ -11,8 +11,16 @@ const parser = require('solidity-parser-antlr')
 /// @param      {Array}   paths     The paths
 /// @return     {array}  importPaths A list of importPaths
 function importPathsFromFile(filePath, paths = new Set()) {
-
-  const content = fs.readFileSync(filePath).toString('utf-8')
+  let content
+  try {
+      content = fs.readFileSync(filePath).toString('utf-8')
+    } catch (e) {
+      if (e.code === 'EISDIR') {
+        console.error(`Skipping directory ${filePath}`)
+        return paths // empty Set
+      } else throw e;
+    }
+  // const content = fs.readFileSync(filePath).toString('utf-8')
   const ast = parser.parse(content, {tolerant: true})
   
   parser.visit(ast, {

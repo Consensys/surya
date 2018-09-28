@@ -3,7 +3,7 @@
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const importHelper = require('../utils/importHelper')
-const contractProfiler = require('./systemProfiler')
+const {systemProfiler} = require('./systemProfiler')
 
 
 /**
@@ -13,10 +13,17 @@ const contractProfiler = require('./systemProfiler')
   * @return     {object}  systemProfile contains an array of contractProfile 
   *                                     objects and an inheritanceTree object
   */ 
-module.exports.derivedProfiler = function derivedProfiler(file) {
+module.exports.derivedProfiler = function derivedProfiler(files) {
+  console.log(files)
   // 1. get the imports and contracts in the sytem...
-  let system = sy
+  let { contractProfiles, dependencies } = systemProfiler(files)
+  for (let contractProfile of contractProfiles) {
+    console.log(contractProfile.name)
+    console.log(dependencies)
 
-
+    // then linearize, then reduce
+  }
 }
+
+module.exports.derivedProfiler([process.argv[2]])
 

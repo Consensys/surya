@@ -14,7 +14,6 @@ const contractProfiler = require('./contractProfiler')
   *                                     objects and an inheritanceTree object
   */ 
 module.exports.systemProfiler = function systemProfiler(files) {
-  
   // 1. ensure we have the FULL list of import paths
   // this is probably pretty inefficient. It could be avoided if we assume all
   // required files are included
