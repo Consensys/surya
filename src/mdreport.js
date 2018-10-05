@@ -29,7 +29,8 @@ export function mdreport(outfile, infiles) {
     const content = fs.readFileSync(file).toString('utf-8')
     const ast = parser.parse(content)
     var isPublic = false
-    var isModifierExists = false;
+    var isModifierExists = false
+    var isConstructor = false;
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -57,8 +58,10 @@ export function mdreport(outfile, infiles) {
         let name
         isPublic = false
         isModifierExists = false
+        isConstructor = false
 
         if (node.isConstructor) {
+          isConstructor = true
           name = '\\<Constructor\\>'
         } else if (!node.name) {
           name = '\\<Fallback\\>'
@@ -94,8 +97,8 @@ export function mdreport(outfile, infiles) {
       },
 
       'FunctionDefinition:exit': function(node) {
-        if (isPublic && !isModifierExists) {
-          contractsTable += '☠️'
+        if (!isConstructor && isPublic && !isModifierExists) {
+          contractsTable += 'NO❗️'
         }
         contractsTable += ` |
 `
