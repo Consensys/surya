@@ -2,6 +2,7 @@
 
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
+const path = require('path');
 const importHelper = require('../utils/importHelper')
 const contractProfiler = require('./contractProfiler')
 
@@ -14,22 +15,29 @@ const contractProfiler = require('./contractProfiler')
   *                                     objects and an inheritanceTree object
   */ 
 module.exports.systemProfiler = function systemProfiler(files) {
-  // 1. ensure we have the FULL list of import paths
-  // this is probably pretty inefficient. It could be avoided if we assume all
-  // required files are included
-  let systemPaths = new Set()
+  // map the files array to absolute paths
+  files = files.map(file => path.resolve(process.cwd(), file))
+  // filter out dirs
+  files = files.filter(file => fs.statSync(file).isFile())
+  
+  // create a Set with the input files (a Set is like an array which prevents duplication of values)
+  let systemPaths = new Set(files)
+  // ensure we have the FULL list of import paths (Note: this is probably pretty inefficient. It 
+  // could be avoided if we can assume all required files are included in the input array.
   for (let file of files) {
     let pathsFromFile = importHelper.importPathsFromFile(file)
 
     systemPaths = new Set([...systemPaths, ...pathsFromFile])
   }
 
-  let contractProfiles = new Array() // TODO: maybe should be an object?S
+  let contractProfiles = new Array() // TODO: maybe should be an object?
   let dependencies = new Object()
 
-  for (let path of systemPaths){
+  // make the set iterable and 
+  const iterablePaths = systemPaths.values();
+  for (let path of iterablePaths){
     let profiles = contractProfiler.contractProfilesFromFile(path)
-    // console.log(profiles)
+
     contractProfiles = contractProfiles.concat(profiles)
     
     for (let profile of profiles) {
@@ -38,6 +46,5 @@ module.exports.systemProfiler = function systemProfiler(files) {
     }
   }
 
-  // console.log(JSON.stringify({contractProfiles, dependencies}, null, 2))
   return { contractProfiles, dependencies }
 }
