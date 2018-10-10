@@ -14,7 +14,7 @@
     "compile": "babel src --out-dir lib",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "prepare": "npm run compile",
-    "test": "./test/test.sh"
+    "test": "./test/test.sh && mocha"
   },
   "devDependencies": {
     "babel-cli": "*",
