@@ -1,17 +1,32 @@
 #!/usr/bin/env node
 
-const { describe, graph, inheritance, dependencies, parse, ftrace, mdreport } = require('../lib/index')
+const { describe, graph, inheritance, dependencies, parse, profile, ftrace, mdreport } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
   .command('describe <files..>', 'show file contracts structure.', (yargs) => {
     yargs
+      .option('s', {
+        alias: 'storage',
+        type: 'boolean',
+        default: false
+      })
+      .option('m', {
+        alias: 'modifiers',
+        type: 'boolean',
+        default: false
+      })
+      .option('f', {
+        alias: 'functions',
+        type: 'boolean',
+        default: false
+      })
       .positional('files', {
         describe: 'files to analyze',
         type: 'string'
       })
   }, (argv) => {
-    describe(argv.files)
+    describe(argv.files, {storage: argv.s, modifiers: argv.m, functions: argv.f})
   })
   .command('graph <files..>', 'generate graph of contract function calls.', (yargs) => {
     yargs
