@@ -21,6 +21,7 @@
     "babel-preset-env": "^1.7.0",
     "chai": "*",
     "coveralls": "^3.0.2",
+    "deep-equal": "^1.0.1",
     "isparta": "^4.1.0",
     "mocha": "^5.2.0",
     "sinon": "^5.1.1"
