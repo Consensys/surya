@@ -4,15 +4,16 @@ const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const path = require('path');
 const importHelper = require('../utils/importHelper')
-const contractProfiler = require('./contractProfiler')
+const { contractProfiler } = require('./contractProfiler')
 
 
 /**
-  * Given an array of solidity files, a systemProfile
+  * Generates a profile of each declared contract, and an object representing the inheritance graph,
+  * from an array of solidity files, 
   *
   * @param      {array}  files  A list of paths to each file in the system
-  * @return     {object}  systemProfile contains an array of contractProfile 
-  *                                     objects and an inheritanceTree object
+  * @return     {object}  systemProfile contains an contractProfiles 
+  *                                     object and an inheritanceGraph object
   */ 
 module.exports.systemProfiler = function systemProfiler(files) {
   // map the files array to absolute paths
@@ -30,21 +31,17 @@ module.exports.systemProfiler = function systemProfiler(files) {
     systemPaths = new Set([...systemPaths, ...pathsFromFile])
   }
 
-  let contractProfiles = new Array() // TODO: maybe should be an object?
-  let dependencies = new Object()
 
-  // make the set iterable and 
+  // make the set iterable and generate an array of profiles
   const iterablePaths = systemPaths.values();
-  for (let path of iterablePaths){
-    let profiles = contractProfiler.contractProfilesFromFile(path)
-
-    contractProfiles = contractProfiles.concat(profiles)
-    
-    for (let profile of profiles) {
-      dependencies[profile.name] = profile.bases
-      
-    }
+  let profiles = contractProfiler(iterablePaths)
+  console.log(profiles)
+  let contractProfiles = new Object() 
+  let inheritanceGraph = new Object()
+  for (let profile of profiles) {
+    contractProfiles[profile.name] = profile;
+    inheritanceGraph[profile.name] = profile.bases
   }
 
-  return { contractProfiles, dependencies }
+  return { contractProfiles, inheritanceGraph }
 }
