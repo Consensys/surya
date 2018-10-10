@@ -12,6 +12,7 @@ const parser = require('solidity-parser-antlr')
   */ 
 module.exports.contractProfiler = function contractProfiler(files) {
   let contractProfiles = new Array()
+  console.log(__filename, files)
   for (let file of files) {
 
     contractProfiles = contractProfiles.concat(
