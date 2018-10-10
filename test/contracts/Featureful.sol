@@ -1,3 +1,5 @@
+/* A contract with a wide variety of statement types for testing*/
+
 pragma solidity ^0.4.0;
 
 contract Boring {
@@ -6,7 +8,7 @@ contract Boring {
   }
 }
 
-contract Generic is Boring {
+contract Featureful is Boring {
 
   struct MyType {
     bytes8 obla;
