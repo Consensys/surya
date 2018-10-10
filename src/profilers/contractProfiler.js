@@ -3,8 +3,6 @@
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 
-
-
 /**
   * Given an array of solidity files, returns an array of objects, each one representing a contract. 
   * This function basically just extends contractProfilesFromFile to accept an array as input
@@ -36,7 +34,16 @@ function contractProfilesFromFile(file) {
   let modifierProfiles = new Array() // List of modifierProfiles defined in a contract
   let functionProfiles = new Array() // List of functionProfiles defined in a contract
   let stateVarProfiles = new Array() // List of stateVarProfiles defined in a contract
-  const content = fs.readFileSync(file).toString('utf-8')
+  // const content = fs.readFileSync(file).toString('utf-8')
+  let content
+  try {
+    content = fs.readFileSync(file).toString('utf-8')
+  } catch (e) {
+    if (e.code === 'EISDIR') {
+      console.error(`Skipping directory ${file}`)
+      // continue
+    } else throw e;
+  }
   const ast = parser.parse(content, {tolerant: true})
 
   parser.visit(ast, {
