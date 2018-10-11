@@ -29,7 +29,7 @@ export function mdreport(outfile, infiles) {
     const content = fs.readFileSync(file).toString('utf-8')
     const ast = parser.parse(content)
     var isPublic = false
-    var isModifierExists = false
+    var doesModifierExist = false
     var isConstructor = false;
 
     parser.visit(ast, {
@@ -57,7 +57,7 @@ export function mdreport(outfile, infiles) {
       FunctionDefinition(node) {
         let name
         isPublic = false
-        isModifierExists = false
+        doesModifierExist = false
         isConstructor = false
 
         if (node.isConstructor) {
@@ -97,7 +97,7 @@ export function mdreport(outfile, infiles) {
       },
 
       'FunctionDefinition:exit': function(node) {
-        if (!isConstructor && isPublic && !isModifierExists) {
+        if (!isConstructor && isPublic && !doesModifierExist) {
           contractsTable += 'NO❗️'
         }
         contractsTable += ` |
@@ -105,7 +105,7 @@ export function mdreport(outfile, infiles) {
       },
 
       ModifierInvocation(node) {
-        isModifierExists = true
+        doesModifierExist = true
         contractsTable += ` ${node.name}`          
         
       }
