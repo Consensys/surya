@@ -35,7 +35,7 @@ module.exports.systemProfiler = function systemProfiler(files) {
   // make the set iterable and generate an array of profiles
   const iterablePaths = systemPaths.values();
   let profiles = contractProfiler(iterablePaths)
-  console.log(profiles)
+
   let contractProfiles = new Object() 
   let inheritanceGraph = new Object()
   for (let profile of profiles) {
