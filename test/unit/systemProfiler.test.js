@@ -3,8 +3,6 @@ const fs = require('fs')
 
 const systemProfiler = require('../../lib/profilers/systemProfiler')
 
-const featureful = './test/contracts/Featureful.sol'
-
 // state variable profiles to match
 
 describe('Profilers', function() {
@@ -26,6 +24,8 @@ describe('Profilers', function() {
       'TokenVesting',
       'RBACMintableToken',
       'CappedToken',
+      'SafeERC20',
+      'TokenTimelock'
       // 'uncomment to make me fail'
     ]
 
@@ -43,7 +43,6 @@ describe('Profilers', function() {
     it('Includes a profile for each contract in the system', function() {
       // convert the array of profiles to just an array of contract names
       let profiledTokens = Object.keys(contractProfiles)
-
       // check that each token in the system has been accounted for
       for (let token of declaredTokens) {
         let index = profiledTokens.indexOf(token)
