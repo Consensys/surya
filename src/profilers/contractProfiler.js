@@ -10,7 +10,7 @@ const parser = require('solidity-parser-antlr')
   * @param      {array}  files  Array of files
   * @return     {array}  contractProfiles A list of objects with details about a given contract
   */ 
-module.exports.contractProfiler = function contractProfiler(files) {
+module.exports = function contractProfiler(files) {
   let contractProfiles = new Array()
   for (let file of files) {
 

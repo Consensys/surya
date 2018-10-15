@@ -3,8 +3,8 @@
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const path = require('path');
-const importHelper = require('../utils/importHelper')
-const { contractProfiler } = require('./contractProfiler')
+const importProfiler = require('./importProfiler')
+const contractProfiler = require('./contractProfiler')
 
 
 /**
@@ -15,7 +15,7 @@ const { contractProfiler } = require('./contractProfiler')
   * @return     {object}  systemProfile contains an contractProfiles 
   *                                     object and an inheritanceGraph object
   */ 
-module.exports.systemProfiler = function systemProfiler(files) {
+module.exports = function systemProfiler(files) {
   // map the files array to absolute paths
   files = files.map(file => path.resolve(process.cwd(), file))
   // filter out dirs
@@ -25,12 +25,7 @@ module.exports.systemProfiler = function systemProfiler(files) {
   let systemPaths = new Set(files)
   // ensure we have the FULL list of import paths (Note: this is probably pretty inefficient. It 
   // could be avoided if we can assume all required files are included in the input array.
-  for (let file of files) {
-    let pathsFromFile = importHelper.importPathsFromFile(file)
-
-    systemPaths = new Set([...systemPaths, ...pathsFromFile])
-  }
-
+  let pathsFromFile = importProfiler(files)
 
   // make the set iterable and generate an array of profiles
   const iterablePaths = systemPaths.values();
