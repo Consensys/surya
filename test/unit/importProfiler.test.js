@@ -5,7 +5,6 @@ const importProfiler = require('../../lib/profilers/importProfiler')
 
 // state variable profiles to match
 describe('importProfiler', function() {
-  let importProfile
   // we'll use openzeppelin's ERC20 dir as a reasonable complex system for testing
   const tokensDir = './node_modules/openzeppelin-solidity/contracts/token/ERC20/'
   // an alphabetically sorted list of all declared contract names found by grepping through the folder:
@@ -32,14 +31,11 @@ describe('importProfiler', function() {
     // 'uncomment to make me fail'
   ]
 
-  before(function() {
-    let tokensFiles = fs.readdirSync(tokensDir).map(entry => `${tokensDir}${entry}`)
-    importProfile = importProfiler(tokensFiles)
-
-    assert(typeof importProfile === 'object')
-  })   
-
   it('Lists all files imported by the system', function() {
+
+    let tokensFiles = fs.readdirSync(tokensDir).map(entry => `${tokensDir}${entry}`)
+    let importProfile = importProfiler(tokensFiles)
+
     // convert the array of import paths to just an array of file names
     let files = importProfile.map((path) => path.split('/').pop())
     // check that each file in the system has been accounted for
@@ -51,5 +47,15 @@ describe('importProfiler', function() {
     }
     // TODO: this is failing, but rightfully so, because there are imports from beyond the directory.
     assert(files.length === 0, `System includes more profiles than expected: ${files}`)
+  })
+
+  it('Throws when trying to access a directory above the provided projectDir', function() {
+    let tokensFiles = fs.readdirSync(tokensDir).map(entry => `${tokensDir}${entry}`)
+    try {
+      let importProfile = importProfiler(tokensFiles, tokensDir)
+      assert.fail('No error thrown')
+    } catch (e) {
+      assert(e.message.indexOf('Imports must be found in sub dirs of the projectDir:') != -1)
+    }
   })
 })
