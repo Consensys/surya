@@ -82,22 +82,3 @@ function resolveImportPath(baseFilePath, relativeFilePath){
   }
   return resolvedPath
 }
-
-
-// TODO: find a less insecure way to allow specific import paths
-/// starts with a current path, and moves up dirs until it finds node_modules dir
-///
-/// @param      {<type>}  currentPath  The current path
-/// @return     {<type>}  { description_of_the_return_value }
-// function findNodeModules(currentPath){
-//   let testPath = `${currentPath}/node_modules`
-//   if (fs.existsSync(testPath) 
-//     && fs.statSync(testPath).isDirectory()
-//   ) {
-//     return testPath
-//   } else {
-//     let parentPath = path.resolve(currentPath, '..')
-//     if(parentPath === '/') throw new Error('node_modules not found')
-//     return findNodeModules(`${parentPath}`)
-//   }
-// }

@@ -16,20 +16,9 @@ const contractProfiler = require('./contractProfiler')
   *                                     object and an inheritanceGraph object
   */ 
 module.exports = function systemProfiler(files) {
-  // map the files array to absolute paths
-  files = files.map(file => path.resolve(process.cwd(), file))
-  // filter out dirs
-  files = files.filter(file => fs.statSync(file).isFile())
-  
-  // create a Set with the input files (a Set is like an array which prevents duplication of values)
-  let systemPaths = new Set(files)
-  // ensure we have the FULL list of import paths (Note: this is probably pretty inefficient. It 
-  // could be avoided if we can assume all required files are included in the input array.
-  let pathsFromFile = importProfiler(files)
+  let importedFiles = importProfiler(files)
 
-  // make the set iterable and generate an array of profiles
-  const iterablePaths = systemPaths.values();
-  let profiles = contractProfiler(iterablePaths)
+  let profiles = contractProfiler(importedFiles)
 
   let contractProfiles = new Object() 
   let inheritanceGraph = new Object()
