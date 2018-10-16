@@ -28,8 +28,13 @@ require('yargs') // eslint-disable-line
         describe: 'files to analyze',
         type: 'string'
       })
+      .option('d', {
+        alias: 'draggable',
+        type: 'boolean',
+        defalt: false
+      })
   }, (argv) => {
-    inheritance(argv.files)
+    inheritance(argv.files, {draggable: argv.d})
   })
   .command('dependencies <target_contract> <files..>', 'output a linearized list of smart contract dependencies (linerized inherited parents).', (yargs) => {
     yargs
@@ -83,15 +88,6 @@ require('yargs') // eslint-disable-line
       })
   }, (argv) => {
     mdreport(argv.outfile, argv.infiles)
-  })
-  .command('inherianddepen <files..>', 'generate draggable graph of tree for both of inheritance and using dependencies.', (yargs) => {
-    yargs
-      .positional('files', {
-        describe: 'files to analyze',
-        type: 'string'
-      })
-  }, (argv) => {
-    inherianddepen(argv.files)
   })
   .help()
   .alias('h', 'help')

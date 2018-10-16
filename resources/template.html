@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Solidity Visualizer</title>
+    <title>Surya(inheritance)</title>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
     <style type="text/css">
@@ -106,7 +106,7 @@
 
 <body>
     <div>
-        <h3>Solidity Visualizer</h3>
+        <h3>Surya(inheritance)</h3>
     </div>
     <div>
         <div class="jtk-canvas canvas-wide chart jtk-surface jtk-surface-nopan" id="canvas">
@@ -118,9 +118,8 @@
         <!-- explanation -->
         <div class="description">
             <h4>Description</h4>
-            <p>This visualizes relationship of Inheritances and Import Dependencies among solidity contracts.</p>
-            <p>If you cannot see a diagram on the above, you should open this file in Chrome or Firefox.</p>
-            <p>solid arrow shows inheritance relationship, and dotted arrow shows import dependencies.</p>
+            <p>This visualizes inheritance relationship among solidity contracts.</p>
+            <p>If you cannot see a diagram on the above, you may need to open this file in Chrome or Firefox.</p>
         </div>
         <!-- /explanation -->
     </div>
@@ -186,18 +185,6 @@
                             addNode(to, level);
                         }
                     });
-
-                    // process uses.
-                    def.uses.forEach(element => {
-                        var use = element.split('=>')
-                        var from = use[0]
-                        var to = use[1]
-                        if (from === contractName) {
-                            var relation = { "from": from, "to": to };
-                            usesRelationList.push(relation);
-                            addNode(to, level);
-                        }
-                    });
                 }
 
                 jsPlumb.batch(function () {
@@ -240,42 +227,8 @@
                         instanceSuper.connect({ uuids: [element.to + "-bottom", element.from + "-top"], overlays: overlays, detachable: true, reattach: true, dragOptions: {} });
                     });
 
-
-                    // for Uses Relation
-                    var instanceUses = jsPlumb.getInstance({
-                        Endpoint: ["Dot", { radius: 0.1 }],
-                    });
-
-                    // add endpoint for uses relation.
-                    for (var i = 0; i < windows.length; i++) {
-                        instanceUses.addEndpoint(windows[i], {
-                            uuid: windows[i].getAttribute("id") + "-bottom",
-                            anchor: "Continuous",
-                            maxConnections: -1
-                        });
-                        instanceUses.addEndpoint(windows[i], {
-                            uuid: windows[i].getAttribute("id") + "-top",
-                            anchor: "Continuous",
-                            maxConnections: -1
-                        });
-                    }
-
-
-                    // connect nodes for uses relation.
-                    usesRelationList.forEach(element => {
-                        instanceSuper.connect({
-                            paintStyle: { stroke: "#28A371", strokeWidth: 2, dashstyle: "2 4" },
-                            uuids: [element.to + "-bottom", element.from + "-top"],
-                            overlays: overlays,
-                            detachable: true,
-                            reattach: true,
-                            dragOptions: {}
-                        });
-                    });
-
                     // enable dragging.
                     instanceSuper.draggable(windows);
-
                 }, true);
             });
         });
