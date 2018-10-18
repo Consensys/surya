@@ -71,7 +71,7 @@ export function describe(files) {
   let payableSymbol = ' ($)'.yellow
 
   console.log(`
-${mutationSymbol} = payable, non-constant function
-${payableSymbol} = non-constant function
+${payableSymbol} = payable function
+${mutationSymbol} = non-constant function
   `)
 }
