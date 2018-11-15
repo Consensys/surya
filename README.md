@@ -33,7 +33,7 @@ The `describe` command shows a summary of the contracts and methods in the files
 surya describe *.sol
 ```
 
-<img src="https://user-images.githubusercontent.com/138426/37748729-b6c42ab2-2d63-11e8-9255-8c30693f8a26.png" width="336" height="236">
+<img src="https://user-images.githubusercontent.com/4008213/48572168-97bfc780-e900-11e8-9e86-d265498de936.png" width="336" height="236">
 
 Functions will be listed as:
 
