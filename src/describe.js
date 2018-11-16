@@ -1,69 +1,73 @@
 "use strict";
 
-const profiler = require('./utils/contractProfiler')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const colors = require('colors')
 
 export function describe(files) {
   for (let file of files) {
+    const content = fs.readFileSync(file).toString('utf-8')
+    const ast = parser.parse(content)
 
-    const profiles = profiler.contractProfilesFromFile(file)
+    parser.visit(ast, {
+      ContractDefinition(node) {
 
-    for (let profile of profiles) {
+        const name = node.name
+        let bases = node.baseContracts.map(spec => {
+          return spec.baseName.namePath
+        }).join(', ')
 
-      const name = profile.name
-      let bases = profile.bases.join(', ')
-      bases = bases.length ? `(${bases})`.gray : ''
+        bases = bases.length ? `(${bases})`.gray : ''
 
-      let specs = ''
-      if (profile.kind === 'library') {
-        specs += '[Lib]'.yellow
-      } else if (profile.kind === 'interface') {
-        specs += '[Int]'.blue
-      }
+        let specs = ''
+        if (node.kind === 'library') {
+          specs += '[Lib]'.yellow
+        } else if (node.kind === 'interface') {
+          specs += '[Int]'.blue
+        }
 
-      console.log(` + ${specs} ${name} ${bases}`)
+        console.log(` + ${specs} ${name} ${bases}`)
+      },
 
+      'ContractDefinition:exit': function(node) {
+        console.log('')
+      },
 
-      for (let functionProfile of profile.functionProfiles) {
+      FunctionDefinition(node) {
         let name
 
-        if (functionProfile.name === 'constructor') {
+        if (node.isConstructor) {
           name = '<Constructor>'.gray
-        } else if (functionProfile.name === 'fallback') {
+        } else if (!node.name) {
           name = '<Fallback>'.gray
         } else {
-          name = functionProfile.name
+          name = node.name
         }
 
-        let visibility = ''
-        if (functionProfile.visibility === 'public' || functionProfile.visibility === 'default') {
-          visibility += '[Pub]'.green
-        } else if (functionProfile.visibility === 'external') {
-          visibility += '[Ext]'.blue
-        } else if (functionProfile.visibility === 'private') {
-          visibility += '[Prv]'.red
-        } else if (functionProfile.visibility === 'internal') {
-          visibility += '[Int]'.gray
+        let spec = ''
+        if (node.visibility === 'public' || node.visibility === 'default') {
+          spec += '[Pub]'.green
+        } else if (node.visibility === 'external') {
+          spec += '[Ext]'.blue
+        } else if (node.visibility === 'private') {
+          spec += '[Prv]'.red
+        } else if (node.visibility === 'internal') {
+          spec += '[Int]'.gray
         }
-
 
         let payable = ''
-        if (functionProfile.mutability === 'payable') {
+        if (node.stateMutability === 'payable') {
           payable = ' ($)'.yellow
         }
-        let mutating = ''
-        if (!functionProfile.mutability) {
-          // no mutability keyword present, function allows state mutations, but not eth transfers
-          mutating = ' #'.red
-        } 
-        
-        console.log(`    - ${visibility} ${name}${payable}${mutating}`)
-      }
 
-      console.log('') // space between contracts
-    }
+        let mutating = ''
+        if (!node.stateMutability) {
+          mutating = ' #'.red
+        }
+
+        console.log(`    - ${spec} ${name}${payable}${mutating}`)
+      }
+    })
   }
 
   // Print a legend for symbols being used
