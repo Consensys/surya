@@ -28,8 +28,13 @@ require('yargs') // eslint-disable-line
         describe: 'files to analyze',
         type: 'string'
       })
+      .option('d', {
+        alias: 'draggable',
+        type: 'boolean',
+        defalt: false
+      })
   }, (argv) => {
-    inheritance(argv.files)
+    inheritance(argv.files, {draggable: argv.d})
   })
   .command('dependencies <target_contract> <files..>', 'output a linearized list of smart contract dependencies (linerized inherited parents).', (yargs) => {
     yargs
