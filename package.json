@@ -36,7 +36,6 @@
     "yargs": "^11.1.0",
     "dot-object": "^1.7.0",
     "jquery": "3.3.1",
-    "jsplumb": "2.7.13",
-    "moment": "^2.22.2"
+    "jsplumb": "2.7.13"
   }
 }

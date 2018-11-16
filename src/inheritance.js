@@ -4,7 +4,6 @@ const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
-const moment = require('moment')
 const path = require('path')
 
 export function inheritance(files, options) {
@@ -68,7 +67,7 @@ export function inheritance(files, options) {
 
             digraph.addNode(dep)
 
-            // for draggalbe
+            // for draggable
             definition.contracts.push(dep)
           }
 
@@ -84,17 +83,7 @@ export function inheritance(files, options) {
   }
 
   if (options.draggable) {
-    try {
-      // generate report
-      const outputFileName = reportGenerate(definition)
-  
-      console.log()
-      console.log("successfully generated!")
-      console.log("open " + outputFileName + " in browser")
-    } catch (e) {
-      console.error(e)
-      process.exit(1)
-    }
+    console.log(reportGenerate(definition))
   } else {
     console.log(digraph.to_dot())
   }
@@ -112,17 +101,11 @@ function reportGenerate(definition) {
   // load template html
   const template = fs.readFileSync(__dirname + '/../resources/template.html').toString()
 
-  // generate file name.
-  const m = moment()
-  const timestamp = m.format('YYYYMMDDHHmmss')
-  const outputFileName = 'inheritance_' + timestamp + '.html'
-
   // generate report
   let output = template.replace(/{{definition}}/g, outputJSON)
   output = output.replace(/{{jsplumbtoolkit-defaults.css}}/g, jsplumbDefaultsCss)
   output = output.replace(/{{jsplumb.min.js}}/g, jsPlumbJs)
   output = output.replace(/{{jquery.min.js}}/g, jquery)
-  fs.writeFileSync(process.cwd() + path.sep + outputFileName, output)
 
-  return outputFileName
+  return output
 }

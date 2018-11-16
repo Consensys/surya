@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { describe, graph, inheritance, dependencies, parse, ftrace, mdreport, inherianddepen } = require('../lib/index')
+const { describe, graph, inheritance, dependencies, parse, ftrace, mdreport } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
