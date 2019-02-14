@@ -28,6 +28,9 @@ export function mdreport(outfile, infiles) {
 
     const content = fs.readFileSync(file).toString('utf-8')
     const ast = parser.parse(content)
+    var isPublic = false
+    var doesModifierExist = false
+    var isConstructor = false;
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -53,8 +56,12 @@ export function mdreport(outfile, infiles) {
 
       FunctionDefinition(node) {
         let name
+        isPublic = false
+        doesModifierExist = false
+        isConstructor = false
 
         if (node.isConstructor) {
+          isConstructor = true
           name = '\\<Constructor\\>'
         } else if (!node.name) {
           name = '\\<Fallback\\>'
@@ -66,8 +73,10 @@ export function mdreport(outfile, infiles) {
         let spec = ''
         if (node.visibility === 'public' || node.visibility === 'default') {
           spec += 'Public ❗️'
+          isPublic = true
         } else if (node.visibility === 'external') {
           spec += 'External ❗️'
+          isPublic = true
         } else if (node.visibility === 'private') {
           spec += 'Private 🔐'
         } else if (node.visibility === 'internal') {
@@ -88,12 +97,17 @@ export function mdreport(outfile, infiles) {
       },
 
       'FunctionDefinition:exit': function(node) {
+        if (!isConstructor && isPublic && !doesModifierExist) {
+          contractsTable += 'NO❗️'
+        }
         contractsTable += ` |
 `
       },
 
       ModifierInvocation(node) {
-        contractsTable += ` ${node.name}`
+        doesModifierExist = true
+        contractsTable += ` ${node.name}`          
+        
       }
     })
   }
