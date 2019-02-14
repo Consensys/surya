@@ -30,7 +30,7 @@
     "detect-installed": "^2.0.4",
     "graphviz": "0.0.8",
     "sha1-file": "^1.0.1",
-    "solidity-parser-antlr": "^0.3.2",
+    "solidity-parser-antlr": "^0.4.0",
     "treeify": "^1.1.0",
     "yargs": "^11.1.0",
     "dot-object": "^1.7.0",
