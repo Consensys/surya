@@ -1,5 +1,8 @@
 <img src="https://user-images.githubusercontent.com/4008213/39437435-bed48266-4c98-11e8-834d-1de152667231.jpg" height="236">
 
+[![npm](https://img.shields.io/npm/v/surya.svg)](https://www.npmjs.com/package/surya)
+[![Build Status](https://travis-ci.com/ConsenSys/surya.svg?branch=master)](https://travis-ci.com/ConsenSys/surya)
+
 # Sūrya, The Sun God: A Solidity Inspector 
 
 #### 
@@ -30,7 +33,7 @@ The `describe` command shows a summary of the contracts and methods in the files
 surya describe *.sol
 ```
 
-<img src="https://user-images.githubusercontent.com/138426/37748729-b6c42ab2-2d63-11e8-9255-8c30693f8a26.png" width="336" height="236">
+<img src="https://user-images.githubusercontent.com/4008213/48572168-97bfc780-e900-11e8-9e86-d265498de936.png" width="336" height="236">
 
 Functions will be listed as:
 

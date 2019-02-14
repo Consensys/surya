@@ -1,6 +1,6 @@
 "use strict";
 
-const parserHelpers = require('./parserHelpers')
+const parserHelpers = require('./utils/parserHelpers')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const colors = require('colors')
@@ -290,8 +290,6 @@ export function ftrace(functionId, accepted_visibility, files) {
     return functionCallsTree[contractName].hasOwnProperty(modifierName) ?
             functionCallsTree[contractName][modifierName] : {}
   }
-
-  let queue = new Array()
 
   // Function to recursively generate the tree to show in the console
   function constructCallTree(reduceJobContractName, reduceJobFunctionName, parentObject) {

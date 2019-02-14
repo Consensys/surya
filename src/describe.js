@@ -69,4 +69,13 @@ export function describe(files) {
       }
     })
   }
+
+  // Print a legend for symbols being used
+  let mutationSymbol = ' #'.red
+  let payableSymbol = ' ($)'.yellow
+
+  console.log(`
+${payableSymbol} = payable function
+${mutationSymbol} = non-constant function
+  `)
 }
