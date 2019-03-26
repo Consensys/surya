@@ -38,6 +38,6 @@ git tag -a vX.Y.Z -m "chore: release version vX.Y.Z"
 git push --follow-tags origin master
 ```
 
-After this, the version in the `develop` branch should be manually increased and committed.
+After this, the a commit merging the `master` branch with the `develop` one should be made.
 
-e.g.: if the `master` branch version was changed to `v1.2.3`, then the new `develop` branch version to be committed should read `v1.2.4`
+e.g.: if the `master` branch version was changed to `v1.2.3`, then the new `develop` branch version to be committed should read `v1.2.3`, too. Travis will automatically increase it to the new `v1.2.4-dev.0`.
