@@ -27,7 +27,7 @@ make_version() {
   
   # Run the deploy build and increment the package versions
   # %s is the placeholder for the created tag
-  npm version prerelease -m "chore: release version %s [skip ci]"
+  npm version prerelease --preid=dev -m "chore: release version %s [skip ci]"
 }
 
 upload_files() {

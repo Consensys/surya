@@ -16,18 +16,28 @@ No action is need from maintainers to trigger a prerelease publish.
 
 Travis CI is also configured to publish the package to NPM on every **tagged** commit to `master`.
 
-What this means is that maintainers should bump the version themselves (should not be a prerelease, so should change _major_, _minor_ or _patch_) by any mean they wish after every PR from `develop` and therefore trigger a publish in Travis.
+What this means is that maintainers should bump the version themselves (should not be a prerelease) by any mean they wish after every PR from `develop` and therefore trigger a publish in Travis.
+
+Following the SemVer specification, if every other process before was followed, you should be able to only delete the *label* part of the SemVer string.
+
+i.e.: `v1.2.3-dev.4` would be changed to `v1.2.3`
 
 Suggested methods are to either run the following commands on a clean git directory (which can be checked with `git clean -n`):
 
 ```
 npm version [major | minor | patch] -m "chore: release version %s"
+git push --follow-tags origin master
 ```
 
-or:
+or, if increasing the version manually:
 
 ```
 git add package.json package-lock.json
+git commit -m "chore: release version vX.Y.Z"
 git tag -a vX.Y.Z -m "chore: release version vX.Y.Z"
-git push upstream master
+git push --follow-tags origin master
 ```
+
+After this, the a commit merging the `master` branch with the `develop` one should be made.
+
+e.g.: if the `master` branch version was changed to `v1.2.3`, then the new `develop` branch version to be committed should read `v1.2.3`, too. Travis will automatically increase it to the new `v1.2.4-dev.0`.
