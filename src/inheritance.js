@@ -83,9 +83,9 @@ export function inheritance(files, options) {
   }
 
   if (options.draggable) {
-    console.log(reportGenerate(definition))
+    return reportGenerate(definition)
   } else {
-    console.log(digraph.to_dot())
+    return digraph.to_dot()
   }
 }
 

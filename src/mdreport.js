@@ -5,7 +5,7 @@ const parser = require('solidity-parser-antlr')
 const colors = require('colors')
 const sha1File = require('sha1-file')
 
-export function mdreport(outfile, infiles) {
+export function mdreport(infiles) {
   if (infiles.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return
@@ -130,10 +130,5 @@ ${contractsTable}
 |    💵    | Function is payable |
 `
   
-  try {
-    fs.writeFileSync(outfile, reportContents, {flag: 'w'})
-  } catch (err) {
-      console.log('Error in writing report file')
-      console.log(err)
-  }
+  return reportContents
 }
