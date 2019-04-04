@@ -341,5 +341,5 @@ export function ftrace(functionId, accepted_visibility, files) {
   // Call with seed
   constructCallTree(contractToTraverse, functionToTraverse, callTree[seedKeyString])
 
-  console.log(treeify.asTree(callTree, true))
+  return treeify.asTree(callTree, true)
 }

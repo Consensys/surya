@@ -14,5 +14,5 @@ export function parse(file) {
     //   }
     // }); 
 
-    console.log( treeify.asTree(ast, true) )
+    return treeify.asTree(ast, true)
 }
