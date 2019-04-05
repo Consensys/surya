@@ -31,7 +31,7 @@ require('yargs') // eslint-disable-line
       .option('d', {
         alias: 'draggable',
         type: 'boolean',
-        defalt: false
+        default: false
       })
   }, (argv) => {
     console.log(inheritance(argv.files, {draggable: argv.d}))
