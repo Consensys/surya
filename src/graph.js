@@ -350,5 +350,5 @@ key:i2:e -> key2:i2:w [color=orange]
 `
   let finalDigraph = utils.insertBeforeLastOccurrence(digraph.to_dot(), '}', legendDotString)
 
-  console.log(finalDigraph)
+  return finalDigraph
 }

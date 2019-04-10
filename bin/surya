@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+const fs = require('fs')
 const { describe, graph, inheritance, dependencies, parse, ftrace, mdreport } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
@@ -20,7 +20,7 @@ require('yargs') // eslint-disable-line
         type: 'string'
       })
   }, (argv) => {
-    graph(argv.files)
+    console.log(graph(argv.files))
   })
   .command('inheritance <files..>', 'generate graph of contract inheritance tree.', (yargs) => {
     yargs
@@ -31,10 +31,10 @@ require('yargs') // eslint-disable-line
       .option('d', {
         alias: 'draggable',
         type: 'boolean',
-        defalt: false
+        default: false
       })
   }, (argv) => {
-    inheritance(argv.files, {draggable: argv.d})
+    console.log(inheritance(argv.files, {draggable: argv.d}))
   })
   .command('dependencies <target_contract> <files..>', 'output a linearized list of smart contract dependencies (linerized inherited parents).', (yargs) => {
     yargs
@@ -56,7 +56,7 @@ require('yargs') // eslint-disable-line
         type: 'string'
       })
   }, (argv) => {
-    parse(argv.file)
+    console.log(parse(argv.file))
   })
   .command('ftrace <function_identifier> <function_visibility_restrictor> <files..>', 'output the selected function call trace in a textual tree format. External calls are marked in `orange` and internal calls are `uncolored`.', (yargs) => {
     yargs
@@ -74,7 +74,7 @@ require('yargs') // eslint-disable-line
         type: 'string'
       })
   }, (argv) => {
-    ftrace(argv.function_identifier, argv.function_visibility_restrictor, argv.files)
+    console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, argv.files))
   })
   .command('mdreport <outfile> <infiles..>', 'output a markdown file ', (yargs) => {
     yargs
@@ -87,7 +87,12 @@ require('yargs') // eslint-disable-line
         type: 'string'
       })
   }, (argv) => {
-    mdreport(argv.outfile, argv.infiles)
+    try {
+      fs.writeFileSync(argv.outfile, mdreport(argv.infiles), {flag: 'w'})
+    } catch (err) {
+        console.log('Error in writing report file')
+        console.log(err)
+    }
   })
   .help()
   .alias('h', 'help')
