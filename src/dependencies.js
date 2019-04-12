@@ -51,20 +51,10 @@ export function dependencies(files, childContract) {
 
   if (!dependencies[childContract]) {
     console.log('Specified child contract not found. Bailing.. ')
+    return
   }
 
   dependencies = linearize(dependencies, {reverse: true})
 
-  let derivedLinearization = dependencies[childContract]
-  console.log(derivedLinearization[0].yellow)
-  
-  if (derivedLinearization.length < 2) {
-    console.log('No Dependencies Found')
-    return
-  }
-  derivedLinearization.shift()
-
-  const reducer = (accumulator, currentValue) => `${accumulator}\n  ↖ ${currentValue}`
-  console.log(`  ↖ ${derivedLinearization.reduce(reducer)}`)
-
+  return dependencies[childContract]
 }
