@@ -158,14 +158,10 @@ require('yargs') // eslint-disable-line
         console.log(err)
     }
   })
-  .command('flatten <target_contract> <files..>', 'output a linearized list of smart contract dependencies (linerized inherited parents).', (yargs) => {
+  .command('flatten <files..>', 'output to a single flattened solidity file', (yargs) => {
     yargs
       .positional('files', {
-        describe: 'files to analyze',
-        type: 'string'
-      })
-      .positional('target_contract', {
-        describe: 'contract name to flatten',
+        describe: 'files to flatten',
         type: 'string'
       })
   }, (argv) => {
