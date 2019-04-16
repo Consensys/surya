@@ -2,11 +2,14 @@
 
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const colors = require('colors')
 const { linearize } = require('c3-linearization')
-const treeify = require('treeify')
 
 
+/**
+ * @param  {array} files A list of files required to resolve dependency graph
+ * @param  {string} childContract The name of the contract to derive
+ * @returns {array} A c3-linearized list of the of the dependency graph
+ */
 export function dependencies(files, childContract) {
   if (files.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
@@ -14,7 +17,7 @@ export function dependencies(files, childContract) {
   }
 
   if (!childContract) {
-    console.log('No child contract specified in the arguments. Bailing.. ')
+    console.log('No target contract specified in the arguments. Bailing.. ')
     return
   }
 
