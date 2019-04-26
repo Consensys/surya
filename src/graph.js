@@ -23,7 +23,7 @@ export const defaultColorScheme = {
     internal: "white"
   },
   nodeType : {
-    modifier: "yellow"
+    modifier: "yellow",
   },
   call : {
     default: "orange",
@@ -62,12 +62,13 @@ export const defaultColorSchemeDark = {
     public: "#FF9797",
     external: "#ffbdb9",
     private: "#edad56",
-    internal: "#f2c383"
+    internal: "#f2c383",
   },
   nodeType : {
     isFilled: false,
     shape: "doubleoctagon",
     modifier: "#1bc6a6",
+    payable: "brown",
   },
   call : {
     default: "white",
@@ -97,7 +98,7 @@ export function graph(files, colorScheme) {
     return
   }
 
-  colorScheme = colorScheme || defaultColorSchemeDark
+  colorScheme = colorScheme || defaultColorScheme
   
   const digraph = graphviz.digraph('G')
   digraph.set('ratio', 'auto')
@@ -139,6 +140,12 @@ export function graph(files, colorScheme) {
     parser.visit(ast, {
       ContractDefinition(node) {
         contractName = node.name
+        let kind=""
+        if (node.kind=="interface"){
+          kind="  (iface)"
+        } else if(node.kind=="library"){
+          kind="  (lib)"
+        }
 
         userDefinedStateVars[contractName] = {}
 
@@ -147,7 +154,7 @@ export function graph(files, colorScheme) {
         if(!(cluster = digraph.getCluster(`"cluster${contractName}"`))) {
           cluster = digraph.addCluster(`"cluster${contractName}"`)
 
-          cluster.set('label', contractName)
+          cluster.set('label', contractName + kind)
           cluster.set('color', colorScheme.contract.defined.color)
           if(colorScheme.contract.defined.fontcolor){
             cluster.set('fontcolor', colorScheme.contract.undefined.fontcolor)
@@ -250,6 +257,7 @@ export function graph(files, colorScheme) {
         } else {
           name = node.name
         }
+
         
         const internal = node.visibility === 'internal'
 
@@ -265,8 +273,15 @@ export function graph(files, colorScheme) {
           opts.color = colorScheme.visibility.internal
         }
 
-        if(colorScheme.visibility.isFilled)
-          opts.fillcolor = opts.color 
+        if(colorScheme.visibility.isFilled){
+          if(node.stateMutability==="payable"){
+            opts.fillcolor = opts.color
+            opts.color = colorScheme.nodeType.payable
+          } else {
+            opts.fillcolor = opts.color
+          }
+        }
+          
         cluster.addNode(nodeName(name, contractName), opts)
       },
 
