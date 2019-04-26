@@ -8,7 +8,7 @@ const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
 
-const defaultColorScheme = {
+export const defaultColorScheme = {
   digraph : {
     bgcolor: undefined,
     nodeAttribs : {
@@ -42,7 +42,7 @@ const defaultColorScheme = {
   }
 }
 
-const defaultColorSchemeDark = {
+export const defaultColorSchemeDark = {
   digraph : {
     bgcolor: "#2e3e56",
     nodeAttribs : {
@@ -97,7 +97,7 @@ export function graph(files, colorScheme) {
     return
   }
 
-  colorScheme = colorScheme || defaultColorScheme
+  colorScheme = colorScheme || defaultColorSchemeDark
   
   const digraph = graphviz.digraph('G')
   digraph.set('ratio', 'auto')
