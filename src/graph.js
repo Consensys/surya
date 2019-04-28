@@ -8,17 +8,110 @@ const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
 
+export const defaultColorScheme = {
+  digraph : {
+    bgcolor: undefined,
+    nodeAttribs : {
+    },
+    edgeAttribs : {
+    }
+  },
+  visibility : {
+    public: "green",
+    external: "blue",
+    private: "red",
+    internal: "white"
+  },
+  nodeType : {
+    modifier: "yellow",
+  },
+  call : {
+    default: "orange",
+    regular: "green",
+    this: "green"
+  },
+  contract : {
+    defined: {
+      bgcolor: "lightgray",
+      color: "lightgray",
+    },
+    undefined: {
+      bgcolor: undefined,
+      color: "lightgray",
+    }
+  }
+}
 
-export function graph(files) {
+export const defaultColorSchemeDark = {
+  digraph : {
+    bgcolor: "#2e3e56",
+    nodeAttribs : {
+      style:"filled",
+      fillcolor:"#edad56",
+      color:"#edad56",
+      penwidth:"3"
+    },
+    edgeAttribs : {
+      color:"#fcfcfc", 
+      penwidth:"2", 
+      fontname:"helvetica Neue Ultra Light"
+    }
+  },
+  visibility : {
+    isFilled: true,
+    public: "#FF9797",
+    external: "#ffbdb9",
+    private: "#edad56",
+    internal: "#f2c383",
+  },
+  nodeType : {
+    isFilled: false,
+    shape: "doubleoctagon",
+    modifier: "#1bc6a6",
+    payable: "brown",
+  },
+  call : {
+    default: "white",
+    regular: "#1bc6a6",
+    this: "#80e097"
+  },
+  contract : {
+    defined: {
+      bgcolor: "#445773",
+      color: "#445773",
+      fontcolor:"#f0f0f0",
+      style: "rounded"
+    },
+    undefined: {
+      bgcolor: "#3b4b63",
+      color: "#e8726d",
+      fontcolor: "#f0f0f0",
+      style: "rounded,dashed"
+    }
+  }
+
+}
+
+export function graph(files, colorScheme) {
   if (files.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return
   }
+
+  colorScheme = colorScheme || defaultColorScheme
   
   const digraph = graphviz.digraph('G')
   digraph.set('ratio', 'auto')
   digraph.set('page', '100')
   digraph.set('compound', 'true')
+  colorScheme.digraph.bgcolor && digraph.set('bgcolor', colorScheme.digraph.bgcolor)
+  for(let i in colorScheme.digraph.nodeAttribs){
+    digraph.setNodeAttribut(i, colorScheme.digraph.nodeAttribs[i])
+  }
+  for(let i in colorScheme.digraph.edgeAttribs){
+    digraph.setEdgeAttribut(i, colorScheme.digraph.edgeAttribs[i])
+  }
+  
 
   // initialize vars that persist over file parsing loops
   let userDefinedStateVars = {}
@@ -47,6 +140,12 @@ export function graph(files) {
     parser.visit(ast, {
       ContractDefinition(node) {
         contractName = node.name
+        let kind=""
+        if (node.kind=="interface"){
+          kind="  (iface)"
+        } else if(node.kind=="library"){
+          kind="  (lib)"
+        }
 
         userDefinedStateVars[contractName] = {}
 
@@ -55,9 +154,20 @@ export function graph(files) {
         if(!(cluster = digraph.getCluster(`"cluster${contractName}"`))) {
           cluster = digraph.addCluster(`"cluster${contractName}"`)
 
-          cluster.set('label', contractName)
-          cluster.set('color', 'lightgray')
-          cluster.set('style', 'filled')
+          cluster.set('label', contractName + kind)
+          cluster.set('color', colorScheme.contract.defined.color)
+          if(colorScheme.contract.defined.fontcolor){
+            cluster.set('fontcolor', colorScheme.contract.undefined.fontcolor)
+          }
+          
+          if(colorScheme.contract.defined.style){
+            cluster.set('style', colorScheme.contract.defined.style || "filled")
+            cluster.set('bgcolor', colorScheme.contract.defined.color)
+          } 
+          else
+            cluster.set('style', 'filled')
+
+          colorScheme.contract.defined.bgcolor && cluster.set('bgcolor', colorScheme.contract.defined.bgcolor)
 
           // opts = {
           //   style: 'invis'
@@ -65,7 +175,10 @@ export function graph(files) {
 
           // cluster.addNode('anchor' + contractName, opts)
         } else {
-          cluster.set('style', 'filled')
+          if(colorScheme.contract.defined.style)
+            cluster.set('style', colorScheme.contract.defined.style)
+          else
+            cluster.set('style', 'filled')
         }
 
         dependencies[contractName] = node.baseContracts.map(spec =>
@@ -144,21 +257,31 @@ export function graph(files) {
         } else {
           name = node.name
         }
+
         
         const internal = node.visibility === 'internal'
 
         let opts = { label: name }
 
         if (node.visibility === 'public' || node.visibility === 'default') {
-          opts.color = 'green'
+          opts.color = colorScheme.visibility.public
         } else if (node.visibility === 'external') {
-          opts.color = 'blue'
+          opts.color = colorScheme.visibility.external
         } else if (node.visibility === 'private') {
-          opts.color = 'red'
+          opts.color = colorScheme.visibility.private
         } else if (node.visibility === 'internal') {
-          opts.color = 'white'
+          opts.color = colorScheme.visibility.internal
         }
 
+        if(colorScheme.visibility.isFilled){
+          if(node.stateMutability==="payable"){
+            opts.fillcolor = opts.color
+            opts.color = colorScheme.nodeType.payable
+          } else {
+            opts.fillcolor = opts.color
+          }
+        }
+          
         cluster.addNode(nodeName(name, contractName), opts)
       },
 
@@ -167,7 +290,13 @@ export function graph(files) {
 
         let opts = {
           label: name,
-          color: 'yellow'
+          color: colorScheme.nodeType.modifier
+        }
+        if(colorScheme.nodeType.isFilled){
+          opts.fillcolor = opts.color
+        }
+        if(colorScheme.nodeType.shape){
+          opts.shape = colorScheme.nodeType.shape
         }
 
         cluster.addNode(nodeName(name, contractName), opts)
@@ -242,11 +371,11 @@ export function graph(files) {
         let name
         let localContractName = contractName
         let opts = {
-          color: 'orange'
+          color: colorScheme.call.default
         }
         
         if (parserHelpers.isRegularFunctionCall(node)) {
-          opts.color = 'green'
+          opts.color = colorScheme.call.regular
           name = expr.name
         } else if (parserHelpers.isMemberAccess(node)) {
           let object
@@ -276,7 +405,7 @@ export function graph(files) {
           }
 
           if (object === 'this') {
-            opts.color = 'green'
+            opts.color = colorScheme.call.this
           } else if (object === 'super') {
             // "super" in this context is gonna be the 2nd element of the dependencies array
             // since the first is the contract itself
@@ -299,8 +428,16 @@ export function graph(files) {
           externalCluster = digraph.addCluster(`"cluster${localContractName}"`)
 
           externalCluster.set('label', localContractName)
-          externalCluster.set('color', 'lightgray')
+          externalCluster.set('color', colorScheme.contract.undefined.color)
+          if(colorScheme.contract.undefined.fontcolor){
+            externalCluster.set('fontcolor', colorScheme.contract.undefined.fontcolor)
+          }
+          if(colorScheme.contract.undefined.style){
+            externalCluster.set('style', colorScheme.contract.undefined.style || "filled")
+            colorScheme.contract.undefined.bgcolor && externalCluster.set('bgcolor', colorScheme.contract.undefined.bgcolor )
+          } 
         }
+        
 
         let localNodeName = nodeName(name, localContractName)
 
@@ -335,17 +472,17 @@ key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
 key2 [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
   <tr><td port="i1">&nbsp;&nbsp;&nbsp;</td></tr>
   <tr><td port="i2">&nbsp;&nbsp;&nbsp;</td></tr>
-  <tr><td port="i3" bgcolor="lightgray">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i3" bgcolor="${colorScheme.contract.defined.bgcolor}">&nbsp;&nbsp;&nbsp;</td></tr>
   <tr><td port="i4">
-    <table border="1" cellborder="0" cellspacing="0" cellpadding="7" color="lightgray">
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="7" color="${colorScheme.contract.undefined.color}">
       <tr>
        <td></td>
       </tr>
      </table>
   </td></tr>
   </table>>]
-key:i1:e -> key2:i1:w [color=green]
-key:i2:e -> key2:i2:w [color=orange]
+key:i1:e -> key2:i1:w [color="${colorScheme.call.regular}"]
+key:i2:e -> key2:i2:w [color="${colorScheme.call.default}"]
 }
 `
   let finalDigraph = utils.insertBeforeLastOccurrence(digraph.to_dot(), '}', legendDotString)
