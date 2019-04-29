@@ -22,7 +22,7 @@ const importer = {
       file = path.resolve(projectDir, file)
       if (file.indexOf(projectDir) != 0) throw new Error(`Imports must be found in sub dirs of the project directory.
       project dir: ${projectDir}
-      path: ${currentDir}`)
+      path: ${file}`)
       let content
       try {
         content = fs.readFileSync(file).toString('utf-8')
