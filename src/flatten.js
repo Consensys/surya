@@ -16,8 +16,13 @@ export function flatten(files) {
   let visitedPaths = new Set()
   let flat = ''
   for (let file of files){
-    flat += replaceImportsWithSource(file, visitedPaths)
+    if(visitedPaths.has(file)){
+      continue
+    }
+    let result = replaceImportsWithSource(file, visitedPaths)
+    flat += result.flattenedContent
     flat += '\n'
+    visitedPaths.add(result.visitedPaths)
   }
   console.log(flat)
 }
@@ -61,10 +66,13 @@ function replaceImportsWithSource(file, visitedPaths = new Set()) {
     } else {
       // first time handling this import path, 
       contentLines[el.location.start.line - 1] = 
-        `// flattened from: ${el.importPath}  \n ${replaceImportsWithSource(el.importPath, visitedPaths)}`
+        `// flattened from: ${el.importPath}  \n ${replaceImportsWithSource(el.importPath, visitedPaths).flattenedContent}`
       visitedPaths.add(el.importPath)
     }
   }
-  
-  return contentLines.join('\n')
+  // let flattenedContent: 
+  return {
+    flattenedContent: contentLines.join('\n'),
+    visitedPaths
+  }
 }
