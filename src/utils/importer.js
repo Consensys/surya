@@ -61,22 +61,21 @@ module.exports = importer
 /// @param      {string}  projectDir        The top-most directory we will search in
 ///
 function resolveImportPath(baseFilePath, importedFilePath, projectDir){
+  const topmostDirArray = projectDir.split(path.sep)
   let resolvedPath
   let baseDirPath = path.dirname(baseFilePath)
   // if it's a relative path:
   if (
-    importedFilePath.slice(0,2) === './' 
-    || importedFilePath.slice(0,3) === '../'
+    importedFilePath.slice(0,1) === '.'
   ) {
     resolvedPath = path.resolve(baseDirPath, importedFilePath)
   // else it's most likely a special case using a remapping to node_modules dir in Truffle
   } else {
-    const topmostDirArray = projectDir.split(path.sep)
     let currentDir = path.resolve(baseDirPath, '..')
     let currentDirArray = baseDirPath.split(path.sep)
     let currentDirName = currentDirArray.pop()
     while (currentDirName != 'contracts') {
-      if (topmostDirArray.length == currentDirArray.length) {
+      if (topmostDirArray.length >= currentDirArray.length) {
         throw new Error(`Import statement seems to be a Truffle "'node_modules' remapping" but no 'contracts' truffle dir could be found in the project's child dirs. Have you ran 'npm install', already? (path: ${baseDirPath})`)
       }
       currentDirName = currentDirArray.pop()
