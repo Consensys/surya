@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const fs = require('fs')
 const colors = require('colors')
+const importer = require('../lib/utils/importer')
 const { describe, graph, inheritance, dependencies, parse, ftrace, mdreport } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
@@ -20,7 +21,17 @@ require('yargs') // eslint-disable-line
         describe: 'files to analyze',
         type: 'string'
       })
+      .option('i', {
+        alias: 'import',
+        type: 'boolean',
+        default: false
+      })
   }, (argv) => {
+    //Derive the whole system from recursive import statements
+    let files = ''
+    if(argv.i) {
+      files = importer.importProfiler(argv.files)
+    }
     console.log(graph(argv.files))
   })
   .command('inheritance <files..>', 'generate graph of contract inheritance tree.', (yargs) => {
@@ -31,6 +42,11 @@ require('yargs') // eslint-disable-line
       })
       .option('d', {
         alias: 'draggable',
+        type: 'boolean',
+        default: false
+      })
+      .option('i', {
+        alias: 'import',
         type: 'boolean',
         default: false
       })
@@ -46,6 +62,11 @@ require('yargs') // eslint-disable-line
       .positional('target_contract', {
         describe: 'contract name to get dependency linearization',
         type: 'string'
+      })
+      .option('i', {
+        alias: 'import',
+        type: 'boolean',
+        default: false
       })
   }, (argv) => {
     let derivedLinearization = dependencies(argv.files, argv.target_contract)
@@ -86,6 +107,11 @@ require('yargs') // eslint-disable-line
         describe: 'files to include in the parsing',
         type: 'string'
       })
+      .option('i', {
+        alias: 'import',
+        type: 'boolean',
+        default: false
+      })
   }, (argv) => {
     console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, argv.files))
   })
@@ -98,6 +124,11 @@ require('yargs') // eslint-disable-line
       .positional('infiles', {
         describe: 'files to analyze',
         type: 'string'
+      })
+      .option('i', {
+        alias: 'import',
+        type: 'boolean',
+        default: false
       })
   }, (argv) => {
     try {
