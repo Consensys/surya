@@ -20,7 +20,9 @@ const importer = {
     for (let file of files){
       // Checks for a valid solidity file
       file = path.resolve(projectDir, file)
-      if (file.indexOf(projectDir) != 0) throw new Error(`Imports must be found in sub dirs of the projectDir: ${projectDir}`)
+      if (file.indexOf(projectDir) != 0) throw new Error(`Imports must be found in sub dirs of the project directory.
+      project dir: ${projectDir}
+      path: ${currentDir}`)
       let content
       try {
         content = fs.readFileSync(file).toString('utf-8')
