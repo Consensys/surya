@@ -64,9 +64,10 @@ function resolveImportPath(baseFilePath, importedFilePath, projectDir){
   const topmostDirArray = projectDir.split(path.sep)
   let resolvedPath
   let baseDirPath = path.dirname(baseFilePath)
-  // if it's a relative path:
+  // if it's a relative or absolute path:
   if (
     importedFilePath.slice(0,1) === '.'
+    || importedFilePath.slice(0,1) === '/'
   ) {
     resolvedPath = path.resolve(baseDirPath, importedFilePath)
   // else it's most likely a special case using a remapping to node_modules dir in Truffle
@@ -74,13 +75,17 @@ function resolveImportPath(baseFilePath, importedFilePath, projectDir){
     let currentDir = path.resolve(baseDirPath, '..')
     let currentDirArray = baseDirPath.split(path.sep)
     let currentDirName = currentDirArray.pop()
+
     while (currentDirName != 'contracts') {
       if (topmostDirArray.length >= currentDirArray.length) {
-        throw new Error(`Import statement seems to be a Truffle "'node_modules' remapping" but no 'contracts' truffle dir could be found in the project's child dirs. Have you ran 'npm install', already? (path: ${baseDirPath})`)
+        throw new Error(`Import statement seems to be a Truffle "'node_modules' remapping" but no 'contracts' truffle dir could be found in the project's child dirs. Have you ran 'npm install', already?
+        project dir: ${projectDir}
+        path: ${currentDir}`)
       }
       currentDirName = currentDirArray.pop()
       currentDir = path.resolve(currentDir, '..')
     }
+
     resolvedPath = path.join(currentDir, 'node_modules', importedFilePath)
   }
 
