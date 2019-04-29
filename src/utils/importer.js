@@ -72,6 +72,7 @@ function resolveImportPath(baseFilePath, importedFilePath, projectDir){
   // else it's most likely a special case using a remapping to node_modules dir in Truffle
   } else {
     const topmostDirArray = projectDir.split(path.sep)
+    let currentDir = path.resolve(baseDirPath, '..')
     let currentDirArray = baseDirPath.split(path.sep)
     let currentDirName = currentDirArray.pop()
     while (currentDirName != 'contracts') {
@@ -79,8 +80,9 @@ function resolveImportPath(baseFilePath, importedFilePath, projectDir){
         throw new Error(`Import statement seems to be a Truffle "'node_modules' remapping" but no 'contracts' truffle dir could be found in the project's child dirs. Have you ran 'npm install', already? (path: ${baseDirPath})`)
       }
       currentDirName = currentDirArray.pop()
+      currentDir = path.resolve(currentDir, '..')
     }
-    resolvedPath = path.join('/', ...currentDirArray, 'node_modules', importedFilePath)
+    resolvedPath = path.join(currentDir, 'node_modules', importedFilePath)
   }
 
   // verify that the resolved path is actually a file
