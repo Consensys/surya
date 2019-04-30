@@ -21,7 +21,7 @@ export function flatten(files) {
     }
     let result = replaceImportsWithSource(file, visitedPaths)
     flat += result.flattenedContent
-    flat += '\n'
+    flat += '\n\n'
     visitedPaths.add(result.visitedPaths)
   }
   console.log(flat)
@@ -31,11 +31,12 @@ export function flatten(files) {
  * Given a solidity file, returns the content with imports replaced by source code
  * 
  * @param      {string}  file  The file
- * @param      {Array}   visitedPaths     Paths already resolved
- * @return     {string}  resolvedContent A string with imports replaced by source code
+ * @param      {Array}   visitedPaths     Paths already resolved that should be skipped if seen again
+ * @return     {object}  { resolvedContent: A string with imports replaced by source code, visitedPaths }
  */
 function replaceImportsWithSource(file, visitedPaths = new Set()) {
   let content
+  // console.log(`// parsing ${file}`)
   try {
     content = fs.readFileSync(file).toString('utf-8')
   } catch (e) {
@@ -44,12 +45,14 @@ function replaceImportsWithSource(file, visitedPaths = new Set()) {
     } else throw e;
   }
 
+  // prepend the code with a space and comment helpful for the flattened output
+  content = `// The following code is from flattening this file: ${file}\n${content}`
+
   const ast = parser.parse(content, {
     loc: true
   })
 
   let importsAndLocations = [];
-  
   parser.visit(ast, {
     ImportDirective(node) {
       let importPath = resolveImportPath(file, node.path)
@@ -59,18 +62,25 @@ function replaceImportsWithSource(file, visitedPaths = new Set()) {
   
   let contentLines = content.split('\n')
   for (let el of importsAndLocations){
-    // array is 0 indexed, file lines are 1 indexed so we need to replace `start.line - 1`
-    if (visitedPaths.has(el.importPath)){
-      // we've already visited this path, just delete the import statement
-      contentLines[el.location.start.line - 1] = ''      
+    // arrays are 0-indexed, file lines are 1-indexed so the statement is at `start.line - 1`
+    let importStatementText = contentLines[el.location.start.line - 1]
+    
+    if (!visitedPaths.has(el.importPath)){
+      // first time handling this import path, comment it out, and replace with flattened source code
+      contentLines[el.location.start.line - 1] =  
+      `// The following code is from flattening this import statement in: ${file}\n// ${importStatementText}\n${replaceImportsWithSource(el.importPath, visitedPaths).flattenedContent}`
+      
     } else {
-      // first time handling this import path, 
+      // we've already visited this path, just comment out the import statement
       contentLines[el.location.start.line - 1] = 
-        `// flattened from: ${el.importPath}  \n ${replaceImportsWithSource(el.importPath, visitedPaths).flattenedContent}`
+        `// Skipping this already resolved import statement found in ${file} \n// ${importStatementText}`      
+      
       visitedPaths.add(el.importPath)
     }
   }
-  // let flattenedContent: 
+  
+  visitedPaths.add(file)
+
   return {
     flattenedContent: contentLines.join('\n'),
     visitedPaths
