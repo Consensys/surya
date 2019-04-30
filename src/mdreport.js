@@ -2,7 +2,6 @@
 
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const colors = require('colors')
 const sha1File = require('sha1-file')
 
 export function mdreport(infiles) {

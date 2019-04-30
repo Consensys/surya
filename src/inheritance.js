@@ -4,7 +4,6 @@ const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
-const path = require('path')
 
 export function inheritance(files, options) {
   if (files.length === 0) {
