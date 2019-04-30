@@ -4,7 +4,7 @@ import { resolve } from 'url';
 
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const { resolveImportPath } = require('./utils/importHelper')
+const { resolveImportPath } = require('./utils/importer')
 
 export function flatten(files) {
   if (!files) {

@@ -15,45 +15,41 @@ const parser = require('solidity-parser-antlr')
  * @param      {Set}     importedFiles  files already parsed 
  * @return     {Array}   importPaths    A list of importPaths 
  */
-const importer = {
-  importProfiler: (files, projectDir = process.cwd(), importedFiles = new Set()) => {
-    for (let file of files){
-      // Checks for a valid solidity file
-      file = path.resolve(projectDir, file)
-      if (file.indexOf(projectDir) != 0) throw new Error(`Imports must be found in sub dirs of the project directory.
-      project dir: ${projectDir}
-      path: ${file}`)
-      let content
-      try {
-        content = fs.readFileSync(file).toString('utf-8')
-      } catch (e) {
-        if (e.code === 'EISDIR') {
-          console.error(`Skipping directory ${file}`)
-          return importedFiles // empty Set
-        } else throw e;
-      }
-      // Having verified that it indeed is a solidity file, add it to set of importedFiles
-      importedFiles.add(file)
-      const ast = parser.parse(content, {tolerant: true})
-      
-      // create an array to hold the imported files
-      const newFiles = new Array()
-      parser.visit(ast, {
-        ImportDirective(node) {
-          let newFile = resolveImportPath(file, node.path, projectDir)
-          newFiles.push(newFile)
-        }
-      })
-      // Run through the array of files found in this file
-      module.exports.importProfiler(newFiles, projectDir, importedFiles)
+export function importProfiler(files, projectDir = process.cwd(), importedFiles = new Set()) {
+  for (let file of files){
+    // Checks for a valid solidity file
+    file = path.resolve(projectDir, file)
+    if (file.indexOf(projectDir) != 0) throw new Error(`Imports must be found in sub dirs of the project directory.
+    project dir: ${projectDir}
+    path: ${file}`)
+    let content
+    try {
+      content = fs.readFileSync(file).toString('utf-8')
+    } catch (e) {
+      if (e.code === 'EISDIR') {
+        console.error(`Skipping directory ${file}`)
+        return importedFiles // empty Set
+      } else throw e;
     }
-    // Convert the set to an array for easy consumption
-    const importedFilesArray = Array.from(importedFiles)
-    return importedFilesArray
+    // Having verified that it indeed is a solidity file, add it to set of importedFiles
+    importedFiles.add(file)
+    const ast = parser.parse(content, {tolerant: true})
+    
+    // create an array to hold the imported files
+    const newFiles = new Array()
+    parser.visit(ast, {
+      ImportDirective(node) {
+        let newFile = resolveImportPath(file, node.path, projectDir)
+        newFiles.push(newFile)
+      }
+    })
+    // Run through the array of files found in this file
+    module.exports.importProfiler(newFiles, projectDir, importedFiles)
   }
+    // Convert the set to an array for easy consumption
+  const importedFilesArray = Array.from(importedFiles)
+  return importedFilesArray
 }
-
-module.exports = importer
 
 /// Takes a filepath, and an import path found within it, and finds the corresponding source code
 /// file. Throws an error if the resolved path is not a file.
@@ -62,7 +58,7 @@ module.exports = importer
 /// @param      {string}  importedFilePath  The imported file path
 /// @param      {string}  projectDir        The top-most directory we will search in
 ///
-function resolveImportPath(baseFilePath, importedFilePath, projectDir){
+export function resolveImportPath(baseFilePath, importedFilePath, projectDir = process.cwd()) {
   const topmostDirArray = projectDir.split(path.sep)
   let resolvedPath
   let baseDirPath = path.dirname(baseFilePath)
