@@ -33,7 +33,6 @@ export function inheritance(files, options) {
     const ast = parser.parse(content)
 
     let contractName = null
-    let cluster = null
     let dependencies = {}
 
     parser.visit(ast, {
@@ -41,10 +40,6 @@ export function inheritance(files, options) {
         contractName = node.name
 
         if (!digraph.getNode(contractName)) {
-          let opts = {
-            label: contractName,
-            color: 'gray'
-          }
 
           digraph.addNode(contractName)
 
@@ -59,10 +54,6 @@ export function inheritance(files, options) {
 
         for (let dep of dependencies[contractName]) {
           if (!digraph.getNode(dep)) {
-            let opts = {
-              label: dep,
-              color: 'gray'
-            }
 
             digraph.addNode(dep)
 
