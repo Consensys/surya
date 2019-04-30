@@ -25,6 +25,9 @@ npm install -g surya
 
 ## Command List
 
+All the commands that take in an array of files also take in a flag (`-i`/`--import`) that resolves file imports automatically.
+Please be aware that in the case you use Truffle's "node_modules" remapping import statements, Surya searches up the project directory recursively until it finds a `contracts` directory in the Truffle project *up until the directory you ran the command in*. This is so that we try to prevent any kind of path traversal vulnerabilities that could come from exposing Surya as a service.
+
 ### describe
 
 The `describe` command shows a summary of the contracts and methods in the files provided.
