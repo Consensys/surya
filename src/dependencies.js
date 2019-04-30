@@ -34,7 +34,6 @@ export function dependencies(files, childContract) {
     const ast = parser.parse(content)
 
     let contractName = null
-    let cluster = null
 
     parser.visit(ast, {
       ContractDefinition(node) {
