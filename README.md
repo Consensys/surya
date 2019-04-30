@@ -77,7 +77,7 @@ surya inheritance MyContract.sol | dot -Tpng > MyContract.png
 
 <img src="https://user-images.githubusercontent.com/23033765/39249140-f50d2828-486b-11e8-81b8-8c4ffb7b1b54.png" height="236">
 
-## dependencies
+### dependencies
 
 The `dependencies` command outputs the [c3-linearization](https://en.wikipedia.org/wiki/C3_linearization) of a given contract's inheritance graph. Contracts will be listed starting with most-derived, ie. if the same function is defined in more than one contract, the solidity compiler will use the definition in whichever contract is listed first. 
 
@@ -85,7 +85,7 @@ The `dependencies` command outputs the [c3-linearization](https://en.wikipedia.o
 surya dependencies Exchange Exchange.sol
 ```
 
-## flatten
+### flatten
 
 The `flatten` command outputs a flattened version of the source code, with all import statements replaced by the corresponding source code. Import statements that reference a file that has already been imported, will simply be commented out. 
 
