@@ -15,6 +15,7 @@ The name stems from the sun deity [Surya](https://en.wikipedia.org/wiki/Surya)
 
 Why the sun, you ask? Because "sun" in latin and portuguese is [*Sol*](https://en.wikipedia.org/wiki/Solar_deity).
 
+
 ## Getting Started
 
 Install it via npm:
@@ -23,7 +24,13 @@ Install it via npm:
 npm install -g surya
 ```
 
+Currently, however, the easiest way to use Surya in your project might be through [VSCode's Solidity Auditor extension](https://github.com/tintinweb/vscode-solidity-auditor) created by [@tintinweb](https://github.com/tintinweb)
+
+<img src="https://user-images.githubusercontent.com/2865694/55647206-65decd00-57dd-11e9-856a-1cceed31d18e.gif" height="236">
+
 ## Command List
+
+Surya takes in a `--no-color` option with any command that disables the colors in the output making it effectively plain text.
 
 All the commands that take in an array of files also take in a flag (`-i`/`--import`) that resolves file imports automatically.
 Please be aware that in the case you use Truffle's "node_modules" remapping import statements, Surya searches up the project directory recursively until it finds a `contracts` directory in the Truffle project *up until the directory you ran the command in*. This is so that we try to prevent any kind of path traversal vulnerabilities that could come from exposing Surya as a service.
