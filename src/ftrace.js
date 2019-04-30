@@ -3,7 +3,6 @@
 const parserHelpers = require('./utils/parserHelpers')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const colors = require('colors')
 const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
 
@@ -53,7 +52,6 @@ export function ftrace(functionId, accepted_visibility, files) {
     fileASTs.push(ast)
 
     let contractName = null
-    let cluster = null
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -82,7 +80,6 @@ export function ftrace(functionId, accepted_visibility, files) {
 
     let contractName = null
     let functionName = null
-    let cluster = null
 
     let userDefinedLocalVars = {}
     let tempUserDefinedStateVars = {}

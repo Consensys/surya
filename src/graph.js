@@ -6,7 +6,6 @@ const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
-const treeify = require('treeify')
 
 export const defaultColorScheme = {
   digraph : {
@@ -149,8 +148,6 @@ export function graph(files, colorScheme) {
 
         userDefinedStateVars[contractName] = {}
 
-        let opts = {}
-
         if(!(cluster = digraph.getCluster(`"cluster${contractName}"`))) {
           cluster = digraph.addCluster(`"cluster${contractName}"`)
 
@@ -168,12 +165,7 @@ export function graph(files, colorScheme) {
             cluster.set('style', 'filled')
 
           colorScheme.contract.defined.bgcolor && cluster.set('bgcolor', colorScheme.contract.defined.bgcolor)
-
-          // opts = {
-          //   style: 'invis'
-          // }
-
-          // cluster.addNode('anchor' + contractName, opts)
+          
         } else {
           if(colorScheme.contract.defined.style)
             cluster.set('style', colorScheme.contract.defined.style)
@@ -184,30 +176,6 @@ export function graph(files, colorScheme) {
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
         )
-
-        // for (let dep of dependencies[contractName]) {
-        //   if (!(cluster = digraph.getCluster(dep))) {
-
-        //     cluster = digraph.addCluster('cluster' + dep, opts)
-
-        //   cluster.set('label', dep)
-        //   cluster.set('color', 'gray')
-
-        //     opts = {
-        //       style: 'invis'
-        //     }
-
-        //     cluster.addNode('anchor' + dep, opts)
-        //   }
-
-        //   opts = {
-        //     ltail: 'cluster' + contractName,
-        //     lhead: 'cluster' + dep,
-        //     color: 'gray'
-        //   }
-
-        //   digraph.addEdge('anchor' + node.name, 'anchor' + dep, opts)
-        // }
       },
 
       StateVariableDeclaration(node) {
@@ -257,9 +225,6 @@ export function graph(files, colorScheme) {
         } else {
           name = node.name
         }
-
-        
-        const internal = node.visibility === 'internal'
 
         let opts = { label: name }
 
@@ -454,8 +419,7 @@ export function graph(files, colorScheme) {
   // of the graph with color information.
   // We'll do it in dot, by hand, because it's overkill to do it programatically.
   // 
-  // We'll have to take the last curly bracket of the diagram out before
-  // pasting this subgraph and hence the unbalanced brackets
+  // We'll have to paste this subgraph before the last curly bracket of the diagram
   
   let legendDotString = `
 

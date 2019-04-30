@@ -2,9 +2,7 @@
 
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const colors = require('colors')
 const { linearize } = require('c3-linearization')
-const treeify = require('treeify')
 
 
 export function dependencies(files, childContract) {
@@ -36,7 +34,6 @@ export function dependencies(files, childContract) {
     const ast = parser.parse(content)
 
     let contractName = null
-    let cluster = null
 
     parser.visit(ast, {
       ContractDefinition(node) {

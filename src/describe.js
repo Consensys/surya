@@ -2,7 +2,6 @@
 
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const colors = require('colors')
 
 export function describe(files) {
   for (let file of files) {
