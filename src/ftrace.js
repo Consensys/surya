@@ -9,19 +9,19 @@ const treeify = require('treeify')
 
 export function ftrace(functionId, accepted_visibility, files) {
   if (files.length === 0) {
-    console.log('No files were specified for analysis in the arguments. Bailing...')
+    console.error('No files were specified for analysis in the arguments. Bailing...')
     return
   }
 
   const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
   if (contractToTraverse === undefined || functionToTraverse === undefined) {
-    console.log('You did not provide the function identifier in the right format "CONTRACT::FUNCTION"')
+    console.error('You did not provide the function identifier in the right format "CONTRACT::FUNCTION"')
     return
   }
 
   if (accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
-    console.log(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`)
+    console.error(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`)
     return
   }
 
