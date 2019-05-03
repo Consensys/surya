@@ -9,20 +9,17 @@ const treeify = require('treeify')
 
 export function ftrace(functionId, accepted_visibility, files) {
   if (files.length === 0) {
-    console.error('No files were specified for analysis in the arguments. Bailing...')
-    return
+    return 'No files were specified for analysis in the arguments. Bailing...'
   }
 
   const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
   if (contractToTraverse === undefined || functionToTraverse === undefined) {
-    console.error('You did not provide the function identifier in the right format "CONTRACT::FUNCTION"')
-    return
+    return 'You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'
   }
 
   if (accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
-    console.error(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`)
-    return
+    return `The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`
   }
 
   let functionCallsTree = {}
@@ -264,11 +261,9 @@ export function ftrace(functionId, accepted_visibility, files) {
   let callTree = {}
 
   if(!functionCallsTree.hasOwnProperty(contractToTraverse)) {
-    console.log(`The ${contractToTraverse} contract is not present in the codebase.`.yellow)
-    return
+    return `The ${contractToTraverse} contract is not present in the codebase.`
   } else if (!functionCallsTree[contractToTraverse].hasOwnProperty(functionToTraverse)) {
-    console.log(`The ${functionToTraverse} function is not present in ${contractToTraverse}.`.yellow)
-    return
+    return `The ${functionToTraverse} function is not present in ${contractToTraverse}.`
   }
 
   const seedKeyString = `${contractToTraverse}::${functionToTraverse}`.green
