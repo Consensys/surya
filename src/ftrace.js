@@ -16,12 +16,12 @@ export function ftrace(functionId, accepted_visibility, files) {
   const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
   if (contractToTraverse === undefined || functionToTraverse === undefined) {
-    console.log('You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'.yellow)
+    console.log('You did not provide the function identifier in the right format "CONTRACT::FUNCTION"')
     return
   }
 
   if (accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
-    console.log(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`.yellow)
+    console.log(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`)
     return
   }
 
