@@ -3,7 +3,16 @@
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 
-export function describe(files, noColorOutput = false) {
+export function describe(files, options, noColorOutput = false) {
+  // make the files array unique by typecastign them to a Set and back
+  // this is not needed in case the importer flag is on, because the 
+  // importer module already filters the array internally
+  if(options.importer) {
+    files = importer.importProfiler(files)
+  } else {
+    files = [...new Set(files)];
+  }
+  
   for (let file of files) {
     const content = fs.readFileSync(file).toString('utf-8')
     const ast = parser.parse(content)
