@@ -91,7 +91,7 @@ export const defaultColorSchemeDark = {
 
 }
 
-export function graph(files, options) {
+export function graph(files, options = {}) {
   if (files.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return

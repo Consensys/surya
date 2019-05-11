@@ -10,7 +10,7 @@ const { linearize } = require('c3-linearization')
  * @param  {string} childContract The name of the contract to derive
  * @returns {array} A c3-linearized list of the of the dependency graph
  */
-export function dependencies(files, childContract, options) {
+export function dependencies(files, childContract, options = {}) {
   if (files.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return

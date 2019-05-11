@@ -4,7 +4,7 @@ const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const sha1File = require('sha1-file')
 
-export function mdreport(infiles, options) {
+export function mdreport(infiles, options = {}) {
   if (infiles.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return

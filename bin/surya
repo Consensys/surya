@@ -32,7 +32,7 @@ require('yargs') // eslint-disable-line
         default: false
       })
   }, (argv) => {
-    console.log(graph(argv.files, {importer: argv.i}))
+    console.log(graph(argv.files))
   })
   .command('inheritance <files..>', 'generate graph of contract inheritance tree.', (yargs) => {
     yargs

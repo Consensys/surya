@@ -7,7 +7,7 @@ const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
 
 
-export function ftrace(functionId, accepted_visibility, files, options, noColorOutput = false) {
+export function ftrace(functionId, accepted_visibility, files, options = {}, noColorOutput = false) {
   if (files.length === 0) {
     return 'No files were specified for analysis in the arguments. Bailing...'
   }
