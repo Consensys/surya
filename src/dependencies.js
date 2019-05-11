@@ -60,3 +60,32 @@ export function dependencies(files, childContract) {
 
   return dependencies[childContract]
 }
+
+/**
+ * A function designed to return a nicely formatted string to be printed
+ * @param  {array} files A list of files required to resolve dependency graph
+ * @param  {string} childContract The name of the contract to derive
+ * @returns {array} A c3-linearized list of the of the dependency graph
+ */
+export function dependenciesPrint(files, childContract, noColorOutput = false) {
+  let outputString = ''
+
+  let derivedLinearization = dependencies(files, childContract)
+
+  if(derivedLinearization){
+    outputString += noColorOutput ? derivedLinearization[0] : derivedLinearization[0].yellow
+    
+    if (derivedLinearization.length < 2) {
+      outputString += `
+No Dependencies Found`
+      return outputString
+    }
+    derivedLinearization.shift()
+
+    const reducer = (accumulator, currentValue) => `${accumulator}\n  ↖ ${currentValue}`
+    outputString += `
+  ↖ ${derivedLinearization.reduce(reducer)}`
+  }
+
+  return outputString
+}

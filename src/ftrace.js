@@ -7,22 +7,19 @@ const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
 
 
-export function ftrace(functionId, accepted_visibility, files) {
+export function ftrace(functionId, accepted_visibility, files, noColorOutput = false) {
   if (files.length === 0) {
-    console.log('No files were specified for analysis in the arguments. Bailing...')
-    return
+    return 'No files were specified for analysis in the arguments. Bailing...'
   }
 
   const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
   if (contractToTraverse === undefined || functionToTraverse === undefined) {
-    console.log('You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'.yellow)
-    return
+    return 'You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'
   }
 
   if (accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
-    console.log(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`.yellow)
-    return
+    return `The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`
   }
 
   let functionCallsTree = {}
@@ -264,11 +261,9 @@ export function ftrace(functionId, accepted_visibility, files) {
   let callTree = {}
 
   if(!functionCallsTree.hasOwnProperty(contractToTraverse)) {
-    console.log(`The ${contractToTraverse} contract is not present in the codebase.`.yellow)
-    return
+    return `The ${contractToTraverse} contract is not present in the codebase.`
   } else if (!functionCallsTree[contractToTraverse].hasOwnProperty(functionToTraverse)) {
-    console.log(`The ${functionToTraverse} function is not present in ${contractToTraverse}.`.yellow)
-    return
+    return `The ${functionToTraverse} function is not present in ${contractToTraverse}.`
   }
 
   const seedKeyString = `${contractToTraverse}::${functionToTraverse}`.green
@@ -314,8 +309,9 @@ export function ftrace(functionId, accepted_visibility, files) {
 
         keyString += functionDecorators[functionCallName] === undefined ? '' : functionDecorators[functionCallName]
 
-        keyString = functionCallObject.visibility === 'external' && accepted_visibility !== 'external'
-                    ? keyString.yellow : keyString
+        if(!noColorOutput && functionCallObject.visibility === 'external' && accepted_visibility !== 'external') {
+          keyString = keyString.yellow
+        }
 
         if(touched[keyString] === undefined) {
           parentObject[keyString] = {}
@@ -328,8 +324,10 @@ export function ftrace(functionId, accepted_visibility, files) {
           }
         } else {
           parentObject[keyString] = Object.keys(functionCallsTree[functionCallObject.contract][functionCallName]).length === 0 ?
-                                    {} :
-                                    '..[Repeated Ref]..'.red
+                                      {} :
+                                      noColorOutput ?
+                                        '..[Repeated Ref]..' :
+                                        '..[Repeated Ref]..'.red
         }
       }
     })

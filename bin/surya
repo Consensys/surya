@@ -2,7 +2,7 @@
 const fs = require('fs')
 const colors = require('colors')
 const importer = require('../lib/utils/importer')
-const { describe, graph, inheritance, dependencies, flatten, parse, ftrace, mdreport } = require('../lib/index')
+const { describe, graph, inheritance, dependenciesPrint, flatten, parse, ftrace, mdreport } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
@@ -81,19 +81,7 @@ require('yargs') // eslint-disable-line
     if(argv.i) {
       files = importer.importProfiler(argv.files)
     }
-    let derivedLinearization = dependencies(files, argv.target_contract)
-    if(derivedLinearization){
-      console.log(derivedLinearization[0].yellow)
-  
-      if (derivedLinearization.length < 2) {
-        console.log('No Dependencies Found')
-        return
-      }
-      derivedLinearization.shift()
-
-      const reducer = (accumulator, currentValue) => `${accumulator}\n  ↖ ${currentValue}`
-      console.log(`  ↖ ${derivedLinearization.reduce(reducer)}`)
-    }
+    console.log(dependenciesPrint(files, argv.target_contract))
   })
   .command('flatten <files..>', 'output to a single flattened solidity file', (yargs) => {
     yargs
