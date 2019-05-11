@@ -193,7 +193,18 @@ export function ftrace(functionId, accepted_visibility, files, noColorOutput = f
         // START BLOCK
         if (parserHelpers.isRegularFunctionCall(node)) {
           name = expr.name
+
           localContractName = contractName
+
+          // check if function is implemented in this contract or in any of its dependencies
+          if (dependencies.hasOwnProperty(contractName)) {
+            for (let dep of dependencies[contractName]) {
+              if (functionCallsTree[dep].hasOwnProperty(name)) {
+                localContractName = dep
+              }
+            }
+          }
+
           visibility = 'internal'
         } else if (parserHelpers.isMemberAccess(node)) {
           let object
@@ -260,6 +271,8 @@ export function ftrace(functionId, accepted_visibility, files, noColorOutput = f
   let touched = {}
   let callTree = {}
 
+  console.log(treeify.asTree(functionCallsTree, true))
+
   if(!functionCallsTree.hasOwnProperty(contractToTraverse)) {
     return `The ${contractToTraverse} contract is not present in the codebase.`
   } else if (!functionCallsTree[contractToTraverse].hasOwnProperty(functionToTraverse)) {
@@ -312,6 +325,10 @@ export function ftrace(functionId, accepted_visibility, files, noColorOutput = f
         if(!noColorOutput && functionCallObject.visibility === 'external' && accepted_visibility !== 'external') {
           keyString = keyString.yellow
         }
+
+        console.log('PING')
+        console.log(keyString)
+        console.log(touched[keyString])
 
         if(touched[keyString] === undefined) {
           parentObject[keyString] = {}
