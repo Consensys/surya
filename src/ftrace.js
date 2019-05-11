@@ -266,7 +266,7 @@ export function ftrace(functionId, accepted_visibility, files, noColorOutput = f
     return `The ${functionToTraverse} function is not present in ${contractToTraverse}.`
   }
 
-  const seedKeyString = `${contractToTraverse}::${functionToTraverse}`.green
+  const seedKeyString = noColorOutput ? `${contractToTraverse}::${functionToTraverse}` : `${contractToTraverse}::${functionToTraverse}`.green
   touched[seedKeyString] = true
   callTree[seedKeyString] = {}
 
