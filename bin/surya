@@ -12,6 +12,11 @@ require('yargs') // eslint-disable-line
         describe: 'files to analyze',
         type: 'string'
       })
+      .option('i', {
+        alias: 'import',
+        type: 'boolean',
+        default: false
+      })
   }, (argv) => {
     let files = argv.files
     if(argv.i) {
