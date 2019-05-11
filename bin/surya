@@ -51,7 +51,7 @@ require('yargs') // eslint-disable-line
         default: false
       })
   }, (argv) => {
-    console.log(inheritance(files, {draggable: argv.d, importer: argv.i}))
+    console.log(inheritance(argv.files, {draggable: argv.d, importer: argv.i}))
   })
   .command('dependencies <target_contract> <files..>', 'output a linearized list of smart contract dependencies (linerized inherited parents).', (yargs) => {
     yargs
@@ -69,7 +69,7 @@ require('yargs') // eslint-disable-line
         default: false
       })
   }, (argv) => {
-    console.log(dependenciesPrint(files, argv.target_contract, {importer: argv.i}))
+    console.log(dependenciesPrint(argv.files, argv.target_contract, {importer: argv.i}))
   })
   .command('flatten <files..>', 'output to a single flattened solidity file', (yargs) => {
     yargs
@@ -110,7 +110,7 @@ require('yargs') // eslint-disable-line
         default: false
       })
   }, (argv) => {
-    console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, files, {importer: argv.i}))
+    console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, argv.files, {importer: argv.i}))
   })
   .command('mdreport <outfile> <infiles..>', 'output a markdown file ', (yargs) => {
     yargs
@@ -129,7 +129,7 @@ require('yargs') // eslint-disable-line
       })
   }, (argv) => {
     try {
-      fs.writeFileSync(argv.outfile, mdreport(files, {importer: argv.i}), {flag: 'w',})
+      fs.writeFileSync(argv.outfile, mdreport(argv.infiles, {importer: argv.i}), {flag: 'w',})
     } catch (err) {
         console.log('Error in writing report file')
         console.log(err)
