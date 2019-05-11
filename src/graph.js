@@ -97,7 +97,7 @@ export function graph(files, options) {
     return
   }
 
-  let colorScheme = options.colorScheme || defaultColorScheme
+  let colorScheme = options.hasOwnProperty('colorScheme') ? options.colorScheme : defaultColorScheme
   
   const digraph = graphviz.digraph('G')
   digraph.set('ratio', 'auto')
