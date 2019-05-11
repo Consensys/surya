@@ -271,8 +271,6 @@ export function ftrace(functionId, accepted_visibility, files, noColorOutput = f
   let touched = {}
   let callTree = {}
 
-  console.log(treeify.asTree(functionCallsTree, true))
-
   if(!functionCallsTree.hasOwnProperty(contractToTraverse)) {
     return `The ${contractToTraverse} contract is not present in the codebase.`
   } else if (!functionCallsTree[contractToTraverse].hasOwnProperty(functionToTraverse)) {
@@ -325,10 +323,6 @@ export function ftrace(functionId, accepted_visibility, files, noColorOutput = f
         if(!noColorOutput && functionCallObject.visibility === 'external' && accepted_visibility !== 'external') {
           keyString = keyString.yellow
         }
-
-        console.log('PING')
-        console.log(keyString)
-        console.log(touched[keyString])
 
         if(touched[keyString] === undefined) {
           parentObject[keyString] = {}
