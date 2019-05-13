@@ -3,7 +3,7 @@
 export { describe } from './describe'
 export { graph } from './graph'
 export { inheritance } from './inheritance'
-export { dependenciesPrint } from './dependencies'
+export { dependenciesPrint, dependencies } from './dependencies'
 export { parse } from './parse'
 export { ftrace } from './ftrace'
 export { mdreport } from './mdreport'
