@@ -7,7 +7,7 @@ const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
 
 
-export function ftrace(functionId, accepted_visibility, files, noColorOutput = false) {
+export function ftrace(functionId, accepted_visibility, files, options = {}, noColorOutput = false) {
   if (files.length === 0) {
     return 'No files were specified for analysis in the arguments. Bailing...'
   }
@@ -31,6 +31,15 @@ export function ftrace(functionId, accepted_visibility, files, noColorOutput = f
   let functionDecorators = {}
 
   let fileASTs = new Array()
+
+  // make the files array unique by typecastign them to a Set and back
+  // this is not needed in case the importer flag is on, because the 
+  // importer module already filters the array internally
+  if(options.importer) {
+    files = importer.importProfiler(files)
+  } else {
+    files = [...new Set(files)];
+  }
 
   for (let file of files) {
 

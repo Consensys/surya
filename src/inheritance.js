@@ -5,7 +5,7 @@ const parser = require('solidity-parser-antlr')
 const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
 
-export function inheritance(files, options) {
+export function inheritance(files, options = {}) {
   if (files.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return
@@ -17,6 +17,15 @@ export function inheritance(files, options) {
 
   // for draggable
   const definition = { "contracts": new Array(), "inheritances": new Array() }
+
+  // make the files array unique by typecastign them to a Set and back
+  // this is not needed in case the importer flag is on, because the 
+  // importer module already filters the array internally
+  if(options.importer) {
+    files = importer.importProfiler(files)
+  } else {
+    files = [...new Set(files)];
+  }
 
   for (let file of files) {
 

@@ -91,13 +91,13 @@ export const defaultColorSchemeDark = {
 
 }
 
-export function graph(files, colorScheme) {
+export function graph(files, options = {}) {
   if (files.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return
   }
 
-  colorScheme = colorScheme || defaultColorScheme
+  let colorScheme = options.hasOwnProperty('colorScheme') ? options.colorScheme : defaultColorScheme
   
   const digraph = graphviz.digraph('G')
   digraph.set('ratio', 'auto')
@@ -111,6 +111,14 @@ export function graph(files, colorScheme) {
     digraph.setEdgeAttribut(i, colorScheme.digraph.edgeAttribs[i])
   }
   
+  // make the files array unique by typecastign them to a Set and back
+  // this is not needed in case the importer flag is on, because the 
+  // importer module already filters the array internally
+  if(options.importer) {
+    files = importer.importProfiler(files)
+  } else {
+    files = [...new Set(files)];
+  }
 
   // initialize vars that persist over file parsing loops
   let userDefinedStateVars = {}

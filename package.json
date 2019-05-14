@@ -22,7 +22,7 @@
     }
   },
   "devDependencies": {
-    "babel-cli": "*",
+    "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "chai": "^4.2.0",
     "coveralls": "^3.0.3",

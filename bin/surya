@@ -12,12 +12,13 @@ require('yargs') // eslint-disable-line
         describe: 'files to analyze',
         type: 'string'
       })
+      .option('i', {
+        alias: 'import',
+        type: 'boolean',
+        default: false
+      })
   }, (argv) => {
-    let files = argv.files
-    if(argv.i) {
-      files = importer.importProfiler(argv.files)
-    }
-    describe(files)
+    describe(argv.files, {importer: argv.i})
   })
   .command('graph <files..>', 'generate graph of contract function calls.', (yargs) => {
     yargs
@@ -31,12 +32,7 @@ require('yargs') // eslint-disable-line
         default: false
       })
   }, (argv) => {
-    //Derive the whole system from recursive import statements
-    let files = argv.files
-    if(argv.i) {
-      files = importer.importProfiler(argv.files)
-    }
-    console.log(graph(files))
+    console.log(graph(argv.files, {importer: argv.i}))
   })
   .command('inheritance <files..>', 'generate graph of contract inheritance tree.', (yargs) => {
     yargs
@@ -55,11 +51,7 @@ require('yargs') // eslint-disable-line
         default: false
       })
   }, (argv) => {
-    let files = argv.files
-    if(argv.i) {
-      files = importer.importProfiler(argv.files)
-    }
-    console.log(inheritance(files, {draggable: argv.d}))
+    console.log(inheritance(argv.files, {draggable: argv.d, importer: argv.i}))
   })
   .command('dependencies <target_contract> <files..>', 'output a linearized list of smart contract dependencies (linerized inherited parents).', (yargs) => {
     yargs
@@ -77,11 +69,7 @@ require('yargs') // eslint-disable-line
         default: false
       })
   }, (argv) => {
-    let files = argv.files
-    if(argv.i) {
-      files = importer.importProfiler(argv.files)
-    }
-    console.log(dependenciesPrint(files, argv.target_contract))
+    console.log(dependenciesPrint(argv.files, argv.target_contract, {importer: argv.i}))
   })
   .command('flatten <files..>', 'output to a single flattened solidity file', (yargs) => {
     yargs
@@ -122,11 +110,7 @@ require('yargs') // eslint-disable-line
         default: false
       })
   }, (argv) => {
-    let files = argv.files
-    if(argv.i) {
-      files = importer.importProfiler(argv.files)
-    }
-    console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, files))
+    console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, argv.files, {importer: argv.i}))
   })
   .command('mdreport <outfile> <infiles..>', 'output a markdown file ', (yargs) => {
     yargs
@@ -144,12 +128,8 @@ require('yargs') // eslint-disable-line
         default: false
       })
   }, (argv) => {
-    let files = argv.infiles
-    if(argv.i) {
-      files = importer.importProfiler(argv.infiles)
-    }
     try {
-      fs.writeFileSync(argv.outfile, mdreport(files), {flag: 'w'})
+      fs.writeFileSync(argv.outfile, mdreport(argv.infiles, {importer: argv.i}), {flag: 'w',})
     } catch (err) {
         console.log('Error in writing report file')
         console.log(err)
