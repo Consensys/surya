@@ -2,7 +2,7 @@
 const fs = require('fs')
 const colors = require('colors')
 const importer = require('../lib/utils/importer')
-const { describe, graph, inheritance, dependenciesPrint, flatten, parse, ftrace, mdreport } = require('../lib/index')
+const { describe, graph, graphCC, inheritance, dependenciesPrint, flatten, parse, ftrace, mdreport } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
@@ -33,6 +33,20 @@ require('yargs') // eslint-disable-line
       })
   }, (argv) => {
     console.log(graph(argv.files, {importer: argv.i}))
+  })
+  .command('graphCC <files..>', 'generate graph of contract-to-contract calls.', (yargs) => {
+    yargs
+      .positional('files', {
+        describe: 'files to analyze',
+        type: 'string'
+      })
+      .option('i', {
+        alias: 'import',
+        type: 'boolean',
+        default: false
+      })
+  }, (argv) => {
+    console.log(graphCC(argv.files, {importer: argv.i}))
   })
   .command('inheritance <files..>', 'generate graph of contract inheritance tree.', (yargs) => {
     yargs

@@ -2,6 +2,7 @@
 
 export { describe } from './describe'
 export { graph } from './graph'
+export { graphCC } from './graph-cc'
 export { inheritance } from './inheritance'
 export { dependenciesPrint, dependencies } from './dependencies'
 export { parse } from './parse'
