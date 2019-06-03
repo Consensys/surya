@@ -29,12 +29,13 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   let dependencies = {}
   let modifiers = {}
   let functionDecorators = {}
+  let usingForDeclaration = {}
 
   let fileASTs = new Array()
   let contractASTIndex = {}
 
   // make the files array unique by typecastign them to a Set and back
-  // this is not needed in case the importer flag is on, because the 
+  // this is not needed in case the importer flag is on, because the
   // importer module already filters the array internally
   if(options.importer) {
     files = importer.importProfiler(files)
@@ -67,10 +68,24 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
         contractASTIndex[contractName] = fileASTs.length - 1
 
         userDefinedStateVars[contractName] = {}
+        usingForDeclaration[contractName] = {}
 
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
         )
+      },
+
+      UsingForDeclaration(node) {
+        let typeName = null
+        if (!node.typeName) {
+          typeName = "*"
+        } else if (parserHelpers.isType(node.typeName, "ElementaryTypeName")) {
+          typeName = node.typeName.name
+        } else if (parserHelpers.isType(node.typeName, "UserDefinedTypeName")) {
+          typeName = node.typeName.namePath
+        }
+
+        usingForDeclaration[contractName][typeName] = node.libraryName
       },
 
       StateVariableDeclaration(node) {
@@ -110,9 +125,9 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
 
   /****************************
-   * 
+   *
    * INTERNAL FUNCTIONS BLOCK
-   * 
+   *
    ****************************/
 
   function modifierCalls(modifierName, contractName) {
@@ -150,7 +165,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       },
 
       'ContractDefinition:exit': function(node) {
-        contractName = null 
+        contractName = null
         tempUserDefinedStateVars = {}
       },
 
@@ -299,7 +314,14 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
             localContractName = dependencies[contractName][1]
           // the next two cases are checking if any user defined contract variable members were accessed
           } else if (tempUserDefinedStateVars[object] !== undefined) {
-            localContractName = tempUserDefinedStateVars[object]
+            const structName = tempUserDefinedStateVars[object]
+            if (structName in usingForDeclaration[contractName]) {
+              localContractName = usingForDeclaration[contractName][structName]
+            } else if ("*" in usingForDeclaration[contractName]) {
+              localContractName = usingForDeclaration[contractName]["*"]
+            } else {
+              return
+            }
           } else if (userDefinedLocalVars[object] !== undefined) {
             localContractName = userDefinedLocalVars[object]
           } else {

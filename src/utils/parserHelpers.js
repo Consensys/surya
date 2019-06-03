@@ -46,6 +46,11 @@ const parserHelpers = {
         && node.typeName.type === 'ElementaryTypeName'
         && node.typeName.name === 'address'
   },
+
+  isType: (node, type) => {
+    return node.hasOwnProperty('type')
+        && node.type === type
+  }
 }
 
 module.exports = parserHelpers
