@@ -143,6 +143,18 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
             functionCallsTree[contractName][modifierName] : {}
   }
 
+  function findImplementation(contracts, name, defaultImplementation) {
+    for (let contract of contracts) {
+      if (!functionCallsTree.hasOwnProperty(contract))
+        constructPerFileFunctionCallTree(fileAST[contractASTIndex[contract]])
+
+      if (functionCallsTree[contract].hasOwnProperty(name)) {
+        return contract
+      }
+    }
+    return defaultImplementation
+  }
+
   function constructPerFileFunctionCallTree(ast) {
     let contractName = null
     let functionName = null
@@ -266,14 +278,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
           // check if function is implemented in this contract or in any of its dependencies
           if (dependencies.hasOwnProperty(contractName)) {
-            for (let dep of dependencies[contractName]) {
-              if (!functionCallsTree.hasOwnProperty(dep))
-                constructPerFileFunctionCallTree(fileAST[contractASTIndex[dep]])
-
-              if (functionCallsTree[dep].hasOwnProperty(name)) {
-                localContractName = dep
-              }
-            }
+            localContractName = findImplementation(dependencies[contractName], name, contractName)
           }
 
           visibility = 'internal'
@@ -309,9 +314,13 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
           // Special keywords cases: this, super
           if (object === 'this') {
-            localContractName = contractName
+            if (dependencies.hasOwnProperty(contractName)) {
+              localContractName = findImplementation(dependencies[contractName], name, contractName)
+            }
           } else if (object === 'super') {
-            localContractName = dependencies[contractName][1]
+            if (dependencies.hasOwnProperty(contractName)) {
+              localContractName = findImplementation(dependencies[contractName].slice(1), name, contractName)
+            }
           // the next two cases are checking if any user defined contract variable members were accessed
           } else if (tempUserDefinedStateVars[object] !== undefined) {
             const structName = tempUserDefinedStateVars[object]

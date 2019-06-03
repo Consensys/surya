@@ -51,8 +51,8 @@ export const defaultColorSchemeDark = {
       penwidth:"3"
     },
     edgeAttribs : {
-      color:"#fcfcfc", 
-      penwidth:"2", 
+      color:"#fcfcfc",
+      penwidth:"2",
       fontname:"helvetica Neue Ultra Light"
     }
   },
@@ -98,7 +98,7 @@ export function graph(files, options = {}) {
   }
 
   let colorScheme = options.hasOwnProperty('colorScheme') ? options.colorScheme : defaultColorScheme
-  
+
   const digraph = graphviz.digraph('G')
   digraph.set('ratio', 'auto')
   digraph.set('page', '100')
@@ -110,9 +110,9 @@ export function graph(files, options = {}) {
   for(let i in colorScheme.digraph.edgeAttribs){
     digraph.setEdgeAttribut(i, colorScheme.digraph.edgeAttribs[i])
   }
-  
+
   // make the files array unique by typecastign them to a Set and back
-  // this is not needed in case the importer flag is on, because the 
+  // this is not needed in case the importer flag is on, because the
   // importer module already filters the array internally
   if(options.importer) {
     files = importer.importProfiler(files)
@@ -164,16 +164,16 @@ export function graph(files, options = {}) {
           if(colorScheme.contract.defined.fontcolor){
             cluster.set('fontcolor', colorScheme.contract.undefined.fontcolor)
           }
-          
+
           if(colorScheme.contract.defined.style){
             cluster.set('style', colorScheme.contract.defined.style || "filled")
             cluster.set('bgcolor', colorScheme.contract.defined.color)
-          } 
+          }
           else
             cluster.set('style', 'filled')
 
           colorScheme.contract.defined.bgcolor && cluster.set('bgcolor', colorScheme.contract.defined.bgcolor)
-          
+
         } else {
           if(colorScheme.contract.defined.style)
             cluster.set('style', colorScheme.contract.defined.style)
@@ -203,17 +203,21 @@ export function graph(files, options = {}) {
     let contractName = null
     let cluster = null
 
-    function nodeName(functionName, contractName) {
+    function nodeNameBuilder(functionName, contractName) {
+      return `${contractName}.${functionName}`
+    }
+
+    function findImplementation(functionName, contractName) {
       if (dependencies.hasOwnProperty(contractName)) {
         for (let dep of dependencies[contractName]) {
-          const name = `${dep}.${functionName}`
+          const name = nodeNameBuilder(functionName, dep)
           if (digraph.getNode(name)) {
             return name
           }
         }
       }
 
-      return `${contractName}.${functionName}`
+      return nodeNameBuilder(functionName, contractName)
     }
 
     parser.visit(ast, {
@@ -254,8 +258,8 @@ export function graph(files, options = {}) {
             opts.fillcolor = opts.color
           }
         }
-          
-        cluster.addNode(nodeName(name, contractName), opts)
+
+        cluster.addNode(nodeNameBuilder(name, contractName), opts)
       },
 
       ModifierDefinition(node) {
@@ -272,7 +276,7 @@ export function graph(files, options = {}) {
           opts.shape = colorScheme.nodeType.shape
         }
 
-        cluster.addNode(nodeName(name, contractName), opts)
+        cluster.addNode(nodeNameBuilder(name, contractName), opts)
       }
     })
 
@@ -292,21 +296,21 @@ export function graph(files, options = {}) {
       },
 
       'ContractDefinition:exit': function(node) {
-        contractName = null 
+        contractName = null
         tempUserDefinedStateVars = {}
       },
 
       FunctionDefinition(node) {
-        callingScope = nodeName(node.name, contractName)
+        callingScope = nodeNameBuilder(node.name, contractName)
       },
 
       'FunctionDefinition:exit': function(node) {
-        callingScope = null 
+        callingScope = null
         userDefinedLocalVars = {}
       },
 
       ModifierDefinition(node) {
-        callingScope = nodeName(node.name, contractName)
+        callingScope = nodeNameBuilder(node.name, contractName)
       },
 
       'ModifierDefinition:exit': function(node) {
@@ -346,7 +350,7 @@ export function graph(files, options = {}) {
         let opts = {
           color: colorScheme.call.default
         }
-        
+
         if (parserHelpers.isRegularFunctionCall(node)) {
           opts.color = colorScheme.call.regular
           name = expr.name
@@ -408,11 +412,11 @@ export function graph(files, options = {}) {
           if(colorScheme.contract.undefined.style){
             externalCluster.set('style', colorScheme.contract.undefined.style || "filled")
             colorScheme.contract.undefined.bgcolor && externalCluster.set('bgcolor', colorScheme.contract.undefined.bgcolor )
-          } 
+          }
         }
-        
 
-        let localNodeName = nodeName(name, localContractName)
+
+        let localNodeName = findImplementation(name, localContractName)
 
         if (!digraph.getNode(localNodeName) && externalCluster) {
           externalCluster.addNode(localNodeName, { label: name})
@@ -426,14 +430,14 @@ export function graph(files, options = {}) {
   // This next block's purpose is to create a legend on the lower left corner
   // of the graph with color information.
   // We'll do it in dot, by hand, because it's overkill to do it programatically.
-  // 
+  //
   // We'll have to paste this subgraph before the last curly bracket of the diagram
-  
+
   let legendDotString = `
 
 rankdir=LR
 node [shape=plaintext]
-subgraph cluster_01 { 
+subgraph cluster_01 {
 label = "Legend";
 key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
   <tr><td align="right" port="i1">Internal Call</td></tr>
