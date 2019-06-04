@@ -207,17 +207,14 @@ export function graph(files, options = {}) {
       return `${contractName}.${functionName}`
     }
 
-    function findImplementation(functionName, contractName) {
-      if (dependencies.hasOwnProperty(contractName)) {
-        for (let dep of dependencies[contractName]) {
-          const name = nodeNameBuilder(functionName, dep)
-          if (digraph.getNode(name)) {
-            return name
-          }
+    function findImplementation(contracts, functionName) {
+      for (let contract of contracts) {
+        const name = nodeNameBuilder(functionName, contract)
+        if (digraph.getNode(name)) {
+          return contract
         }
       }
-
-      return nodeNameBuilder(functionName, contractName)
+      return contracts[0]
     }
 
     parser.visit(ast, {
@@ -354,6 +351,7 @@ export function graph(files, options = {}) {
         if (parserHelpers.isRegularFunctionCall(node)) {
           opts.color = colorScheme.call.regular
           name = expr.name
+          localContractName = findImplementation(dependencies[contractName], name)
         } else if (parserHelpers.isMemberAccess(node)) {
           let object
 
@@ -383,10 +381,11 @@ export function graph(files, options = {}) {
 
           if (object === 'this') {
             opts.color = colorScheme.call.this
+            localContractName = findImplementation(dependencies[contractName], name)
           } else if (object === 'super') {
             // "super" in this context is gonna be the 2nd element of the dependencies array
             // since the first is the contract itself
-            localContractName = dependencies[localContractName][1]
+            localContractName = findImplementation(dependencies[contractName].slice(1), name)
           } else if (tempUserDefinedStateVars[object] !== undefined) {
             localContractName = tempUserDefinedStateVars[object]
           } else if (userDefinedLocalVars[object] !== undefined) {
@@ -416,7 +415,7 @@ export function graph(files, options = {}) {
         }
 
 
-        let localNodeName = findImplementation(name, localContractName)
+        let localNodeName = nodeNameBuilder(name, localContractName)
 
         if (!digraph.getNode(localNodeName) && externalCluster) {
           externalCluster.addNode(localNodeName, { label: name})
