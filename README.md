@@ -23,6 +23,8 @@ Install it via npm:
 npm install -g surya
 ```
 
+**NOTE:** In order to view the graph output, you need to have `graphviz` installed, so that you can run the `dot` command.
+
 ## Command List
 
 ### describe
