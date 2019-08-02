@@ -39,7 +39,7 @@
     "jquery": "^3.4.0",
     "jsplumb": "2.7.13",
     "sha1-file": "^1.0.4",
-    "solidity-parser-antlr": "^0.4.2",
+    "solidity-parser-antlr": "^0.4.7",
     "treeify": "^1.1.0",
     "yargs": "^11.1.0"
   }
