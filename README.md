@@ -50,12 +50,11 @@ A red `#` indicates that it's able to modify state.
 
 ### inheritance
 
-The `inheritance` command outputs a DOT-formatted graph of the inheritance tree.
+The `inheritance` command outputs a DOT-formatted graph of the inheritance tree. For Windows machines, the `>` should be replaced with `-o`.
 
 ```shell
 surya inheritance MyContract.sol | dot -Tpng > MyContract.png
 ```
-
 
 <img src="https://user-images.githubusercontent.com/23033765/39249140-f50d2828-486b-11e8-81b8-8c4ffb7b1b54.png" height="236">
 
