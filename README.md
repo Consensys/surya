@@ -24,6 +24,8 @@ Install it via npm:
 npm install -g surya
 ```
 
+**NOTE:** In order to view the graph output, you need to have `graphviz` installed, so that you can run the `dot` command.
+
 Currently, however, the easiest way to use Surya in your project might be through [VSCode's Solidity Auditor extension](https://github.com/tintinweb/vscode-solidity-auditor) created by [@tintinweb](https://github.com/tintinweb)
 
 <img src="https://user-images.githubusercontent.com/2865694/55647206-65decd00-57dd-11e9-856a-1cceed31d18e.gif" height="236">
@@ -68,12 +70,11 @@ surya graph contracts/**/*.sol | dot -Tpng > MyContract.png
 
 ### inheritance
 
-The `inheritance` command outputs a DOT-formatted graph of the inheritance tree.
+The `inheritance` command outputs a DOT-formatted graph of the inheritance tree. For Windows machines, the `>` should be replaced with `-o`.
 
 ```shell
 surya inheritance MyContract.sol | dot -Tpng > MyContract.png
 ```
-
 
 <img src="https://user-images.githubusercontent.com/23033765/39249140-f50d2828-486b-11e8-81b8-8c4ffb7b1b54.png" height="236">
 
@@ -116,6 +117,13 @@ surya ftrace APMRegistry::_newRepo all MyContract.sol
 
 <img src="https://user-images.githubusercontent.com/4008213/42409007-61473d12-81f1-11e8-8fee-1867cfd66822.png" height="236">
 
+## dependencies
+
+The `dependencies` command outputs the [c3-linearization](https://en.wikipedia.org/wiki/C3_linearization) of a given contract's inheritance graph. Contracts will be listed starting with most-derived, ie. if the same function is defined in more than one contract, the solidity compiler will use the definition in whichever contract is listed first. 
+
+```shell
+surya dependencies Exchange Exchange.sol
+```
 
 <img src="https://user-images.githubusercontent.com/23033765/43811687-cbb312f4-9a8b-11e8-9d8e-98be09fcd2d4.png" height="300">
 
