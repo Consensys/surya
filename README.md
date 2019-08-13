@@ -15,6 +15,7 @@ The name stems from the sun deity [Surya](https://en.wikipedia.org/wiki/Surya)
 
 Why the sun, you ask? Because "sun" in latin and portuguese is [*Sol*](https://en.wikipedia.org/wiki/Solar_deity).
 
+
 ## Getting Started
 
 Install it via npm:
@@ -25,7 +26,16 @@ npm install -g surya
 
 **NOTE:** In order to view the graph output, you need to have `graphviz` installed, so that you can run the `dot` command.
 
+Currently, however, the easiest way to use Surya in your project might be through [VSCode's Solidity Auditor extension](https://github.com/tintinweb/vscode-solidity-auditor) created by [@tintinweb](https://github.com/tintinweb)
+
+<img src="https://user-images.githubusercontent.com/2865694/55647206-65decd00-57dd-11e9-856a-1cceed31d18e.gif" height="236">
+
 ## Command List
+
+Surya takes in a `--no-color` option with any command that disables the colors in the output making it effectively plain text.
+
+All the commands that take in an array of files also take in a flag (`-i`/`--import`) that resolves file imports automatically.
+Please be aware that in the case you use Truffle's "node_modules" remapping import statements, Surya searches up the project directory recursively until it finds a `contracts` directory in the Truffle project *up until the directory you ran the command in*. This is so that we try to prevent any kind of path traversal vulnerabilities that could come from exposing Surya as a service.
 
 ### describe
 
@@ -48,6 +58,16 @@ A yellow `($)`denotes a function is `payable`.
 
 A red `#` indicates that it's able to modify state.
 
+### graph
+
+The `graph` command outputs a DOT-formatted graph of the control flow.
+
+```shell
+surya graph contracts/**/*.sol | dot -Tpng > MyContract.png
+```
+
+<img src="https://user-images.githubusercontent.com/4008213/39415345-fbac4e3a-4c39-11e8-8260-0d9670c352d6.png" height="236">
+
 ### inheritance
 
 The `inheritance` command outputs a DOT-formatted graph of the inheritance tree. For Windows machines, the `>` should be replaced with `-o`.
@@ -58,16 +78,21 @@ surya inheritance MyContract.sol | dot -Tpng > MyContract.png
 
 <img src="https://user-images.githubusercontent.com/23033765/39249140-f50d2828-486b-11e8-81b8-8c4ffb7b1b54.png" height="236">
 
-### graph
+### dependencies
 
-The `graph` command outputs a DOT-formatted graph of the control flow.
+The `dependencies` command outputs the [c3-linearization](https://en.wikipedia.org/wiki/C3_linearization) of a given contract's inheritance graph. Contracts will be listed starting with most-derived, ie. if the same function is defined in more than one contract, the solidity compiler will use the definition in whichever contract is listed first. 
 
 ```shell
-surya graph contracts/**/*.sol | dot -Tpng > MyContract.png
+surya dependencies Exchange Exchange.sol
 ```
 
+### flatten
 
-<img src="https://user-images.githubusercontent.com/4008213/39415345-fbac4e3a-4c39-11e8-8260-0d9670c352d6.png" height="236">
+The `flatten` command outputs a flattened version of the source code, with all import statements replaced by the corresponding source code. Import statements that reference a file that has already been imported, will simply be commented out. 
+
+```shell
+surya flatten MyContract.sol
+```
 
 ### parse
 

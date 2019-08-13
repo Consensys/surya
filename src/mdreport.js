@@ -2,10 +2,9 @@
 
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const colors = require('colors')
 const sha1File = require('sha1-file')
 
-export function mdreport(infiles) {
+export function mdreport(infiles, options = {}) {
   if (infiles.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return
@@ -21,6 +20,15 @@ export function mdreport(infiles) {
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 `
+
+  // make the files array unique by typecastign them to a Set and back
+  // this is not needed in case the importer flag is on, because the 
+  // importer module already filters the array internally
+  if(options.importer) {
+    infiles = importer.importProfiler(infiles)
+  } else {
+    infiles = [...new Set(infiles)];
+  }
 
   for (let file of infiles) {
     filesTable += `| ${file} | ${sha1File(file)} |

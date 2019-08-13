@@ -8,11 +8,5 @@ export function parse(file) {
     const content = fs.readFileSync(file).toString('utf-8')
     const ast = parser.parse(content)
 
-    // fs.writeFile(file + ".ast", JSON.stringify(ast), (err) => {
-    //   if(err) {
-    //       return console.log(err);
-    //   }
-    // }); 
-
     return treeify.asTree(ast, true)
 }
