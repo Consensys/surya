@@ -50,16 +50,20 @@ export function inheritance(files, options = {}) {
 
         if (!digraph.getNode(contractName)) {
 
-        var nodeCur = digraph.addNode(contractName);
-
-        if (node.kind == 'library') {
-                nodeCur.set("color", "red");
-            }  
+        digraph.addNode(contractName);
+ 
 
           // for draggable
           definition.contracts.push(contractName)
         }
-
+          
+          var nodeCur = digraph.getNode(contractName);
+          if (node.kind == 'library') {
+                nodeCur.set("color", "red");
+              }  
+          if (node.kind == 'interface') {
+                nodeCur.set("color", "blue");
+          }
 
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
