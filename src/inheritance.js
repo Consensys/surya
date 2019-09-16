@@ -50,11 +50,7 @@ export function inheritance(files, options = {}) {
 
         if (!digraph.getNode(contractName)) {
 
-        var nodeCur = digraph.addNode(contractName);
-
-        if (node.kind == 'library') {
-                nodeCur.set("color", "red");
-            }  
+          digraph.addNode(contractName)
 
           // for draggable
           definition.contracts.push(contractName)
