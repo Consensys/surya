@@ -233,7 +233,6 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       FunctionCall(node) {
         if (!functionName) {
           // this is a function call outside of functions and modifiers, ignore if exists
-          // TODO: THIS IS ACTUALLY THE CONSTRUCTOR :facepalm:
           return
         }
 
