@@ -120,17 +120,17 @@ export function mdreport(infiles, options = {}) {
     })
   }
 
-  const reportContents = `## Sūrya's Description Report
+  const reportContents = `${'#'.repeat(options.deepness)} Sūrya's Description Report
 
-### Files Description Table
+${'#'.repeat(options.deepness + 1)} Files Description Table
 
 ${filesTable}
 
-### Contracts Description Table
+${'#'.repeat(options.deepness + 1)} Contracts Description Table
 
 ${contractsTable}
 
-### Legend
+${'#'.repeat(options.deepness + 1)} Legend
 
 |  Symbol  |  Meaning  |
 |:--------:|-----------|
