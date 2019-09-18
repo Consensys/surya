@@ -9,7 +9,6 @@
   ],
   "repository": "ConsenSys/surya",
   "license": "Apache-2.0",
-  "publishConfig": { "registry": "https://npm.pkg.github.com/@GNSPS" },
   "bin": "./bin/surya",
   "scripts": {
     "compile": "rm -rf lib && babel src --out-dir lib",
