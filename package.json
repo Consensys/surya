@@ -1,7 +1,7 @@
 {
   "name": "surya",
   "description": "Sūrya, The Sun God: A set of utilities for inspecting the structure of Solidity contracts.",
-  "version": "0.2.12-dev.15",
+  "version": "0.2.12-dev.16",
   "main": "lib/index.js",
   "author": [
     "GNSPS",
@@ -9,7 +9,9 @@
   ],
   "repository": "ConsenSys/surya",
   "license": "Apache-2.0",
-  "publishConfig": { "registry": "https://npm.pkg.github.com/@GNSPS" },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@GNSPS"
+  },
   "bin": "./bin/surya",
   "scripts": {
     "compile": "rm -rf lib && babel src --out-dir lib",
