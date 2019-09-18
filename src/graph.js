@@ -297,7 +297,17 @@ export function graph(files, options = {}) {
       },
 
       FunctionDefinition(node) {
-        callingScope = nodeName(node.name, contractName)
+        let name
+
+        if (node.isConstructor) {
+          name = '<Constructor>'
+        } else if (!node.name) {
+          name = '<Fallback>'
+        } else {
+          name = node.name
+        }
+
+        callingScope = nodeName(name, contractName)
       },
 
       'FunctionDefinition:exit': function(node) {
