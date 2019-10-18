@@ -334,7 +334,8 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           } else if (userDefinedLocalVars[object] !== undefined) {
             localContractName = userDefinedLocalVars[object]
           } else {
-            localContractName = object
+            return
+            // localContractName = object
           }
         } else {
           return
@@ -358,7 +359,8 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   function constructCallTree(reduceJobContractName, reduceJobFunctionName, parentObject) {
     let tempIterable
 
-    if (functionCallsTree[reduceJobContractName][reduceJobFunctionName] === undefined) {
+    if (functionCallsTree[reduceJobContractName] === undefined ||
+      functionCallsTree[reduceJobContractName][reduceJobFunctionName] === undefined) {
       return
     }
 
