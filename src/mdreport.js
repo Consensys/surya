@@ -2,10 +2,9 @@
 
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const colors = require('colors')
 const sha1File = require('sha1-file')
 
-export function mdreport(infiles) {
+export function mdreport(infiles, options = {}) {
   if (infiles.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return
@@ -21,6 +20,15 @@ export function mdreport(infiles) {
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 `
+
+  // make the files array unique by typecastign them to a Set and back
+  // this is not needed in case the importer flag is on, because the 
+  // importer module already filters the array internally
+  if(options.importer) {
+    infiles = importer.importProfiler(infiles)
+  } else {
+    infiles = [...new Set(infiles)];
+  }
 
   for (let file of infiles) {
     filesTable += `| ${file} | ${sha1File(file)} |
@@ -112,17 +120,17 @@ export function mdreport(infiles) {
     })
   }
 
-  const reportContents = `## Sūrya's Description Report
+  const reportContents = `${'#'.repeat(options.deepness)} Sūrya's Description Report
 
-### Files Description Table
+${'#'.repeat(options.deepness + 1)} Files Description Table
 
 ${filesTable}
 
-### Contracts Description Table
+${'#'.repeat(options.deepness + 1)} Contracts Description Table
 
 ${contractsTable}
 
-### Legend
+${'#'.repeat(options.deepness + 1)} Legend
 
 |  Symbol  |  Meaning  |
 |:--------:|-----------|

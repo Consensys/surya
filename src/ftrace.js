@@ -3,27 +3,23 @@
 const parserHelpers = require('./utils/parserHelpers')
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
-const colors = require('colors')
 const { linearize } = require('c3-linearization')
 const treeify = require('treeify')
 
 
-export function ftrace(functionId, accepted_visibility, files) {
+export function ftrace(functionId, accepted_visibility, files, options = {}, noColorOutput = false) {
   if (files.length === 0) {
-    console.log('No files were specified for analysis in the arguments. Bailing...')
-    return
+    return 'No files were specified for analysis in the arguments. Bailing...'
   }
 
   const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
   if (contractToTraverse === undefined || functionToTraverse === undefined) {
-    console.log('You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'.yellow)
-    return
+    return 'You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'
   }
 
   if (accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
-    console.log(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`.yellow)
-    return
+    return `The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`
   }
 
   let functionCallsTree = {}
@@ -35,6 +31,16 @@ export function ftrace(functionId, accepted_visibility, files) {
   let functionDecorators = {}
 
   let fileASTs = new Array()
+  let contractASTIndex = {}
+
+  // make the files array unique by typecastign them to a Set and back
+  // this is not needed in case the importer flag is on, because the 
+  // importer module already filters the array internally
+  if(options.importer) {
+    files = importer.importProfiler(files)
+  } else {
+    files = [...new Set(files)];
+  }
 
   for (let file of files) {
 
@@ -53,11 +59,12 @@ export function ftrace(functionId, accepted_visibility, files) {
     fileASTs.push(ast)
 
     let contractName = null
-    let cluster = null
 
     parser.visit(ast, {
       ContractDefinition(node) {
         contractName = node.name
+
+        contractASTIndex[contractName] = fileASTs.length - 1
 
         userDefinedStateVars[contractName] = {}
 
@@ -79,14 +86,54 @@ export function ftrace(functionId, accepted_visibility, files) {
   dependencies = linearize(dependencies, {reverse: true})
 
   for (let ast of fileASTs) {
+    constructPerFileFunctionCallTree(ast)
+  }
+  // END of file traversing
 
+  let touched = {}
+  let callTree = {}
+
+  if(!functionCallsTree.hasOwnProperty(contractToTraverse)) {
+    return `The ${contractToTraverse} contract is not present in the codebase.`
+  } else if (!functionCallsTree[contractToTraverse].hasOwnProperty(functionToTraverse)) {
+    return `The ${functionToTraverse} function is not present in ${contractToTraverse}.`
+  }
+
+  const seedKeyString = `${contractToTraverse}::${functionToTraverse}`
+  touched[seedKeyString] = true
+  callTree[seedKeyString] = {}
+
+  // Call with seed
+  constructCallTree(contractToTraverse, functionToTraverse, callTree[seedKeyString])
+
+  return treeify.asTree(callTree, true)
+
+
+  /****************************
+   * 
+   * INTERNAL FUNCTIONS BLOCK
+   * 
+   ****************************/
+
+  function modifierCalls(modifierName, contractName) {
+    if (dependencies.hasOwnProperty(contractName)) {
+      for (let dep of dependencies[contractName]) {
+        if (functionCallsTree[dep].hasOwnProperty(modifierName)) {
+          return functionCallsTree[dep][modifierName]
+        }
+      }
+    }
+
+    return functionCallsTree[contractName].hasOwnProperty(modifierName) ?
+            functionCallsTree[contractName][modifierName] : {}
+  }
+
+  function constructPerFileFunctionCallTree(ast) {
     let contractName = null
     let functionName = null
-    let cluster = null
 
     let userDefinedLocalVars = {}
     let tempUserDefinedStateVars = {}
-
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -199,7 +246,21 @@ export function ftrace(functionId, accepted_visibility, files) {
         // START BLOCK
         if (parserHelpers.isRegularFunctionCall(node)) {
           name = expr.name
+
           localContractName = contractName
+
+          // check if function is implemented in this contract or in any of its dependencies
+          if (dependencies.hasOwnProperty(contractName)) {
+            for (let dep of dependencies[contractName]) {
+              if (!functionCallsTree.hasOwnProperty(dep))
+                constructPerFileFunctionCallTree(fileAST[contractASTIndex[dep]])
+
+              if (functionCallsTree[dep].hasOwnProperty(name)) {
+                localContractName = dep
+              }
+            }
+          }
+
           visibility = 'internal'
         } else if (parserHelpers.isMemberAccess(node)) {
           let object
@@ -261,35 +322,6 @@ export function ftrace(functionId, accepted_visibility, files) {
       }
     })
   }
-  // END of file traversing
-
-  let touched = {}
-  let callTree = {}
-
-  if(!functionCallsTree.hasOwnProperty(contractToTraverse)) {
-    console.log(`The ${contractToTraverse} contract is not present in the codebase.`.yellow)
-    return
-  } else if (!functionCallsTree[contractToTraverse].hasOwnProperty(functionToTraverse)) {
-    console.log(`The ${functionToTraverse} function is not present in ${contractToTraverse}.`.yellow)
-    return
-  }
-
-  const seedKeyString = `${contractToTraverse}::${functionToTraverse}`.green
-  touched[seedKeyString] = true
-  callTree[seedKeyString] = {}
-
-  function modifierCalls(modifierName, contractName) {
-    if (dependencies.hasOwnProperty(contractName)) {
-      for (let dep of dependencies[contractName]) {
-        if (functionCallsTree[dep].hasOwnProperty(modifierName)) {
-          return functionCallsTree[dep][modifierName]
-        }
-      }
-    }
-
-    return functionCallsTree[contractName].hasOwnProperty(modifierName) ?
-            functionCallsTree[contractName][modifierName] : {}
-  }
 
   // Function to recursively generate the tree to show in the console
   function constructCallTree(reduceJobContractName, reduceJobFunctionName, parentObject) {
@@ -317,8 +349,9 @@ export function ftrace(functionId, accepted_visibility, files) {
 
         keyString += functionDecorators[functionCallName] === undefined ? '' : functionDecorators[functionCallName]
 
-        keyString = functionCallObject.visibility === 'external' && accepted_visibility !== 'external'
-                    ? keyString.yellow : keyString
+        if(!noColorOutput && functionCallObject.visibility === 'external' && accepted_visibility !== 'external') {
+          keyString = keyString.yellow
+        }
 
         if(touched[keyString] === undefined) {
           parentObject[keyString] = {}
@@ -331,15 +364,13 @@ export function ftrace(functionId, accepted_visibility, files) {
           }
         } else {
           parentObject[keyString] = Object.keys(functionCallsTree[functionCallObject.contract][functionCallName]).length === 0 ?
-                                    {} :
-                                    '..[Repeated Ref]..'.red
+                                      {} :
+                                      noColorOutput ?
+                                        '..[Repeated Ref]..' :
+                                        '..[Repeated Ref]..'.red
         }
       }
     })
   }
 
-  // Call with seed
-  constructCallTree(contractToTraverse, functionToTraverse, callTree[seedKeyString])
-
-  return treeify.asTree(callTree, true)
 }
