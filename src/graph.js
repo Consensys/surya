@@ -3,7 +3,7 @@
 const parserHelpers = require('./utils/parserHelpers')
 const utils = require('./utils/utils')
 const fs = require('fs')
-const parser = require('solidity-parser-antlr')
+const parser = require('solidity-parser-diligence')
 const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
 const importer = require('../lib/utils/importer')
@@ -94,7 +94,7 @@ export const defaultColorSchemeDark = {
 
 export function graph(files, options = {}) {
   if (files.length === 0) {
-    console.log('No files were specified for analysis in the arguments. Bailing...')
+    // console.log('No files were specified for analysis in the arguments. Bailing...')
     return
   }
 
@@ -142,7 +142,7 @@ export function graph(files, options = {}) {
       try {
         return parser.parse(content)
       } catch (err) {
-        console.log(`Error found while parsing the following file: ${file}\n`)
+        console.error(`Error found while parsing the following file: ${file}\n`)
         throw err;
       }
     })()
@@ -224,6 +224,21 @@ export function graph(files, options = {}) {
       return `${contractName}.${functionName}`
     }
 
+    function functionName(node) {
+      let name
+      if (node.isConstructor) {
+        name = '<Constructor>'
+      } else if (node.isFallback) {
+        name = '<Fallback>'
+      } else if (node.isReceiveEther) {
+        name = '<Receive Ether>'
+      } else {
+        name = node.name
+      }
+
+      return name
+    }
+
     parser.visit(ast, {
       ContractDefinition(node) {
         contractName = node.name
@@ -232,15 +247,7 @@ export function graph(files, options = {}) {
       },
 
       FunctionDefinition(node) {
-        let name
-
-        if (node.isConstructor) {
-          name = '<Constructor>'
-        } else if (!node.name) {
-          name = '<Fallback>'
-        } else {
-          name = node.name
-        }
+        const name = functionName(node)
 
         let opts = { label: name }
 
@@ -305,15 +312,7 @@ export function graph(files, options = {}) {
       },
 
       FunctionDefinition(node) {
-        let name
-
-        if (node.isConstructor) {
-          name = '<Constructor>'
-        } else if (!node.name) {
-          name = '<Fallback>'
-        } else {
-          name = node.name
-        }
+        const name = functionName(node)
 
         callingScope = nodeName(name, contractName)
       },

@@ -2,7 +2,7 @@
 
 const fs = require('fs')
 const path = require('path');
-const parser = require('solidity-parser-antlr')
+const parser = require('solidity-parser-diligence')
 
 
 /**

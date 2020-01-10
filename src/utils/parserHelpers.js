@@ -18,7 +18,7 @@ const parserHelpers = {
 
   isMemberAccess: node => {
     const expr = node.expression
-    return expr.type === 'MemberAccess' && !['push', 'pop', 'encode', 'encodePacked'].includes(expr.memberName)
+    return expr.type === 'MemberAccess' && !['push', 'pop', 'encode', 'encodePacked', 'encodeWithSelector', 'encodeWithSignature', 'decode'].includes(expr.memberName)
   },
 
   isMemberAccessOfAddress: node => {

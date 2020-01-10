@@ -1,7 +1,7 @@
 "use strict";
 
 const fs = require('fs')
-const parser = require('solidity-parser-antlr')
+const parser = require('solidity-parser-diligence')
 
 export function describe(files, options = {}, noColorOutput = false) {
   // make the files array unique by typecastign them to a Set and back
