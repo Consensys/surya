@@ -1,4 +1,13 @@
-<img src="https://user-images.githubusercontent.com/4008213/39437435-bed48266-4c98-11e8-834d-1de152667231.jpg" height="236">
+<img align="right" height="200" src="https://user-images.githubusercontent.com/4008213/39437435-bed48266-4c98-11e8-834d-1de152667231.jpg">
+
+<p align="left">
+
+  [<img width="200" alt="get in touch with Consensys Diligence" src="https://user-images.githubusercontent.com/2865694/56826101-91dcf380-685b-11e9-937c-af49c2510aa0.png">](https://diligence.consensys.net)<br/>
+  <sup>
+  [[  🌐  ](https://diligence.consensys.net?utm_source=github_npm&utm_medium=banner&utm_campaign=surya)  [  📩  ](mailto:diligence@consensys.net)  [  🔥  ](https://consensys.github.io/diligence/)]
+  </sup>
+</p>
+<br/><br/>
 
 [![npm](https://img.shields.io/npm/v/surya.svg)](https://www.npmjs.com/package/surya)
 [![Build Status](https://travis-ci.com/ConsenSys/surya.svg?branch=master)](https://travis-ci.com/ConsenSys/surya)
@@ -28,7 +37,7 @@ npm install -g surya
 
 Currently, however, the easiest way to use Surya in your project might be through [VSCode's Solidity Auditor extension](https://github.com/tintinweb/vscode-solidity-auditor) created by [@tintinweb](https://github.com/tintinweb)
 
-<img src="https://user-images.githubusercontent.com/2865694/55647206-65decd00-57dd-11e9-856a-1cceed31d18e.gif" height="236">
+![vscode-solidity-auditor-interactive-graph](https://user-images.githubusercontent.com/2865694/57710279-e27e8a00-766c-11e9-9ca9-8cde50aa31fc.gif)
 
 ## Command List
 
