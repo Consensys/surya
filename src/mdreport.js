@@ -79,10 +79,11 @@ export function mdreport(infiles, options = {}) {
         isConstructor = false
 
         if (node.isConstructor) {
-          isConstructor = true
-          name = '\\<Constructor\\>'
-        } else if (!node.name) {
-          name = '\\<Fallback\\>'
+          name = '<Constructor>'
+        } else if (node.isFallback) {
+          name = '<Fallback>'
+        } else if (node.isReceiveEther) {
+          name = '<Receive Ether>'
         } else {
           name = node.name
         }

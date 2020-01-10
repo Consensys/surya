@@ -158,8 +158,10 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       FunctionDefinition(node) {
         if (node.isConstructor) {
           functionName = '<Constructor>'
-        } else if (!node.name) {
+        } else if (node.isFallback) {
           functionName = '<Fallback>'
+        } else if (node.isReceiveEther) {
+          functionName = '<Receive Ether>'
         } else {
           functionName = node.name
         }
