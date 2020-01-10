@@ -3,6 +3,7 @@
 const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const sha1File = require('sha1-file')
+const importer = require('../lib/utils/importer')
 
 export function mdreport(infiles, options = {}) {
   if (infiles.length === 0) {
@@ -35,7 +36,16 @@ export function mdreport(infiles, options = {}) {
 `
 
     const content = fs.readFileSync(file).toString('utf-8')
-    const ast = parser.parse(content)
+
+    const ast = (() => {
+      try {
+        return parser.parse(content)
+      } catch (err) {
+        console.log(`Error found while parsing the following file: ${file}\n`)
+        throw err;
+      }
+    })()
+
     var isPublic = false
     var doesModifierExist = false
     var isConstructor = false;

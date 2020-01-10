@@ -6,6 +6,7 @@ const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
+const importer = require('../lib/utils/importer')
 
 export const defaultColorScheme = {
   digraph : {
@@ -111,7 +112,7 @@ export function graph(files, options = {}) {
     digraph.setEdgeAttribut(i, colorScheme.digraph.edgeAttribs[i])
   }
   
-  // make the files array unique by typecastign them to a Set and back
+  // make the files array unique by typecasting them to a Set and back
   // this is not needed in case the importer flag is on, because the 
   // importer module already filters the array internally
   if(options.importer) {
@@ -137,7 +138,14 @@ export function graph(files, options = {}) {
       } else throw e;
     }
 
-    const ast = parser.parse(content)
+    const ast = (() => {
+      try {
+        return parser.parse(content)
+      } catch (err) {
+        console.log(`Error found while parsing the following file: ${file}\n`)
+        throw err;
+      }
+    })()
 
     fileASTs.push(ast)
 

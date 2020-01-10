@@ -4,8 +4,7 @@
   "version": "0.2.12-dev.19",
   "main": "lib/index.js",
   "author": [
-    "GNSPS",
-    "federicobond"
+    "GNSPS"
   ],
   "repository": "ConsenSys/surya",
   "license": "Apache-2.0",

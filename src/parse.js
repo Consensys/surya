@@ -6,7 +6,14 @@ const treeify = require('treeify')
 
 export function parse(file) {
     const content = fs.readFileSync(file).toString('utf-8')
-    const ast = parser.parse(content)
+    const ast = (() => {
+        try {
+            return parser.parse(content)
+        } catch (err) {
+            console.log(`Error found while parsing the following file: ${file}`)
+            throw err;
+        }
+    })()
 
     return treeify.asTree(ast, true)
 }

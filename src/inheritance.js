@@ -4,6 +4,7 @@ const fs = require('fs')
 const parser = require('solidity-parser-antlr')
 const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
+const importer = require('../lib/utils/importer')
 
 export function inheritance(files, options = {}) {
   if (files.length === 0) {
@@ -39,7 +40,14 @@ export function inheritance(files, options = {}) {
       } else throw e;
     }
 
-    const ast = parser.parse(content)
+    const ast = (() => {
+      try {
+        return parser.parse(content)
+      } catch (err) {
+        console.log(`Error found while parsing the following file: ${file}\n`)
+        throw err;
+      }
+    })()
 
     let contractName = null
     let dependencies = {}
