@@ -1,12 +1,12 @@
 "use strict";
 
 const fs = require('fs')
-const parser = require('solidity-parser-antlr')
+const parser = require('solidity-parser-diligence')
 const graphviz = require('graphviz')
 const { linearize } = require('c3-linearization')
-const path = require('path')
+const importer = require('../lib/utils/importer')
 
-export function inheritance(files, options) {
+export function inheritance(files, options = {}) {
   if (files.length === 0) {
     console.log('No files were specified for analysis in the arguments. Bailing...')
     return
@@ -18,6 +18,15 @@ export function inheritance(files, options) {
 
   // for draggable
   const definition = { "contracts": new Array(), "inheritances": new Array() }
+
+  // make the files array unique by typecastign them to a Set and back
+  // this is not needed in case the importer flag is on, because the 
+  // importer module already filters the array internally
+  if(options.importer) {
+    files = importer.importProfiler(files)
+  } else {
+    files = [...new Set(files)];
+  }
 
   for (let file of files) {
 
@@ -31,10 +40,16 @@ export function inheritance(files, options) {
       } else throw e;
     }
 
-    const ast = parser.parse(content)
+    const ast = (() => {
+      try {
+        return parser.parse(content)
+      } catch (err) {
+        console.log(`Error found while parsing the following file: ${file}\n`)
+        throw err;
+      }
+    })()
 
     let contractName = null
-    let cluster = null
     let dependencies = {}
 
     parser.visit(ast, {
@@ -42,10 +57,6 @@ export function inheritance(files, options) {
         contractName = node.name
 
         if (!digraph.getNode(contractName)) {
-          let opts = {
-            label: contractName,
-            color: 'gray'
-          }
 
           digraph.addNode(contractName)
 
@@ -60,10 +71,6 @@ export function inheritance(files, options) {
 
         for (let dep of dependencies[contractName]) {
           if (!digraph.getNode(dep)) {
-            let opts = {
-              label: dep,
-              color: 'gray'
-            }
 
             digraph.addNode(dep)
 

@@ -1,10 +1,18 @@
 "use strict";
 
 const fs = require('fs')
-const parser = require('solidity-parser-antlr')
-const colors = require('colors')
+const parser = require('solidity-parser-diligence')
 
-export function describe(files) {
+export function describe(files, options = {}, noColorOutput = false) {
+  // make the files array unique by typecastign them to a Set and back
+  // this is not needed in case the importer flag is on, because the 
+  // importer module already filters the array internally
+  if(options.importer) {
+    files = importer.importProfiler(files)
+  } else {
+    files = [...new Set(files)];
+  }
+  
   for (let file of files) {
     const content = fs.readFileSync(file).toString('utf-8')
     const ast = parser.parse(content)
@@ -17,13 +25,17 @@ export function describe(files) {
           return spec.baseName.namePath
         }).join(', ')
 
-        bases = bases.length ? `(${bases})`.gray : ''
+        bases = bases.length ? 
+                  noColorOutput ?
+                    `(${bases})`
+                    : `(${bases})`.gray
+                  : ''
 
         let specs = ''
         if (node.kind === 'library') {
-          specs += '[Lib]'.yellow
+          specs += noColorOutput ? '[Lib]' : '[Lib]'.yellow
         } else if (node.kind === 'interface') {
-          specs += '[Int]'.blue
+          specs += noColorOutput ? '[Int]' : '[Int]'.blue
         }
 
         console.log(` + ${specs} ${name} ${bases}`)
@@ -37,32 +49,32 @@ export function describe(files) {
         let name
 
         if (node.isConstructor) {
-          name = '<Constructor>'.gray
+          name = noColorOutput ? '<Constructor>' : '<Constructor>'.gray
         } else if (!node.name) {
-          name = '<Fallback>'.gray
+          name = noColorOutput ? '<Fallback>' : '<Fallback>'.gray
         } else {
           name = node.name
         }
 
         let spec = ''
         if (node.visibility === 'public' || node.visibility === 'default') {
-          spec += '[Pub]'.green
+          spec += noColorOutput ? '[Pub]' : '[Pub]'.green
         } else if (node.visibility === 'external') {
-          spec += '[Ext]'.blue
+          spec += noColorOutput ? '[Ext]' : '[Ext]'.blue
         } else if (node.visibility === 'private') {
-          spec += '[Prv]'.red
+          spec += noColorOutput ? '[Prv]' : '[Prv]'.red
         } else if (node.visibility === 'internal') {
-          spec += '[Int]'.gray
+          spec += noColorOutput ? '[Int]' : '[Int]'.gray
         }
 
         let payable = ''
         if (node.stateMutability === 'payable') {
-          payable = ' ($)'.yellow
+          payable = noColorOutput ? ' ($)' : ' ($)'.yellow
         }
 
         let mutating = ''
         if (!node.stateMutability) {
-          mutating = ' #'.red
+          mutating = noColorOutput ? ' #' : ' #'.red
         }
 
         console.log(`    - ${spec} ${name}${payable}${mutating}`)
@@ -71,8 +83,8 @@ export function describe(files) {
   }
 
   // Print a legend for symbols being used
-  let mutationSymbol = ' #'.red
-  let payableSymbol = ' ($)'.yellow
+  let mutationSymbol = noColorOutput ? ' #' : ' #'.red
+  let payableSymbol = noColorOutput ? ' ($)' : ' ($)'.yellow
 
   console.log(`
 ${payableSymbol} = payable function
