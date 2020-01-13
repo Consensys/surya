@@ -10,15 +10,22 @@ function isLowerCase(str) {
 }
 
 const parserHelpers = {
-  isRegularFunctionCall: node => {
+  isRegularFunctionCall: (node, contractNames) => {
     const expr = node.expression
     // @TODO: replace lowercase for better filtering
-    return expr.type === 'Identifier' && isLowerCase(expr.name[0]) && !BUILTINS.includes(expr.name)
+    return expr.type === 'Identifier'
+        && !contractNames.includes(expr.name)
+        && !BUILTINS.includes(expr.name)
   },
 
   isMemberAccess: node => {
     const expr = node.expression
     return expr.type === 'MemberAccess' && !['push', 'pop', 'encode', 'encodePacked', 'encodeWithSelector', 'encodeWithSignature', 'decode'].includes(expr.memberName)
+  },
+
+  isIndexAccess: node => {
+    const expr = node.expression
+    return expr.type === 'IndexAccess'
   },
 
   isMemberAccessOfAddress: node => {
@@ -28,16 +35,28 @@ const parserHelpers = {
         && expr.expression.typeName.name === 'address'
   },
 
-  isAContractTypecast: node => {
+  isAContractTypecast: (node, contractNames) => {
     const expr = node.expression.expression
     // @TODO: replace lowercase for better filtering
     return expr.type === 'FunctionCall'
         && expr.expression.hasOwnProperty('name')
-        && !isLowerCase(expr.expression.name[0])
+        && contractNames.includes(expr.expression.name[0])
   },
 
   isUserDefinedDeclaration: node => {
     return node.hasOwnProperty('typeName') && node.typeName.hasOwnProperty('type') && node.typeName.type === 'UserDefinedTypeName'
+  },
+
+  isElementaryTypeDeclaration: node => {
+    return node.hasOwnProperty('typeName') && node.typeName.hasOwnProperty('type') && node.typeName.type === 'ElementaryTypeName'
+  },
+
+  isArrayDeclaration: node => {
+    return node.hasOwnProperty('typeName') && node.typeName.hasOwnProperty('type') && node.typeName.type === 'ArrayTypeName'
+  },
+
+  isMappingDeclaration: node => {
+    return node.hasOwnProperty('typeName') && node.typeName.hasOwnProperty('type') && node.typeName.type === 'Mapping'
   },
 
   isAddressDeclaration: node => {
