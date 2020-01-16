@@ -405,53 +405,65 @@ export function graph(files, options = {}) {
           color: colorScheme.call.default
         }
         
-        if (
+        if(
           parserHelpers.isRegularFunctionCall(node, contractNames) &&
           functionsPerContract[contractName].includes(expr.name)
         ) {
           opts.color = colorScheme.call.regular
           name = expr.name
-        } else if (parserHelpers.isMemberAccess(node)) {
-          let object
+        } else if(parserHelpers.isMemberAccess(node)) {
+          let object = null
+          let variableType = null
 
           name = expr.memberName
 
-          if (expr.expression.hasOwnProperty('name')) {
+          
+          // checking if the member expression is a simple identifier
+          if(expr.expression.hasOwnProperty('name')) {
             object = expr.expression.name
 
           // checking if it is a member of `address` and pass along it's contents
-          } else if (parserHelpers.isMemberAccessOfAddress(node)) {
+          } else if(parserHelpers.isMemberAccessOfAddress(node)) {
             if(expr.expression.arguments[0].hasOwnProperty('name')) {
               object = expr.expression.arguments[0].name
+            } else if(expr.expression.arguments[0].type === 'NumberLiteral') {
+              object = 'address('+expr.expression.arguments[0].number+')'
             } else {
-              object = JSON.stringify(expr.expression.arguments)
+              object = JSON.stringify(expr.expression.arguments).replace(/"/g,"")
             }
 
           // checking if it is a typecasting to a user-defined contract type
-          } else if (parserHelpers.isAContractTypecast(node, contractNames)) {
+          } else if(parserHelpers.isAContractTypecast(node, contractNames)) {
             object = expr.expression.expression.name
-          } else {
-            return
           }
 
-          // check if member access is a function of a "using for" declaration
-          // START
-          let variableType = null
-          if(localVars.hasOwnProperty(object)) {
-            variableType = localVars[object]
-          } else if(userDefinedLocalVars.hasOwnProperty(object)) {
-            variableType = userDefinedLocalVars[object]
-          } else if(tempUserDefinedStateVars.hasOwnProperty(object)) {
-            variableType = tempUserDefinedStateVars[object]
-          } else if(tempStateVars.hasOwnProperty(object)) {
-            variableType = tempStateVars[object]
-          } else if(object === 'now') {
-            variableType = 'uint256'
+          // check if member expression is a special var and get its canonical type
+          if(parserHelpers.isSpecialVariable(expr.expression)) {
+            variableType = parserHelpers.getSpecialVariableType(expr.expression)
+
+          // check if member expression is a typecast for a canonical type
+          } else if(parserHelpers.isElementaryTypecast(expr.expression)) {
+            variableType = expr.expression.expression.typeName.name
+
+          // else check for vars in defined the contract
+          } else {
+            // check if member access is a function of a "using for" declaration
+            // START
+            if(localVars.hasOwnProperty(object)) {
+              variableType = localVars[object]
+            } else if(userDefinedLocalVars.hasOwnProperty(object)) {
+              variableType = userDefinedLocalVars[object]
+            } else if(tempUserDefinedStateVars.hasOwnProperty(object)) {
+              variableType = tempUserDefinedStateVars[object]
+            } else if(tempStateVars.hasOwnProperty(object)) {
+              variableType = tempStateVars[object]
+            }
           }
 
           // convert to canonical elementary type: uint -> uint256
           variableType = variableType === 'uint' ? 'uint256' : variableType
 
+          // if variable type is not null let's replace "object" for the actual library name
           if(
             variableType !== null &&
             contractUsingFor[contractName].hasOwnProperty(variableType) &&
@@ -469,7 +481,10 @@ export function graph(files, options = {}) {
           }
           // END
 
-          if (object === 'this') {
+          // if we have found nothing so far then create no node
+          if(object === null) {
+            return
+          } else if(object === 'this') {
             opts.color = colorScheme.call.this
           } else if (object === 'super') {
             // "super" in this context is gonna be the 2nd element of the dependencies array
@@ -510,7 +525,7 @@ export function graph(files, options = {}) {
           externalCluster.addNode(localNodeName, { label: name})
         }
 
-        digraph.addEdge(callingScope, localNodeName, opts)
+        let edge = digraph.addEdge(callingScope, localNodeName, opts)
       }
     })
   }
