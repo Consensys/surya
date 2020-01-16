@@ -256,7 +256,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           if (dependencies.hasOwnProperty(contractName)) {
             for (let dep of dependencies[contractName]) {
               if (!functionCallsTree.hasOwnProperty(dep))
-                constructPerFileFunctionCallTree(fileAST[contractASTIndex[dep]])
+                constructPerFileFunctionCallTree(fileASTs[contractASTIndex[dep]])
 
               if (functionCallsTree[dep].hasOwnProperty(name)) {
                 localContractName = dep
