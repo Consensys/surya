@@ -123,8 +123,12 @@ export function graph(files, options = {}) {
 
   // initialize vars that persist over file parsing loops
   let userDefinedStateVars = {}
+  let stateVars = {}
   let dependencies = {}
   let fileASTs = new Array()
+  let functionsPerContract = {}
+  let contractUsingFor = {}
+  let contractNames = new Array()
 
   for (let file of files) {
 
@@ -155,6 +159,8 @@ export function graph(files, options = {}) {
     parser.visit(ast, {
       ContractDefinition(node) {
         contractName = node.name
+        contractNames.push(contractName)
+        
         let kind=""
         if (node.kind=="interface"){
           kind="  (iface)"
@@ -163,6 +169,9 @@ export function graph(files, options = {}) {
         }
 
         userDefinedStateVars[contractName] = {}
+        stateVars[contractName] = {}
+        functionsPerContract[contractName] = new Array()
+        contractUsingFor[contractName] = {}
 
         if(!(cluster = digraph.getCluster(`"cluster${contractName}"`))) {
           cluster = digraph.addCluster(`"cluster${contractName}"`)
@@ -198,8 +207,22 @@ export function graph(files, options = {}) {
         for (let variable of node.variables) {
           if (parserHelpers.isUserDefinedDeclaration(variable)) {
             userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath
+          } else if (parserHelpers.isElementaryTypeDeclaration(variable)) {
+            stateVars[contractName][variable.name] = variable.typeName.name
+          } else if (parserHelpers.isArrayDeclaration(variable)) {
+            stateVars[contractName][variable.name] = variable.typeName.baseTypeName.namePath
+          } else if (parserHelpers.isMappingDeclaration(variable)) {
+            stateVars[contractName][variable.name] = variable.typeName.valueType.name
           }
         }
+      },
+
+      FunctionDefinition(node) {
+        functionsPerContract[contractName].push(node.name)
+      },
+
+      UsingForDeclaration(node) {
+        contractUsingFor[contractName][node.typeName.name] = node.libraryName
       }
     })
   }
@@ -293,7 +316,9 @@ export function graph(files, options = {}) {
 
     let callingScope = null
     let userDefinedLocalVars = {}
+    let localVars = {}
     let tempUserDefinedStateVars = {}
+    let tempStateVars = {}
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -301,14 +326,17 @@ export function graph(files, options = {}) {
 
         for (let dep of dependencies[contractName]) {
           Object.assign(tempUserDefinedStateVars, userDefinedStateVars[dep])
+          Object.assign(tempStateVars, stateVars[dep])
         }
 
         Object.assign(tempUserDefinedStateVars, userDefinedStateVars[contractName])
+        Object.assign(tempStateVars, stateVars[contractName])
       },
 
       'ContractDefinition:exit': function(node) {
         contractName = null 
         tempUserDefinedStateVars = {}
+        tempStateVars = {}
       },
 
       FunctionDefinition(node) {
@@ -320,6 +348,7 @@ export function graph(files, options = {}) {
       'FunctionDefinition:exit': function(node) {
         callingScope = null 
         userDefinedLocalVars = {}
+        localVars = {}
       },
 
       ModifierDefinition(node) {
@@ -332,21 +361,33 @@ export function graph(files, options = {}) {
 
       ParameterList(node) {
         for (let parameter of node.parameters) {
-          if (parserHelpers.isUserDefinedDeclaration(parameter)) {
+          if (parameter.name === null) {
+            return
+          } else if (parserHelpers.isUserDefinedDeclaration(parameter)) {
             userDefinedLocalVars[parameter.name] = parameter.typeName.namePath
+          } else if (callingScope) {
+            localVars[parameter.name] = parameter.typeName.name
           }
         }
       },
 
       VariableDeclaration(node) {
-        if (callingScope && parserHelpers.isUserDefinedDeclaration(node)) {
+        if (callingScope && node.name === null) {
+          return
+        } else if (callingScope && parserHelpers.isUserDefinedDeclaration(node)) {
           userDefinedLocalVars[node.name] = node.typeName.namePath
+        } else if (callingScope && parserHelpers.isElementaryTypeDeclaration(node)) {
+          localVars[node.name] = node.typeName.name
+        } else if (callingScope && parserHelpers.isArrayDeclaration(node)) {
+          localVars[node.name] = node.typeName.baseTypeName.namePath
+        } else if (callingScope && parserHelpers.isMappingDeclaration(node)) {
+          localVars[node.name] = node.typeName.valueType.name
         }
       },
 
       ModifierInvocation(node) {
-        if (callingScope) {
-          // digraph.addEdge(callingScope, nodeName(node.name, contractName), { color: 'yellow' })
+        if (options.enableModifierEdges && callingScope) {
+          digraph.addEdge(callingScope, nodeName(node.name, contractName), { color: 'yellow' })
         }
       },
 
@@ -364,37 +405,86 @@ export function graph(files, options = {}) {
           color: colorScheme.call.default
         }
         
-        if (parserHelpers.isRegularFunctionCall(node)) {
+        if(
+          parserHelpers.isRegularFunctionCall(node, contractNames) &&
+          functionsPerContract[contractName].includes(expr.name)
+        ) {
           opts.color = colorScheme.call.regular
           name = expr.name
-        } else if (parserHelpers.isMemberAccess(node)) {
-          let object
+        } else if(parserHelpers.isMemberAccess(node)) {
+          let object = null
+          let variableType = null
 
           name = expr.memberName
 
-          if (expr.expression.hasOwnProperty('name')) {
+          
+          // checking if the member expression is a simple identifier
+          if(expr.expression.hasOwnProperty('name')) {
             object = expr.expression.name
 
           // checking if it is a member of `address` and pass along it's contents
-          } else if (parserHelpers.isMemberAccessOfAddress(node)) {
+          } else if(parserHelpers.isMemberAccessOfAddress(node)) {
             if(expr.expression.arguments[0].hasOwnProperty('name')) {
               object = expr.expression.arguments[0].name
+            } else if(expr.expression.arguments[0].type === 'NumberLiteral') {
+              object = 'address('+expr.expression.arguments[0].number+')'
             } else {
-              object = JSON.stringify(expr.expression.arguments)
+              object = JSON.stringify(expr.expression.arguments).replace(/"/g,"")
             }
 
           // checking if it is a typecasting to a user-defined contract type
-          } else if (parserHelpers.isAContractTypecast(node)) {
-            if(expr.expression.expression.hasOwnProperty('name')) {
-              object = expr.expression.expression.name
+          } else if(parserHelpers.isAContractTypecast(node, contractNames)) {
+            object = expr.expression.expression.name
+          }
+
+          // check if member expression is a special var and get its canonical type
+          if(parserHelpers.isSpecialVariable(expr.expression)) {
+            variableType = parserHelpers.getSpecialVariableType(expr.expression)
+
+          // check if member expression is a typecast for a canonical type
+          } else if(parserHelpers.isElementaryTypecast(expr.expression)) {
+            variableType = expr.expression.expression.typeName.name
+
+          // else check for vars in defined the contract
+          } else {
+            // check if member access is a function of a "using for" declaration
+            // START
+            if(localVars.hasOwnProperty(object)) {
+              variableType = localVars[object]
+            } else if(userDefinedLocalVars.hasOwnProperty(object)) {
+              variableType = userDefinedLocalVars[object]
+            } else if(tempUserDefinedStateVars.hasOwnProperty(object)) {
+              variableType = tempUserDefinedStateVars[object]
+            } else if(tempStateVars.hasOwnProperty(object)) {
+              variableType = tempStateVars[object]
+            }
+          }
+
+          // convert to canonical elementary type: uint -> uint256
+          variableType = variableType === 'uint' ? 'uint256' : variableType
+
+          // if variable type is not null let's replace "object" for the actual library name
+          if(
+            variableType !== null &&
+            contractUsingFor[contractName].hasOwnProperty(variableType) &&
+            functionsPerContract
+              .hasOwnProperty(contractUsingFor[contractName][variableType]) &&
+            functionsPerContract[
+              contractUsingFor[contractName][variableType]
+            ].includes(name)
+          ) {
+            if(!options.libraries) {
+              object = contractUsingFor[contractName][variableType]
             } else {
               return
             }
-          } else {
-            return
           }
+          // END
 
-          if (object === 'this') {
+          // if we have found nothing so far then create no node
+          if(object === null) {
+            return
+          } else if(object === 'this') {
             opts.color = colorScheme.call.this
           } else if (object === 'super') {
             // "super" in this context is gonna be the 2nd element of the dependencies array
@@ -435,7 +525,7 @@ export function graph(files, options = {}) {
           externalCluster.addNode(localNodeName, { label: name})
         }
 
-        digraph.addEdge(callingScope, localNodeName, opts)
+        let edge = digraph.addEdge(callingScope, localNodeName, opts)
       }
     })
   }

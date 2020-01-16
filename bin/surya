@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fs = require('fs')
 const colors = require('colors')
-const { describe, graph, inheritance, dependenciesPrint, flatten, parse, ftrace, mdreport } = require('../lib/index')
+const { describe, graph, inheritance, dependenciesPrint, flatten, parse, mdreport } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
@@ -30,8 +30,18 @@ require('yargs') // eslint-disable-line
         type: 'boolean',
         default: false
       })
+      .option('l', {
+        alias: 'libraries',
+        type: 'boolean',
+        default: false
+      })
+      .option('m', {
+        alias: 'modifiers',
+        type: 'boolean',
+        default: false
+      })
   }, (argv) => {
-    console.log(graph(argv.files, {importer: argv.i}))
+    console.log(graph(argv.files, {importer: argv.i, libraries: argv.l, enableModifierEdges: argv.m}))
   })
   .command('inheritance <files..>', 'generate graph of contract inheritance tree.', (yargs) => {
     yargs
