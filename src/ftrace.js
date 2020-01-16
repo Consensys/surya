@@ -231,17 +231,17 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       },
 
       'FunctionDefinition:exit': function(node) {
-        callingScope = null 
+        functionName = null 
         userDefinedLocalVars = {}
         localVars = {}
       },
 
       ModifierDefinition(node) {
-        callingScope = nodeName(node.name, contractName)
+        functionName = node.name, contractName
       },
 
       'ModifierDefinition:exit': function(node) {
-        callingScope = null
+        functionName = null
       },
 
       ModifierInvocation(node) {
@@ -299,8 +299,16 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           // check if function is implemented in this contract or in any of its dependencies
           if (dependencies.hasOwnProperty(contractName)) {
             for (let dep of dependencies[contractName]) {
-              if (!functionCallsTree.hasOwnProperty(dep))
+              if (!functionCallsTree.hasOwnProperty(dep)) {
                 constructPerFileFunctionCallTree(fileASTs[contractASTIndex[dep]])
+              }
+
+              if(!functionCallsTree.hasOwnProperty(dep)) {
+                throw new Error(`
+A referenced contract was not available in the provided list of contracts. This usually means that some imported file was left out of the files argument.
+You can try to solve this automatically by using the '-i' flag or by including all the imported files manually.
+`)
+              }
 
               if (functionCallsTree[dep].hasOwnProperty(name)) {
                 localContractName = dep
