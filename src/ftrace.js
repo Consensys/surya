@@ -10,17 +10,17 @@ const importer = require('../lib/utils/importer')
 
 export function ftrace(functionId, accepted_visibility, files, options = {}, noColorOutput = false) {
   if(files.length === 0) {
-    return 'No files were specified for analysis in the arguments. Bailing...'
+    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`)
   }
 
   const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
   if(contractToTraverse === undefined || functionToTraverse === undefined) {
-    return 'You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'
+    throw new Error(`\nYou did not provide the function identifier in the right format "CONTRACT::FUNCTION"\n`)
   }
 
   if(accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
-    return `The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`
+    throw new Error(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`)
   }
 
   if(options.jsonOutput) {
@@ -90,13 +90,6 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       ContractDefinition(node) {
         contractName = node.name
         contractNames.push(contractName)
-        
-        let kind=""
-        if (node.kind=="interface"){
-          kind="  (iface)"
-        } else if(node.kind=="library"){
-          kind="  (lib)"
-        }
 
         userDefinedStateVars[contractName] = {}
         stateVars[contractName] = {}
@@ -328,10 +321,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
               }
 
               if(!functionCallsTree.hasOwnProperty(dep)) {
-                throw new Error(`
-A referenced contract was not available in the provided list of contracts. This usually means that some imported file was left out of the files argument.
-You can try to solve this automatically by using the '-i' flag or by including all the imported files manually.
-`)
+                throw new Error(`\nA referenced contract was not available in the provided list of contracts. This usually means that some imported file was left out of the files argument.\nYou can try to solve this automatically by using the '-i' flag or by including all the imported files manually.\n`)
               }
 
               if (functionCallsTree[dep].hasOwnProperty(name)) {

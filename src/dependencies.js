@@ -12,13 +12,11 @@ const { linearize } = require('c3-linearization')
  */
 export function dependencies(files, childContract, options = {}) {
   if(files.length === 0) {
-    console.log('No files were specified for analysis in the arguments. Bailing...')
-    return
+    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`)
   }
 
   if(!childContract) {
-    console.log('No target contract specified in the arguments. Bailing.. ')
-    return
+    throw new Error(`\nNo target contract specified in the arguments. Bailing...\n`)
   }
 
   // initialize vars that persist over file parsing loops
@@ -76,8 +74,7 @@ export function dependencies(files, childContract, options = {}) {
   }
 
   if (!dependencies[childContract]) {
-    console.log('Specified child contract not found. Bailing.. ')
-    return
+    throw new Error(`\nSpecified child contract not found. Bailing...\n`)
   }
 
   dependencies = linearize(dependencies, {reverse: true})

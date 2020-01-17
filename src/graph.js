@@ -94,8 +94,7 @@ export const defaultColorSchemeDark = {
 
 export function graph(files, options = {}) {
   if (files.length === 0) {
-    // console.log('No files were specified for analysis in the arguments. Bailing...')
-    return
+    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`)
   }
 
   let colorScheme = options.hasOwnProperty('colorScheme') ? options.colorScheme : defaultColorScheme

@@ -5,8 +5,7 @@ const parser = require('solidity-parser-diligence')
 
 export function describe(files, options = {}, noColorOutput = false) {
   if (files.length === 0) {
-    console.log('No files were specified for analysis in the arguments. Bailing...')
-    return
+    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`)
   }
 
   // make the files array unique by typecasting them to a Set and back
