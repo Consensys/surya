@@ -532,7 +532,7 @@ export function graph(files, options = {}) {
           externalCluster.addNode(localNodeName, { label: name})
         }
 
-        let edge = digraph.addEdge(callingScope, localNodeName, opts)
+        digraph.addEdge(callingScope, localNodeName, opts)
       }
     })
   }
