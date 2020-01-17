@@ -237,7 +237,8 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       },
 
       ModifierDefinition(node) {
-        functionName = node.name, contractName
+        functionName = node.name
+        functionCallsTree[contractName][functionName] = {}
       },
 
       'ModifierDefinition:exit': function(node) {
