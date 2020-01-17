@@ -14,13 +14,13 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'c'
       })
       .option('c', {
         alias: 'content',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'i'
       })
   }, (argv) => {
@@ -45,13 +45,13 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'c'
       })
       .option('c', {
         alias: 'content',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'i'
       })
   }, (argv) => {
@@ -71,13 +71,13 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'c'
       })
       .option('c', {
         alias: 'content',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'i'
       })
   }, (argv) => {
@@ -96,13 +96,13 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'c'
       })
       .option('c', {
         alias: 'content',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'i'
       })
   }, (argv) => {
@@ -144,13 +144,13 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'c'
       })
       .option('c', {
         alias: 'content',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'i'
       })
       .option('j', {
@@ -174,13 +174,13 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'c'
       })
       .option('c', {
         alias: 'content',
         type: 'boolean',
-        default: false,
+        default: undefined,
         conflicts: 'i'
       })
       .option('d', {
