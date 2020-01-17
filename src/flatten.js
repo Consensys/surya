@@ -7,8 +7,8 @@ const parser = require('solidity-parser-diligence')
 const { resolveImportPath } = require('./utils/importer')
 
 export function flatten(files) {
-  if (!files) {
-    console.log('No file was specified for analysis in the arguments. Bailing...')
+  if (files.length === 0) {
+    console.log('No files were specified for analysis in the arguments. Bailing...')
     return
   }
 
@@ -36,7 +36,6 @@ export function flatten(files) {
  */
 function replaceImportsWithSource(file, visitedPaths = new Set()) {
   let content
-  // console.log(`// parsing ${file}`)
   try {
     content = fs.readFileSync(file).toString('utf-8')
   } catch (e) {
