@@ -2,6 +2,7 @@
 
 const fs = require('fs')
 const parser = require('solidity-parser-diligence')
+const importer = require('../lib/utils/importer')
 
 export function describe(files, options = {}, noColorOutput = false) {
   if (files.length === 0) {
