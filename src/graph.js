@@ -150,7 +150,11 @@ export function graph(files, options = {}) {
       try {
         return parser.parse(content)
       } catch (err) {
-        console.error(`Error found while parsing the following file: ${file}\n`)
+        if(!options.contentsInFilePath) {
+          console.error(`\nError found while parsing the following file: ${file}\n`)
+        } else {
+          console.error(`\nError found while parsing one of the provided files\n`)
+        }
         throw err;
       }
     })()
