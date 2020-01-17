@@ -115,7 +115,7 @@ export function graph(files, options = {}) {
   // make the files array unique by typecasting them to a Set and back
   // this is not needed in case the importer flag is on, because the 
   // importer module already filters the array internally
-  if(options.importer) {
+  if(!options.contentsInFilePath && options.importer) {
     files = importer.importProfiler(files)
   } else {
     files = [...new Set(files)];
@@ -133,13 +133,17 @@ export function graph(files, options = {}) {
   for (let file of files) {
 
     let content
-    try {
-      content = fs.readFileSync(file).toString('utf-8')
-    } catch (e) {
-      if (e.code === 'EISDIR') {
-        console.error(`Skipping directory ${file}`)
-        continue
-      } else throw e;
+    if(!options.contentsInFilePath) {
+      try {
+        content = fs.readFileSync(file).toString('utf-8')
+      } catch (e) {
+        if (e.code === 'EISDIR') {
+          console.error(`Skipping directory ${file}`)
+          continue
+        } else throw e;
+      }
+    } else {
+      content = file
     }
 
     const ast = (() => {

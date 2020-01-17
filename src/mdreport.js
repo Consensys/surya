@@ -22,20 +22,31 @@ export function mdreport(infiles, options = {}) {
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 `
 
-  // make the files array unique by typecastign them to a Set and back
+  // make the files array unique by typecasting them to a Set and back
   // this is not needed in case the importer flag is on, because the 
   // importer module already filters the array internally
-  if(options.importer) {
-    infiles = importer.importProfiler(infiles)
+  if(!options.contentsInFilePath && options.importer) {
+    files = importer.importProfiler(files)
   } else {
-    infiles = [...new Set(infiles)];
+    files = [...new Set(files)];
   }
 
   for (let file of infiles) {
     filesTable += `| ${file} | ${sha1File(file)} |
 `
 
-    const content = fs.readFileSync(file).toString('utf-8')
+    if(!options.contentsInFilePath) {
+      try {
+        content = fs.readFileSync(file).toString('utf-8')
+      } catch (e) {
+        if (e.code === 'EISDIR') {
+          console.error(`Skipping directory ${file}`)
+          continue
+        } else throw e;
+      }
+    } else {
+      content = file
+    }
 
     const ast = (() => {
       try {
