@@ -9,18 +9,22 @@ const importer = require('../lib/utils/importer')
 
 
 export function ftrace(functionId, accepted_visibility, files, options = {}, noColorOutput = false) {
-  if (files.length === 0) {
+  if(files.length === 0) {
     return 'No files were specified for analysis in the arguments. Bailing...'
   }
 
   const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
-  if (contractToTraverse === undefined || functionToTraverse === undefined) {
+  if(contractToTraverse === undefined || functionToTraverse === undefined) {
     return 'You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'
   }
 
-  if (accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
+  if(accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
     return `The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`
+  }
+
+  if(options.jsonOutput) {
+    noColorOutput = true;
   }
 
   let functionCallsTree = {}
@@ -138,7 +142,11 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   // Call with seed
   constructCallTree(contractToTraverse, functionToTraverse, callTree[seedKeyString])
 
-  return treeify.asTree(callTree, true)
+  if(options.jsonOutput) {
+    return callTree
+  } else {
+    return treeify.asTree(callTree, true)
+  }
 
 
   /****************************

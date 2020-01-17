@@ -118,8 +118,13 @@ require('yargs') // eslint-disable-line
         type: 'boolean',
         default: false
       })
+      .option('j', {
+        alias: 'json',
+        type: 'boolean',
+        default: false
+      })
   }, (argv) => {
-    console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, argv.files, {importer: argv.i}))
+    console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, argv.files, {importer: argv.i, jsonOutput:argv.j}))
   })
   .command('mdreport <outfile> <infiles..>', 'output a markdown file ', (yargs) => {
     yargs
