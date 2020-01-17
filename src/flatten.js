@@ -47,9 +47,14 @@ function replaceImportsWithSource(file, visitedPaths = new Set()) {
   // prepend the code with a space and comment helpful for the flattened output
   content = `// The following code is from flattening this file: ${file}\n${content}`
 
-  const ast = parser.parse(content, {
-    loc: true
-  })
+  const ast = (() => {
+    try {
+      return parser.parse(content, {loc: true})
+    } catch (err) {
+      console.error(`\nError found while parsing the following file: ${file}\n`)
+      throw err;
+    }
+  })()
 
   let importsAndLocations = [];
   parser.visit(ast, {
