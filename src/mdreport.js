@@ -6,6 +6,8 @@ const sha1File = require('sha1-file')
 const importer = require('../lib/utils/importer')
 
 export function mdreport(infiles, options = {}) {
+  let content = ''
+
   if (infiles.length === 0) {
     throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`)
   }
@@ -25,9 +27,9 @@ export function mdreport(infiles, options = {}) {
   // this is not needed in case the importer flag is on, because the 
   // importer module already filters the array internally
   if(!options.contentsInFilePath && options.importer) {
-    files = importer.importProfiler(files)
+    infiles = importer.importProfiler(infiles)
   } else {
-    files = [...new Set(files)];
+    infiles = [...new Set(infiles)];
   }
 
   for (let file of infiles) {
