@@ -7,8 +7,8 @@ const parser = require('solidity-parser-diligence')
 const { resolveImportPath } = require('./utils/importer')
 
 export function flatten(files) {
-  if (!files) {
-    console.log('No file was specified for analysis in the arguments. Bailing...')
+  if (files.length === 0) {
+    console.log('No files were specified for analysis in the arguments. Bailing...')
     return
   }
 
@@ -36,7 +36,6 @@ export function flatten(files) {
  */
 function replaceImportsWithSource(file, visitedPaths = new Set()) {
   let content
-  // console.log(`// parsing ${file}`)
   try {
     content = fs.readFileSync(file).toString('utf-8')
   } catch (e) {
@@ -48,9 +47,14 @@ function replaceImportsWithSource(file, visitedPaths = new Set()) {
   // prepend the code with a space and comment helpful for the flattened output
   content = `// The following code is from flattening this file: ${file}\n${content}`
 
-  const ast = parser.parse(content, {
-    loc: true
-  })
+  const ast = (() => {
+    try {
+      return parser.parse(content, {loc: true})
+    } catch (err) {
+      console.error(`\nError found while parsing the following file: ${file}\n`)
+      throw err;
+    }
+  })()
 
   let importsAndLocations = [];
   parser.visit(ast, {

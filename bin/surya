@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fs = require('fs')
 const colors = require('colors')
-const { describe, graph, inheritance, dependenciesPrint, flatten, parse, mdreport } = require('../lib/index')
+const { describe, graph, inheritance, dependenciesPrint, flatten, parse, ftrace, mdreport } = require('../lib/index')
 
 require('yargs') // eslint-disable-line
   .usage('$0 <cmd> [args]')
@@ -14,21 +14,23 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false
+        default: undefined,
+        conflicts: 'c'
+      })
+      .option('c', {
+        alias: 'content',
+        type: 'boolean',
+        default: undefined,
+        conflicts: 'i'
       })
   }, (argv) => {
-    describe(argv.files, {importer: argv.i})
+    describe(argv.files, {importer: argv.i, contentsInFilePath: argv.c})
   })
   .command('graph <files..>', 'generate graph of contract function calls.', (yargs) => {
     yargs
       .positional('files', {
         describe: 'files to analyze',
         type: 'string'
-      })
-      .option('i', {
-        alias: 'import',
-        type: 'boolean',
-        default: false
       })
       .option('l', {
         alias: 'libraries',
@@ -40,8 +42,20 @@ require('yargs') // eslint-disable-line
         type: 'boolean',
         default: false
       })
+      .option('i', {
+        alias: 'import',
+        type: 'boolean',
+        default: undefined,
+        conflicts: 'c'
+      })
+      .option('c', {
+        alias: 'content',
+        type: 'boolean',
+        default: undefined,
+        conflicts: 'i'
+      })
   }, (argv) => {
-    console.log(graph(argv.files, {importer: argv.i, libraries: argv.l, enableModifierEdges: argv.m}))
+    console.log(graph(argv.files, {importer: argv.i, libraries: argv.l, enableModifierEdges: argv.m, contentsInFilePath: argv.c}))
   })
   .command('inheritance <files..>', 'generate graph of contract inheritance tree.', (yargs) => {
     yargs
@@ -57,10 +71,17 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false
+        default: undefined,
+        conflicts: 'c'
+      })
+      .option('c', {
+        alias: 'content',
+        type: 'boolean',
+        default: undefined,
+        conflicts: 'i'
       })
   }, (argv) => {
-    console.log(inheritance(argv.files, {draggable: argv.d, importer: argv.i}))
+    console.log(inheritance(argv.files, {draggable: argv.d, importer: argv.i, contentsInFilePath: argv.c}))
   })
   .command('dependencies <target_contract> <files..>', 'output a linearized list of smart contract dependencies (linerized inherited parents).', (yargs) => {
     yargs
@@ -75,10 +96,17 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false
+        default: undefined,
+        conflicts: 'c'
+      })
+      .option('c', {
+        alias: 'content',
+        type: 'boolean',
+        default: undefined,
+        conflicts: 'i'
       })
   }, (argv) => {
-    console.log(dependenciesPrint(argv.files, argv.target_contract, {importer: argv.i}))
+    console.log(dependenciesPrint(argv.files, argv.target_contract, {importer: argv.i, contentsInFilePath: argv.c}))
   })
   .command('flatten <files..>', 'output to a single flattened solidity file', (yargs) => {
     yargs
@@ -116,10 +144,22 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
+        default: undefined,
+        conflicts: 'c'
+      })
+      .option('c', {
+        alias: 'content',
+        type: 'boolean',
+        default: undefined,
+        conflicts: 'i'
+      })
+      .option('j', {
+        alias: 'json',
+        type: 'boolean',
         default: false
       })
   }, (argv) => {
-    console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, argv.files, {importer: argv.i}))
+    console.log(ftrace(argv.function_identifier, argv.function_visibility_restrictor, argv.files, {importer: argv.i, jsonOutput:argv.j, contentsInFilePath: argv.c}))
   })
   .command('mdreport <outfile> <infiles..>', 'output a markdown file ', (yargs) => {
     yargs
@@ -134,7 +174,14 @@ require('yargs') // eslint-disable-line
       .option('i', {
         alias: 'import',
         type: 'boolean',
-        default: false
+        default: undefined,
+        conflicts: 'c'
+      })
+      .option('c', {
+        alias: 'content',
+        type: 'boolean',
+        default: undefined,
+        conflicts: 'i'
       })
       .option('d', {
         alias: 'title-deepness',
@@ -143,7 +190,7 @@ require('yargs') // eslint-disable-line
       })
   }, (argv) => {
     try {
-      fs.writeFileSync(argv.outfile, mdreport(argv.infiles, {importer: argv.i, deepness: argv.d}), {flag: 'w',})
+      fs.writeFileSync(argv.outfile, mdreport(argv.infiles, {importer: argv.i, deepness: argv.d, contentsInFilePath: argv.c}), {flag: 'w',})
     } catch (err) {
         console.log('Error in writing report file')
         console.log(err)

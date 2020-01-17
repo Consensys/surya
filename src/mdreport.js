@@ -7,8 +7,7 @@ const importer = require('../lib/utils/importer')
 
 export function mdreport(infiles, options = {}) {
   if (infiles.length === 0) {
-    console.log('No files were specified for analysis in the arguments. Bailing...')
-    return
+    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`)
   }
 
   let filesTable = `
@@ -22,26 +21,41 @@ export function mdreport(infiles, options = {}) {
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 `
 
-  // make the files array unique by typecastign them to a Set and back
+  // make the files array unique by typecasting them to a Set and back
   // this is not needed in case the importer flag is on, because the 
   // importer module already filters the array internally
-  if(options.importer) {
-    infiles = importer.importProfiler(infiles)
+  if(!options.contentsInFilePath && options.importer) {
+    files = importer.importProfiler(files)
   } else {
-    infiles = [...new Set(infiles)];
+    files = [...new Set(files)];
   }
 
   for (let file of infiles) {
     filesTable += `| ${file} | ${sha1File(file)} |
 `
 
-    const content = fs.readFileSync(file).toString('utf-8')
+    if(!options.contentsInFilePath) {
+      try {
+        content = fs.readFileSync(file).toString('utf-8')
+      } catch (e) {
+        if (e.code === 'EISDIR') {
+          console.error(`Skipping directory ${file}`)
+          continue
+        } else throw e;
+      }
+    } else {
+      content = file
+    }
 
     const ast = (() => {
       try {
         return parser.parse(content)
       } catch (err) {
-        console.log(`Error found while parsing the following file: ${file}\n`)
+        if(!options.contentsInFilePath) {
+          console.error(`\nError found while parsing the following file: ${file}\n`)
+        } else {
+          console.error(`\nError found while parsing one of the provided files\n`)
+        }
         throw err;
       }
     })()

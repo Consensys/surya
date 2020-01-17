@@ -19,9 +19,9 @@ export function importProfiler(files, projectDir = process.cwd(), importedFiles 
   for (let file of files){
     // Checks for a valid solidity file
     file = path.resolve(projectDir, file)
-    if (file.indexOf(projectDir) != 0) throw new Error(`Imports must be found in sub dirs of the project directory.
+    if (file.indexOf(projectDir) != 0) throw new Error(`\nImports must be found in sub dirs of the project directory.
     project dir: ${projectDir}
-    path: ${file}`)
+    path: ${file}\n`)
     let content
     try {
       content = fs.readFileSync(file).toString('utf-8')
@@ -33,7 +33,14 @@ export function importProfiler(files, projectDir = process.cwd(), importedFiles 
     }
     // Having verified that it indeed is a solidity file, add it to set of importedFiles
     importedFiles.add(file)
-    const ast = parser.parse(content, {tolerant: true})
+    const ast = (() => {
+      try {
+        return parser.parse(content, {tolerant: true})
+      } catch (err) {
+        console.error(`\nError found while parsing the following file: ${file}\n`)
+        throw err;
+      }
+    })()
     
     // create an array to hold the imported files
     const newFiles = new Array()

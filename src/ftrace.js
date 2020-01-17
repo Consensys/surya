@@ -9,35 +9,45 @@ const importer = require('../lib/utils/importer')
 
 
 export function ftrace(functionId, accepted_visibility, files, options = {}, noColorOutput = false) {
-  if (files.length === 0) {
-    return 'No files were specified for analysis in the arguments. Bailing...'
+  if(files.length === 0) {
+    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`)
   }
 
   const [contractToTraverse, functionToTraverse] = functionId.split('::', 2)
 
-  if (contractToTraverse === undefined || functionToTraverse === undefined) {
-    return 'You did not provide the function identifier in the right format "CONTRACT::FUNCTION"'
+  if(contractToTraverse === undefined || functionToTraverse === undefined) {
+    throw new Error(`\nYou did not provide the function identifier in the right format "CONTRACT::FUNCTION"\n`)
   }
 
-  if (accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
-    return `The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`
+  if(accepted_visibility !== 'all' && accepted_visibility !== 'internal' && accepted_visibility !== 'external') {
+    throw new Error(`The "${accepted_visibility}" type of call to traverse is not known [all|internal|external]`)
+  }
+
+  if(options.jsonOutput) {
+    noColorOutput = true;
   }
 
   let functionCallsTree = {}
 
   // initialize vars that persist over file parsing loops
   let userDefinedStateVars = {}
+  let stateVars = {}
   let dependencies = {}
+
+  let functionsPerContract = {}
+  let contractUsingFor = {}
+  let contractNames = new Array()
+
   let modifiers = {}
   let functionDecorators = {}
 
   let fileASTs = new Array()
   let contractASTIndex = {}
 
-  // make the files array unique by typecastign them to a Set and back
+  // make the files array unique by typecasting them to a Set and back
   // this is not needed in case the importer flag is on, because the 
   // importer module already filters the array internally
-  if(options.importer) {
+  if(!options.contentsInFilePath && options.importer) {
     files = importer.importProfiler(files)
   } else {
     files = [...new Set(files)];
@@ -46,16 +56,31 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   for (let file of files) {
 
     let content
-    try {
-      content = fs.readFileSync(file).toString('utf-8')
-    } catch (e) {
-      if (e.code === 'EISDIR') {
-        console.error(`Skipping directory ${file}`)
-        continue
-      } else throw e;
+    if(!options.contentsInFilePath) {
+      try {
+        content = fs.readFileSync(file).toString('utf-8')
+      } catch (e) {
+        if (e.code === 'EISDIR') {
+          console.error(`Skipping directory ${file}`)
+          continue
+        } else throw e;
+      }
+    } else {
+      content = file
     }
 
-    const ast = parser.parse(content)
+    const ast = (() => {
+      try {
+        return parser.parse(content)
+      } catch (err) {
+        if(!options.contentsInFilePath) {
+          console.error(`\nError found while parsing the following file: ${file}\n`)
+        } else {
+          console.error(`\nError found while parsing one of the provided files\n`)
+        }
+        throw err;
+      }
+    })()
 
     fileASTs.push(ast)
 
@@ -64,10 +89,14 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
     parser.visit(ast, {
       ContractDefinition(node) {
         contractName = node.name
-
-        contractASTIndex[contractName] = fileASTs.length - 1
+        contractNames.push(contractName)
 
         userDefinedStateVars[contractName] = {}
+        stateVars[contractName] = {}
+        functionsPerContract[contractName] = new Array()
+        contractUsingFor[contractName] = {}
+
+        contractASTIndex[contractName] = fileASTs.length - 1
 
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
@@ -78,8 +107,22 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
         for (let variable of node.variables) {
           if (parserHelpers.isUserDefinedDeclaration(variable)) {
             userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath
+          } else if (parserHelpers.isElementaryTypeDeclaration(variable)) {
+            stateVars[contractName][variable.name] = variable.typeName.name
+          } else if (parserHelpers.isArrayDeclaration(variable)) {
+            stateVars[contractName][variable.name] = variable.typeName.baseTypeName.namePath
+          } else if (parserHelpers.isMappingDeclaration(variable)) {
+            stateVars[contractName][variable.name] = variable.typeName.valueType.name
           }
         }
+      },
+
+      FunctionDefinition(node) {
+        functionsPerContract[contractName].push(node.name)
+      },
+
+      UsingForDeclaration(node) {
+        contractUsingFor[contractName][node.typeName.name] = node.libraryName
       }
     })
   }
@@ -107,7 +150,11 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   // Call with seed
   constructCallTree(contractToTraverse, functionToTraverse, callTree[seedKeyString])
 
-  return treeify.asTree(callTree, true)
+  if(options.jsonOutput) {
+    return callTree
+  } else {
+    return treeify.asTree(callTree, true)
+  }
 
 
   /****************************
@@ -134,7 +181,9 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
     let functionName = null
 
     let userDefinedLocalVars = {}
+    let localVars = {}
     let tempUserDefinedStateVars = {}
+    let tempStateVars = {}
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -145,14 +194,17 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
         for (let dep of dependencies[contractName]) {
           Object.assign(tempUserDefinedStateVars, userDefinedStateVars[dep])
+          Object.assign(tempStateVars, stateVars[dep])
         }
 
         Object.assign(tempUserDefinedStateVars, userDefinedStateVars[contractName])
+        Object.assign(tempStateVars, stateVars[contractName])
       },
 
       'ContractDefinition:exit': function(node) {
         contractName = null 
         tempUserDefinedStateVars = {}
+        tempStateVars = {}
       },
 
       FunctionDefinition(node) {
@@ -195,13 +247,13 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       },
 
       'FunctionDefinition:exit': function(node) {
-        functionName = null
+        functionName = null 
         userDefinedLocalVars = {}
+        localVars = {}
       },
 
       ModifierDefinition(node) {
         functionName = node.name
-
         functionCallsTree[contractName][functionName] = {}
       },
 
@@ -215,21 +267,27 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
       ParameterList(node) {
         for (let parameter of node.parameters) {
-          if (parserHelpers.isUserDefinedDeclaration(parameter)) {
-            userDefinedLocalVars[parameter.name] = parameter.typeName.name
-          } else if (parserHelpers.isAddressDeclaration(parameter)) {
-            // starting name with  "#" because it's an illegal character for naming vars in Solidity
-            userDefinedLocalVars[parameter.name] = `#address [${parameter.name}]`
+          if (parameter.name === null) {
+            return
+          } else if (parserHelpers.isUserDefinedDeclaration(parameter)) {
+            userDefinedLocalVars[parameter.name] = parameter.typeName.namePath
+          } else if (functionName) {
+            localVars[parameter.name] = parameter.typeName.name
           }
         }
       },
 
       VariableDeclaration(node) {
-        if (functionName && parserHelpers.isUserDefinedDeclaration(node)) {
+        if (functionName && node.name === null) {
+          return
+        } else if (functionName && parserHelpers.isUserDefinedDeclaration(node)) {
           userDefinedLocalVars[node.name] = node.typeName.namePath
-        } else if (functionName && parserHelpers.isAddressDeclaration(node)) {
-          // starting name with  "#" because it's an illegal character for naming vars in Solidity
-          userDefinedLocalVars[node.name] = `#address [${node.name}]`
+        } else if (functionName && parserHelpers.isElementaryTypeDeclaration(node)) {
+          localVars[node.name] = node.typeName.name
+        } else if (functionName && parserHelpers.isArrayDeclaration(node)) {
+          localVars[node.name] = node.typeName.baseTypeName.namePath
+        } else if (functionName && parserHelpers.isMappingDeclaration(node)) {
+          localVars[node.name] = node.typeName.valueType.name
         }
       },
 
@@ -247,7 +305,10 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
         // The following block is a nested switch statement for creation of the call tree
         // START BLOCK
-        if (parserHelpers.isRegularFunctionCall(node)) {
+        if(
+          parserHelpers.isRegularFunctionCall(node, contractNames) &&
+          functionsPerContract[contractName].includes(expr.name)
+        ) {
           name = expr.name
 
           localContractName = contractName
@@ -255,8 +316,13 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           // check if function is implemented in this contract or in any of its dependencies
           if (dependencies.hasOwnProperty(contractName)) {
             for (let dep of dependencies[contractName]) {
-              if (!functionCallsTree.hasOwnProperty(dep))
+              if (!functionCallsTree.hasOwnProperty(dep)) {
                 constructPerFileFunctionCallTree(fileASTs[contractASTIndex[dep]])
+              }
+
+              if(!functionCallsTree.hasOwnProperty(dep)) {
+                throw new Error(`\nA referenced contract was not available in the provided list of contracts. This usually means that some imported file was left out of the files argument.\nYou can try to solve this automatically by using the '-i' flag or by including all the imported files manually.\n`)
+              }
 
               if (functionCallsTree[dep].hasOwnProperty(name)) {
                 localContractName = dep
@@ -266,41 +332,86 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
           visibility = 'internal'
         } else if (parserHelpers.isMemberAccess(node)) {
-          let object
+          let object = null
+          let variableType = null
 
           visibility = 'external'
-
+          
           name = expr.memberName
 
-          if (expr.expression.hasOwnProperty('name')) {
+          
+          // checking if the member expression is a simple identifier
+          if(expr.expression.hasOwnProperty('name')) {
             object = expr.expression.name
 
           // checking if it is a member of `address` and pass along it's contents
-          } else if (parserHelpers.isMemberAccessOfAddress(node)) {
+          } else if(parserHelpers.isMemberAccessOfAddress(node)) {
             if(expr.expression.arguments[0].hasOwnProperty('name')) {
               object = expr.expression.arguments[0].name
+            } else if(expr.expression.arguments[0].type === 'NumberLiteral') {
+              object = 'address('+expr.expression.arguments[0].number+')'
             } else {
-              object = JSON.stringify(expr.expression.arguments)
+              object = JSON.stringify(expr.expression.arguments).replace(/"/g,"")
             }
 
           // checking if it is a typecasting to a user-defined contract type
-          } else if (parserHelpers.isAContractTypecast(node)) {
+          } else if(parserHelpers.isAContractTypecast(node, contractNames)) {
+            object = expr.expression.expression.name
+          }
 
-            if(expr.expression.expression.hasOwnProperty('name')) {
-              object = expr.expression.expression.name
+          // check if member expression is a special var and get its canonical type
+          if(parserHelpers.isSpecialVariable(expr.expression)) {
+            variableType = parserHelpers.getSpecialVariableType(expr.expression)
+
+          // check if member expression is a typecast for a canonical type
+          } else if(parserHelpers.isElementaryTypecast(expr.expression)) {
+            variableType = expr.expression.expression.typeName.name
+
+          // else check for vars in defined the contract
+          } else {
+            // check if member access is a function of a "using for" declaration
+            // START
+            if(localVars.hasOwnProperty(object)) {
+              variableType = localVars[object]
+            } else if(userDefinedLocalVars.hasOwnProperty(object)) {
+              variableType = userDefinedLocalVars[object]
+            } else if(tempUserDefinedStateVars.hasOwnProperty(object)) {
+              variableType = tempUserDefinedStateVars[object]
+            } else if(tempStateVars.hasOwnProperty(object)) {
+              variableType = tempStateVars[object]
+            }
+          }
+
+          // convert to canonical elementary type: uint -> uint256
+          variableType = variableType === 'uint' ? 'uint256' : variableType
+
+          // if variable type is not null let's replace "object" for the actual library name
+          if(
+            variableType !== null &&
+            contractUsingFor[contractName].hasOwnProperty(variableType) &&
+            functionsPerContract
+              .hasOwnProperty(contractUsingFor[contractName][variableType]) &&
+            functionsPerContract[
+              contractUsingFor[contractName][variableType]
+            ].includes(name)
+          ) {
+            if(!options.libraries) {
+              object = contractUsingFor[contractName][variableType]
             } else {
               return
             }
-          } else {
-            return
           }
+          // END
 
-          // Special keywords cases: this, super
-          if (object === 'this') {
-            localContractName = contractName
+          // if we have found nothing so far then create no node
+          if(object === null) {
+            return
+          } else if(object === 'this') {
+            opts.color = colorScheme.call.this
           } else if (object === 'super') {
-            localContractName = dependencies[contractName][1]
-          // the next two cases are checking if any user defined contract variable members were accessed
+            // "super" in this context is gonna be the 2nd element of the dependencies array
+            // since the first is the contract itself
+            localContractName = dependencies[localContractName][1]
           } else if (tempUserDefinedStateVars[object] !== undefined) {
             localContractName = tempUserDefinedStateVars[object]
           } else if (userDefinedLocalVars[object] !== undefined) {
@@ -308,10 +419,10 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           } else {
             localContractName = object
           }
+
         } else {
           return
         }
-        // END BLOCK
 
         if(!functionCallsTree[contractName][functionName].hasOwnProperty(name)) {
           functionCallsTree[contractName][functionName][name] = {
