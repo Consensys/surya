@@ -453,12 +453,11 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       Object.assign(tempIterable, modifierCalls(modifier, reduceJobContractName));
     }
 
-    Object.entries(tempIterable).forEach((functionCallName, functionCallObject) => {
+    Object.entries(tempIterable).forEach(([functionCallName, functionCallObject]) => {
 
       if (
-        functionCallName !== 'undefined' && (
-          (accepted_visibility == 'all' || functionCallObject.visibility == accepted_visibility)
-        )
+        functionCallName !== 'undefined' &&
+        (accepted_visibility == 'all' || functionCallObject.visibility == accepted_visibility)
       ) {
         let keyString = `${functionCallObject.contract}::${functionCallName}`;
 

@@ -4,8 +4,10 @@
 # We really need better testing! 😂
 set -e
 
+
 ## PARSE
-echo "TEST `parse` command"
+echo "## TEST 'parse' command"
+echo ""
 echo "node ./bin/surya parse ./test/contracts/Generic.sol 2>&1 > /dev/null"
 node ./bin/surya parse ./test/contracts/Generic.sol 2>&1 > /dev/null
 echo "Passed ✅"
@@ -23,9 +25,10 @@ node ./bin/surya parse ./test/contracts/V060.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
 
+
 ## DESCRIBE
 # File by file
-echo "TEST `describe` command"
+echo "## TEST 'describe' command"
 echo ""
 echo "node ./bin/surya describe ./test/contracts/Generic.sol 2>&1 > /dev/null"
 node ./bin/surya describe ./test/contracts/Generic.sol 2>&1 > /dev/null
@@ -54,9 +57,10 @@ node ./bin/surya describe -i ./test/contracts/*.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
 
+
 ## DEPENDENCIES
 # File by file
-echo "TEST `dependencies` command"
+echo "## TEST 'dependencies' command"
 echo ""
 echo "node ./bin/surya dependencies Generic ./test/contracts/Generic.sol 2>&1 > /dev/null"
 node ./bin/surya dependencies Generic ./test/contracts/Generic.sol 2>&1 > /dev/null
@@ -85,9 +89,10 @@ node ./bin/surya dependencies -i Child ./test/contracts/*.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
 
+
 ## INHERITANCE
 # File by file
-echo "TEST `inheritance` command"
+echo "## TEST 'inheritance' command"
 echo ""
 echo "node ./bin/surya inheritance ./test/contracts/Generic.sol 2>&1 > /dev/null"
 node ./bin/surya inheritance ./test/contracts/Generic.sol 2>&1 > /dev/null
@@ -116,9 +121,10 @@ node ./bin/surya inheritance -i ./test/contracts/*.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
 
+
 ## GRAPH
 # File by file
-echo "TEST `graph` command"
+echo "## TEST 'graph' command"
 echo ""
 echo "node ./bin/surya graph ./test/contracts/Generic.sol 2>&1 > /dev/null"
 node ./bin/surya graph ./test/contracts/Generic.sol 2>&1 > /dev/null
@@ -147,9 +153,10 @@ node ./bin/surya graph -i ./test/contracts/*.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
 
+
 ## FTRACE
 # File by file
-echo "TEST `ftrace` command"
+echo "## TEST 'ftrace' command"
 echo ""
 echo "node ./bin/surya ftrace Generic::foo all ./test/contracts/Generic.sol 2>&1 > /dev/null"
 node ./bin/surya ftrace Generic::foo all ./test/contracts/Generic.sol 2>&1 > /dev/null
@@ -205,9 +212,10 @@ node ./bin/surya ftrace Tester::useLib3 all -i ./test/contracts/*.sol 2>&1 > /de
 echo "Passed ✅"
 echo ""
 
+
 ## MDREPORT
 # File by file
-echo "TEST `mdreport` command"
+echo "## TEST 'mdreport' command"
 echo ""
 echo "node ./bin/surya mdreport testreport.md ./test/contracts/Generic.sol 2>&1"
 node ./bin/surya mdreport testreport.md ./test/contracts/Generic.sol 2>&1
