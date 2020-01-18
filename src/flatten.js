@@ -1,7 +1,5 @@
 "use strict";
 
-import { resolve } from 'url';
-
 const fs = require('fs');
 const parser = require('solidity-parser-diligence');
 const { resolveImportPath } = require('./utils/importer');
