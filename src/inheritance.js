@@ -15,9 +15,6 @@ export function inheritance(files, options = {}) {
   digraph.set('ratio', 'auto');
   digraph.set('page', '40');
 
-  // for draggable
-  const definition = { "contracts": [], "inheritances": [] };
-
   // make the files array unique by typecasting them to a Set and back
   // this is not needed in case the importer flag is on, because the 
   // importer module already filters the array internally
@@ -68,9 +65,6 @@ export function inheritance(files, options = {}) {
         if (!digraph.getNode(contractName)) {
 
           digraph.addNode(contractName);
-
-          // for draggable
-          definition.contracts.push(contractName);
         }
 
 
@@ -82,15 +76,9 @@ export function inheritance(files, options = {}) {
           if (!digraph.getNode(dep)) {
 
             digraph.addNode(dep);
-
-            // for draggable
-            definition.contracts.push(dep);
           }
 
           digraph.addEdge(contractName, dep);
-
-          // for draggable
-          definition.inheritances.push(contractName + "=>" + dep);
         }
       }
     });
@@ -98,30 +86,5 @@ export function inheritance(files, options = {}) {
     dependencies = linearize(dependencies, {reverse: true});
   }
 
-  if (options.draggable) {
-    return reportGenerate(definition);
-  } else {
-    return digraph.to_dot();
-  }
-}
-
-function reportGenerate(definition) {
-  // remove CR, LE, and space from definition
-  const outputJSON = JSON.stringify(definition).replace(/\r|\n|\s/g, '');
-
-  // load jspulub and jquery
-  const jsplumbDefaultsCss = fs.readFileSync(__dirname + '/../node_modules/jsplumb/css/jsplumbtoolkit-defaults.css').toString();
-  const jsPlumbJs = fs.readFileSync(__dirname + '/../node_modules/jsplumb/dist/js/jsplumb.min.js').toString();
-  const jquery = fs.readFileSync(__dirname + '/../node_modules/jquery/dist/jquery.min.js').toString();
-
-  // load template html
-  const template = fs.readFileSync(__dirname + '/../resources/template.html').toString();
-
-  // generate report
-  let output = template.replace(/{{definition}}/g, outputJSON);
-  output = output.replace(/{{jsplumbtoolkit-defaults.css}}/g, jsplumbDefaultsCss);
-  output = output.replace(/{{jsplumb.min.js}}/g, jsPlumbJs);
-  output = output.replace(/{{jquery.min.js}}/g, jquery);
-
-  return output;
+  return digraph.to_dot();
 }
