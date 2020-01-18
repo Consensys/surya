@@ -1,125 +1,127 @@
 "use strict";
 
-const fs = require('fs')
-const parser = require('solidity-parser-diligence')
-const graphviz = require('graphviz')
-const { linearize } = require('c3-linearization')
-const importer = require('../lib/utils/importer')
+const fs = require('fs');
+const parser = require('solidity-parser-diligence');
+const graphviz = require('graphviz');
+const { linearize } = require('c3-linearization');
+const importer = require('../lib/utils/importer');
 
 export function inheritance(files, options = {}) {
   if (files.length === 0) {
-    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`)
+    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`);
   }
 
-  const digraph = graphviz.digraph('G')
-  digraph.set('ratio', 'auto')
-  digraph.set('page', '40')
+  const digraph = graphviz.digraph('G');
+  digraph.set('ratio', 'auto');
+  digraph.set('page', '40');
 
   // for draggable
-  const definition = { "contracts": new Array(), "inheritances": new Array() }
+  const definition = { "contracts": [], "inheritances": [] };
 
   // make the files array unique by typecasting them to a Set and back
   // this is not needed in case the importer flag is on, because the 
   // importer module already filters the array internally
   if(!options.contentsInFilePath && options.importer) {
-    files = importer.importProfiler(files)
+    files = importer.importProfiler(files);
   } else {
     files = [...new Set(files)];
   }
 
   for (let file of files) {
 
-    let content
+    let content;
     if(!options.contentsInFilePath) {
       try {
-        content = fs.readFileSync(file).toString('utf-8')
+        content = fs.readFileSync(file).toString('utf-8');
       } catch (e) {
         if (e.code === 'EISDIR') {
-          console.error(`Skipping directory ${file}`)
-          continue
-        } else throw e;
+          console.error(`Skipping directory ${file}`);
+          continue;
+        } else {
+          throw e;
+        }
       }
     } else {
-      content = file
+      content = file;
     }
 
     const ast = (() => {
       try {
-        return parser.parse(content)
+        return parser.parse(content);
       } catch (err) {
         if(!options.contentsInFilePath) {
-          console.error(`\nError found while parsing the following file: ${file}\n`)
+          console.error(`\nError found while parsing the following file: ${file}\n`);
         } else {
-          console.error(`\nError found while parsing one of the provided files\n`)
+          console.error(`\nError found while parsing one of the provided files\n`);
         }
         throw err;
       }
-    })()
+    })();
 
-    let contractName = null
-    let dependencies = {}
+    let contractName = null;
+    let dependencies = {};
 
     parser.visit(ast, {
       ContractDefinition(node) {
-        contractName = node.name
+        contractName = node.name;
 
         if (!digraph.getNode(contractName)) {
 
-          digraph.addNode(contractName)
+          digraph.addNode(contractName);
 
           // for draggable
-          definition.contracts.push(contractName)
+          definition.contracts.push(contractName);
         }
 
 
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
-        )
+        );
 
         for (let dep of dependencies[contractName]) {
           if (!digraph.getNode(dep)) {
 
-            digraph.addNode(dep)
+            digraph.addNode(dep);
 
             // for draggable
-            definition.contracts.push(dep)
+            definition.contracts.push(dep);
           }
 
-          digraph.addEdge(contractName, dep)
+          digraph.addEdge(contractName, dep);
 
           // for draggable
-          definition.inheritances.push(contractName + "=>" + dep)
+          definition.inheritances.push(contractName + "=>" + dep);
         }
       }
-    })
+    });
 
-    dependencies = linearize(dependencies, {reverse: true})
+    dependencies = linearize(dependencies, {reverse: true});
   }
 
   if (options.draggable) {
-    return reportGenerate(definition)
+    return reportGenerate(definition);
   } else {
-    return digraph.to_dot()
+    return digraph.to_dot();
   }
 }
 
 function reportGenerate(definition) {
   // remove CR, LE, and space from definition
-  const outputJSON = JSON.stringify(definition).replace(/\r|\n|\s/g, '')
+  const outputJSON = JSON.stringify(definition).replace(/\r|\n|\s/g, '');
 
   // load jspulub and jquery
-  const jsplumbDefaultsCss = fs.readFileSync(__dirname + '/../node_modules/jsplumb/css/jsplumbtoolkit-defaults.css').toString()
-  const jsPlumbJs = fs.readFileSync(__dirname + '/../node_modules/jsplumb/dist/js/jsplumb.min.js').toString()
-  const jquery = fs.readFileSync(__dirname + '/../node_modules/jquery/dist/jquery.min.js').toString()
+  const jsplumbDefaultsCss = fs.readFileSync(__dirname + '/../node_modules/jsplumb/css/jsplumbtoolkit-defaults.css').toString();
+  const jsPlumbJs = fs.readFileSync(__dirname + '/../node_modules/jsplumb/dist/js/jsplumb.min.js').toString();
+  const jquery = fs.readFileSync(__dirname + '/../node_modules/jquery/dist/jquery.min.js').toString();
 
   // load template html
-  const template = fs.readFileSync(__dirname + '/../resources/template.html').toString()
+  const template = fs.readFileSync(__dirname + '/../resources/template.html').toString();
 
   // generate report
-  let output = template.replace(/{{definition}}/g, outputJSON)
-  output = output.replace(/{{jsplumbtoolkit-defaults.css}}/g, jsplumbDefaultsCss)
-  output = output.replace(/{{jsplumb.min.js}}/g, jsPlumbJs)
-  output = output.replace(/{{jquery.min.js}}/g, jquery)
+  let output = template.replace(/{{definition}}/g, outputJSON);
+  output = output.replace(/{{jsplumbtoolkit-defaults.css}}/g, jsplumbDefaultsCss);
+  output = output.replace(/{{jsplumb.min.js}}/g, jsPlumbJs);
+  output = output.replace(/{{jquery.min.js}}/g, jquery);
 
-  return output
+  return output;
 }

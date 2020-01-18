@@ -1,8 +1,8 @@
 "use strict";
 
-const fs = require('fs')
+const fs = require('fs');
 const path = require('path');
-const parser = require('solidity-parser-diligence')
+const parser = require('solidity-parser-diligence');
 
 
 /**
@@ -18,44 +18,48 @@ const parser = require('solidity-parser-diligence')
 export function importProfiler(files, projectDir = process.cwd(), importedFiles = new Set()) {
   for (let file of files){
     // Checks for a valid solidity file
-    file = path.resolve(projectDir, file)
-    if (file.indexOf(projectDir) != 0) throw new Error(`\nImports must be found in sub dirs of the project directory.
-    project dir: ${projectDir}
-    path: ${file}\n`)
-    let content
+    file = path.resolve(projectDir, file);
+    if (file.indexOf(projectDir) != 0) {
+      throw new Error(`\nImports must be found in sub dirs of the project directory.
+      project dir: ${projectDir}
+      path: ${file}\n`);
+    }
+    let content;
     try {
-      content = fs.readFileSync(file).toString('utf-8')
+      content = fs.readFileSync(file).toString('utf-8');
     } catch (e) {
       if (e.code === 'EISDIR') {
-        console.error(`Skipping directory ${file}`)
-        return importedFiles // empty Set
-      } else throw e;
+        console.error(`Skipping directory ${file}`);
+        return importedFiles; // empty Set
+      } else {
+        throw e;
+      }
     }
     // Having verified that it indeed is a solidity file, add it to set of importedFiles
-    importedFiles.add(file)
+    importedFiles.add(file);
     const ast = (() => {
       try {
-        return parser.parse(content, {tolerant: true})
+        return parser.parse(content, {tolerant: true});
       } catch (err) {
-        console.error(`\nError found while parsing the following file: ${file}\n`)
+        console.error(`\nError found while parsing the following file: ${file}\n`);
         throw err;
       }
-    })()
+    })();
     
     // create an array to hold the imported files
-    const newFiles = new Array()
+    const newFiles = [];
     parser.visit(ast, {
       ImportDirective(node) {
-        let newFile = resolveImportPath(file, node.path, projectDir)
-        newFiles.push(newFile)
+        let newFile = resolveImportPath(file, node.path, projectDir);
+        newFiles.push(newFile);
       }
-    })
+    });
     // Run through the array of files found in this file
-    module.exports.importProfiler(newFiles, projectDir, importedFiles)
+    module.exports.importProfiler(newFiles, projectDir, importedFiles);
   }
     // Convert the set to an array for easy consumption
-  const importedFilesArray = Array.from(importedFiles)
-  return importedFilesArray
+  const importedFilesArray = Array.from(importedFiles);
+  return importedFilesArray;
 }
 
 /// Takes a filepath, and an import path found within it, and finds the corresponding source code
@@ -66,21 +70,21 @@ export function importProfiler(files, projectDir = process.cwd(), importedFiles 
 /// @param      {string}  projectDir        The top-most directory we will search in
 ///
 export function resolveImportPath(baseFilePath, importedFilePath, projectDir = process.cwd()) {
-  const topmostDirArray = projectDir.split(path.sep)
-  let resolvedPath
-  let baseDirPath = path.dirname(baseFilePath)
+  const topmostDirArray = projectDir.split(path.sep);
+  let resolvedPath;
+  let baseDirPath = path.dirname(baseFilePath);
   // if it's a relative or absolute path:
   if (
     importedFilePath.slice(0,1) === '.'
     || importedFilePath.slice(0,1) === '/'
   ) {
-    resolvedPath = path.resolve(baseDirPath, importedFilePath)
+    resolvedPath = path.resolve(baseDirPath, importedFilePath);
   // else it's most likely a special case using a remapping to node_modules dir in Truffle
   } else {
     // we use a string and not the array alone because of different windows and UNIX path roots
-    let currentDir = path.resolve(baseDirPath, '..')
-    let currentDirArray = baseDirPath.split(path.sep)
-    let currentDirName = currentDirArray.pop()
+    let currentDir = path.resolve(baseDirPath, '..');
+    let currentDirArray = baseDirPath.split(path.sep);
+    let currentDirName = currentDirArray.pop();
 
     while (currentDirName != 'contracts') {
       // since we already know the current file is inside the project dir we can check if the
@@ -89,15 +93,15 @@ export function resolveImportPath(baseFilePath, importedFilePath, projectDir = p
       if (topmostDirArray.length >= currentDirArray.length) {
         throw new Error(`Import statement seems to be a Truffle "'node_modules' remapping" but no 'contracts' truffle dir could be found in the project's child dirs. Have you ran 'npm install', already?
         project dir: ${projectDir}
-        path: ${currentDir}`)
+        path: ${currentDir}`);
       }
       // if we still aren't in a folder called 'contracts' go up one level
-      currentDirName = currentDirArray.pop()
-      currentDir = path.resolve(currentDir, '..')
+      currentDirName = currentDirArray.pop();
+      currentDir = path.resolve(currentDir, '..');
     }
 
     // join it all to get the file path
-    resolvedPath = path.join(currentDir, 'node_modules', importedFilePath)
+    resolvedPath = path.join(currentDir, 'node_modules', importedFilePath);
   }
 
   // verify that the resolved path is actually a file
@@ -105,7 +109,7 @@ export function resolveImportPath(baseFilePath, importedFilePath, projectDir = p
     !fs.existsSync(resolvedPath) 
     || !fs.statSync(resolvedPath).isFile()
   ) {
-    throw new Error(`Import path (${resolvedPath}) not resolved to a file`)
+    throw new Error(`Import path (${resolvedPath}) not resolved to a file`);
   }
-  return resolvedPath
+  return resolvedPath;
 }
