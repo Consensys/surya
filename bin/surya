@@ -63,11 +63,6 @@ require('yargs') // eslint-disable-line
         describe: 'files to analyze',
         type: 'string'
       })
-      .option('d', {
-        alias: 'draggable',
-        type: 'boolean',
-        default: false
-      })
       .option('i', {
         alias: 'import',
         type: 'boolean',
@@ -81,7 +76,7 @@ require('yargs') // eslint-disable-line
         conflicts: 'i'
       });
   }, (argv) => {
-    console.log(inheritance(argv.files, {draggable: argv.d, importer: argv.i, contentsInFilePath: argv.c}));
+    console.log(inheritance(argv.files, {importer: argv.i, contentsInFilePath: argv.c}));
   })
   .command('dependencies <target_contract> <files..>', 'output a linearized list of smart contract dependencies (linerized inherited parents).', (yargs) => {
     yargs
