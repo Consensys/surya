@@ -36,12 +36,12 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
   let functionsPerContract = {};
   let contractUsingFor = {};
-  let contractNames = new Array();
+  let contractNames = [];
 
   let modifiers = {};
   let functionDecorators = {};
 
-  let fileASTs = new Array();
+  let fileASTs = [];
   let contractASTIndex = {};
 
   // make the files array unique by typecasting them to a Set and back
@@ -63,7 +63,9 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
         if (e.code === 'EISDIR') {
           console.error(`Skipping directory ${file}`);
           continue;
-        } else throw e;
+        } else {
+          throw e;
+        }
       }
     } else {
       content = file;
@@ -93,7 +95,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
         userDefinedStateVars[contractName] = {};
         stateVars[contractName] = {};
-        functionsPerContract[contractName] = new Array();
+        functionsPerContract[contractName] = [];
         contractUsingFor[contractName] = {};
 
         contractASTIndex[contractName] = fileASTs.length - 1;
@@ -243,7 +245,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
         functionDecorators[functionName] = ` | ${spec}  ${mutating} ${payable}`;
 
         functionCallsTree[contractName][functionName] = {};
-        modifiers[contractName][functionName] = new Array();
+        modifiers[contractName][functionName] = [];
       },
 
       'FunctionDefinition:exit': function(node) {
@@ -431,7 +433,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
             visibility: visibility
           };
         } else {
-          functionCallsTree[contractName][functionName][name].numberOfCalls++;
+          functionCallsTree[contractName][functionName][name].numberOfCalls += 1;
         }
       }
     });
@@ -451,12 +453,11 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       Object.assign(tempIterable, modifierCalls(modifier, reduceJobContractName));
     }
 
-    Object.entries(tempIterable).forEach(([functionCallName, functionCallObject]) => {
+    Object.entries(tempIterable).forEach((functionCallName, functionCallObject) => {
 
       if (
         functionCallName !== 'undefined' && (
-          accepted_visibility == 'all' ||
-          functionCallObject.visibility == accepted_visibility
+          (accepted_visibility == 'all' || functionCallObject.visibility == accepted_visibility)
         )
       ) {
         let keyString = `${functionCallObject.contract}::${functionCallName}`;
