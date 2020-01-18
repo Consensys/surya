@@ -1,8 +1,8 @@
 "use strict";
 
-const fs = require('fs')
-const parser = require('solidity-parser-diligence')
-const { linearize } = require('c3-linearization')
+const fs = require('fs');
+const parser = require('solidity-parser-diligence');
+const { linearize } = require('c3-linearization');
 
 
 /**
@@ -12,74 +12,76 @@ const { linearize } = require('c3-linearization')
  */
 export function dependencies(files, childContract, options = {}) {
   if(files.length === 0) {
-    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`)
+    throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`);
   }
 
   if(!childContract) {
-    throw new Error(`\nNo target contract specified in the arguments. Bailing...\n`)
+    throw new Error(`\nNo target contract specified in the arguments. Bailing...\n`);
   }
 
   // initialize vars that persist over file parsing loops
-  let dependencies = {}
+  let dependencies = {};
 
   // make the files array unique by typecasting them to a Set and back
   // this is not needed in case the importer flag is on, because the 
   // importer module already filters the array internally
   if(!options.contentsInFilePath && options.importer) {
-    files = importer.importProfiler(files)
+    files = importer.importProfiler(files);
   } else {
     files = [...new Set(files)];
   }
 
   for (let file of files) {
 
-    let content
+    let content;
     if(!options.contentsInFilePath) {
       try {
-        content = fs.readFileSync(file).toString('utf-8')
+        content = fs.readFileSync(file).toString('utf-8');
       } catch (e) {
         if (e.code === 'EISDIR') {
-          console.error(`Skipping directory ${file}`)
-          continue
-        } else throw e;
+          console.error(`Skipping directory ${file}`);
+          continue;
+        } else {
+          throw e;
+        }
       }
     } else {
-      content = file
+      content = file;
     }
 
     const ast = (() => {
       try {
-        return parser.parse(content)
+        return parser.parse(content);
       } catch (err) {
         if(!options.contentsInFilePath) {
-          console.error(`\nError found while parsing the following file: ${file}\n`)
+          console.error(`\nError found while parsing the following file: ${file}\n`);
         } else {
-          console.error(`\nError found while parsing one of the provided files\n`)
+          console.error(`\nError found while parsing one of the provided files\n`);
         }
         throw err;
       }
-    })()
+    })();
 
-    let contractName = null
+    let contractName = null;
 
     parser.visit(ast, {
       ContractDefinition(node) {
-        contractName = node.name
+        contractName = node.name;
 
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
-        )
+        );
       }
-    })
+    });
   }
 
   if (!dependencies[childContract]) {
-    throw new Error(`\nSpecified child contract not found. Bailing...\n`)
+    throw new Error(`\nSpecified child contract not found. Bailing...\n`);
   }
 
-  dependencies = linearize(dependencies, {reverse: true})
+  dependencies = linearize(dependencies, {reverse: true});
 
-  return dependencies[childContract]
+  return dependencies[childContract];
 }
 
 /**
@@ -89,24 +91,24 @@ export function dependencies(files, childContract, options = {}) {
  * @returns {array} A c3-linearized list of the of the dependency graph
  */
 export function dependenciesPrint(files, childContract, noColorOutput = false) {
-  let outputString = ''
+  let outputString = '';
 
-  let derivedLinearization = dependencies(files, childContract)
+  let derivedLinearization = dependencies(files, childContract);
 
   if(derivedLinearization){
-    outputString += noColorOutput ? derivedLinearization[0] : derivedLinearization[0].yellow
+    outputString += noColorOutput ? derivedLinearization[0] : derivedLinearization[0].yellow;
     
     if (derivedLinearization.length < 2) {
       outputString += `
-No Dependencies Found`
-      return outputString
+No Dependencies Found`;
+      return outputString;
     }
-    derivedLinearization.shift()
+    derivedLinearization.shift();
 
-    const reducer = (accumulator, currentValue) => `${accumulator}\n  ↖ ${currentValue}`
+    const reducer = (accumulator, currentValue) => `${accumulator}\n  ↖ ${currentValue}`;
     outputString += `
-  ↖ ${derivedLinearization.reduce(reducer)}`
+  ↖ ${derivedLinearization.reduce(reducer)}`;
   }
 
-  return outputString
+  return outputString;
 }
