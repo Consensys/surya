@@ -109,7 +109,16 @@ export function describe(files, options = {}, noColorOutput = false) {
           mutating = noColorOutput ? ' #' : ' #'.red;
         }
 
-        console.log(`    - ${spec} ${name}${payable}${mutating}`);
+        let modifiers = ''
+        for (let m of node.modifiers) {
+          if (!!modifiers) modifiers += ','
+          modifiers += m.name
+        }
+
+        console.log(`    - ${spec} ${name}${payable}${mutating}`)
+        if (!!modifiers) {
+          console.log(`       - modifiers: ${modifiers}`)
+        }
       }
     });
   }
