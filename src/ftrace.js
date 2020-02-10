@@ -408,9 +408,6 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           // if we have found nothing so far then create no node
           if(object === null) {
             return;
-          } else if(object === 'this') {
-            // TODO: Rewrite 
-            // opts.color = colorScheme.call.this;
           } else if (object === 'super') {
             // "super" in this context is gonna be the 2nd element of the dependencies array
             // since the first is the contract itself
