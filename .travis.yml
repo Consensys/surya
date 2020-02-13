@@ -1,6 +1,5 @@
 dist: trusty
 language: node_js
-version: 2.0
 node_js:
 - node
 cache:
