@@ -416,8 +416,7 @@ export function graph(files, options = {}) {
         };
         
         if(
-          parserHelpers.isRegularFunctionCall(node, contractNames) &&
-          functionsPerContract[contractName].includes(expr.name)
+          parserHelpers.isRegularFunctionCall(node, contractNames)
         ) {
           opts.color = colorScheme.call.regular;
           name = expr.name;

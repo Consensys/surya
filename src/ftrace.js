@@ -308,8 +308,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
         // The following block is a nested switch statement for creation of the call tree
         // START BLOCK
         if(
-          parserHelpers.isRegularFunctionCall(node, contractNames) &&
-          functionsPerContract[contractName].includes(expr.name)
+          parserHelpers.isRegularFunctionCall(node, contractNames)
         ) {
           name = expr.name;
 

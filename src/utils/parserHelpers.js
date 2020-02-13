@@ -12,7 +12,6 @@ function isLowerCase(str) {
 const parserHelpers = {
   isRegularFunctionCall: (node, contractNames) => {
     const expr = node.expression;
-    // @TODO: replace lowercase for better filtering
     return expr.type === 'Identifier'
         && !contractNames.includes(expr.name)
         && !BUILTINS.includes(expr.name);
