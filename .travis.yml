@@ -1,6 +1,7 @@
 dist: trusty
 sudo: false
 language: node_js
+version: 1.0
 node_js:
 - node
 cache:
