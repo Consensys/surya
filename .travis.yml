@@ -11,7 +11,6 @@ cache:
 
 -: &npm_deploy
     provider: npm
-    edge: true
     email: goncalo05@gmail.com
     api_key: $NPM_TOKEN
     skip_cleanup: true
@@ -23,7 +22,6 @@ deploy:
       branch: master
       tags: true
   - provider: script
-    edge: true
     script: .travis/prerelease_pu.sh
     on:
       repo: ConsenSys/surya
