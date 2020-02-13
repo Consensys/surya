@@ -27,10 +27,10 @@ deploy:
     script: .travis/prerelease_pu.sh
     on:
       repo: ConsenSys/surya
-      branch: develop
+      branch: fix/travis-build
   - <<: *npm_deploy
     tag: next
     script: .travis/prerelease_pu.sh
     on:
       repo: ConsenSys/surya
-      branch: develop
+      branch: fix/travis-build
