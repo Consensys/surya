@@ -1,5 +1,6 @@
 dist: trusty
 language: node_js
+version: 2.0
 node_js:
 - node
 cache:
@@ -9,6 +10,7 @@ cache:
 
 -: &npm_deploy
     provider: npm
+    edge: true
     email: goncalo05@gmail.com
     api_key: $NPM_TOKEN
     cleanup: false
@@ -20,7 +22,6 @@ deploy:
       branch: master
       tags: true
   - provider: script
-    edge: true
     script: .travis/prerelease_pu.sh
     on:
       repo: ConsenSys/surya
