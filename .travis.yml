@@ -11,6 +11,7 @@ cache:
     provider: npm
     email: goncalo05@gmail.com
     api_key: $NPM_TOKEN
+    cleanup: false
 
 deploy:
   - <<: *npm_deploy
