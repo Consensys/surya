@@ -168,6 +168,14 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   function modifierCalls(modifierName, contractName) {
     if (dependencies.hasOwnProperty(contractName)) {
       for (let dep of dependencies[contractName]) {
+        if (!functionCallsTree.hasOwnProperty(dep)) {
+          constructPerFileFunctionCallTree(fileASTs[contractASTIndex[dep]])
+        }
+
+        if(!functionCallsTree.hasOwnProperty(dep)) {
+          throw new Error(`\nA referenced contract was not available in the provided list of contracts. This usually means that some imported file was left out of the files argument.\nYou can try to solve this automatically by using the '-i' flag or by including all the imported files manually.\n`)
+        }
+        
         if (functionCallsTree[dep].hasOwnProperty(modifierName)) {
           return functionCallsTree[dep][modifierName];
         }
