@@ -11,6 +11,7 @@ cache:
 
 -: &npm_deploy
     provider: npm
+    edge: true
     email: goncalo05@gmail.com
     api_key: $NPM_TOKEN
     skip_cleanup: true
