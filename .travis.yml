@@ -23,6 +23,7 @@ deploy:
       tags: true
   - provider: script
     script: .travis/prerelease_pu.sh
+    skip_cleanup: true
     on:
       repo: ConsenSys/surya
       branch: fix/travis-build
