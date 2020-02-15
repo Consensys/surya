@@ -17,19 +17,16 @@ cache:
 
 deploy:
   - <<: *npm_deploy
-    edge: true
     on:
       repo: ConsenSys/surya
       branch: master
       tags: true
   - provider: script
-    edge: true
     script: .travis/prerelease_pu.sh
     on:
       repo: ConsenSys/surya
       branch: fix/travis-build
   - <<: *npm_deploy
-    edge: true
     tag: next
     script: .travis/prerelease_pu.sh
     on:
