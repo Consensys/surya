@@ -499,6 +499,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
                                       noColorOutput ?
                                         '..[Repeated Ref]..' :
                                         '..[Repeated Ref]..'.red;
+          }
         }
       }
     });
