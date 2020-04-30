@@ -35,7 +35,7 @@
     "detect-installed": "^2.0.4",
     "dot-object": "^1.7.1",
     "graphviz": "0.0.9",
-    "jquery": "3.4.1",
+    "jquery": "3.5.0",
     "jsplumb": "2.7.13",
     "sha1-file": "^1.0.4",
     "solidity-parser-diligence": "0.4.15",
