@@ -159,6 +159,82 @@ export function graphSimple(files, options = {}) {
         throw err;
       }
     })();
+
+    fileASTs.push(ast);
+
+    let contractName = null;
+    let contractNode = null; // a digraph node representing a contract
+
+    parser.visit(ast, {
+      ContractDefinition(node) {
+        contractName = node.name;
+        contractNames.push(contractName);
+
+        let kind = "";
+        if (node.kind == "interface") {
+          kind = "  (iface)";
+        } else if (node.kind == "library") {
+          kind = "  (lib)";
+        }
+
+        userDefinedStateVars[contractName] = {};
+        stateVars[contractName] = {};
+        functionsPerContract[contractName] = [];
+        contractUsingFor[contractName] = {};
+
+        if (!(contractNode = digraph.getNode('contractName'))) {
+          contractNode = digraph.addNode('contractName');
+
+          contractNode.set('label', contractName + kind);
+          contractNode.set('color', colorScheme.contract.defined.color);
+          if (colorScheme.contract.defined.fontcolor) {
+            contractNode.set('fontcolor', colorScheme.contract.undefined.fontcolor);
+          }
+
+          if (colorScheme.contract.defined.style) {
+            contractNode.set('style', colorScheme.contract.defined.style || "filled");
+            // contractNode.set('bgcolor', colorScheme.contract.defined.color);
+          } else {
+            contractNode.set('style', 'filled');
+          }
+
+          // colorScheme.contract.defined.bgcolor && contractNode.set('bgcolor', colorScheme.contract.defined.bgcolor);
+
+        } else {
+          if (colorScheme.contract.defined.style) {
+            contractNode.set('style', colorScheme.contract.defined.style);
+          } else {
+            contractNode.set('style', 'filled');
+          }
+        }
+
+        dependencies[contractName] = node.baseContracts.map(spec =>
+          spec.baseName.namePath
+        );
+      },
+
+      StateVariableDeclaration(node) {
+        for (let variable of node.variables) {
+          if (parserHelpers.isUserDefinedDeclaration(variable)) {
+            userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath;
+          } else if (parserHelpers.isElementaryTypeDeclaration(variable)) {
+            stateVars[contractName][variable.name] = variable.typeName.name;
+          } else if (parserHelpers.isArrayDeclaration(variable)) {
+            stateVars[contractName][variable.name] = variable.typeName.baseTypeName.namePath;
+          } else if (parserHelpers.isMappingDeclaration(variable)) {
+            stateVars[contractName][variable.name] = variable.typeName.valueType.name;
+          }
+        }
+      },
+
+      FunctionDefinition(node) {
+        functionsPerContract[contractName].push(node.name);
+      },
+
+      UsingForDeclaration(node) {
+        contractUsingFor[contractName][node.typeName.name] = node.libraryName;
+      }
+    });
   }
 
   dependencies = linearize(dependencies, {reverse: true});
@@ -168,83 +244,10 @@ export function graphSimple(files, options = {}) {
     let contractName = null;
     let cluster = null;
 
-    function nodeName(functionName, contractName) {
-      if (dependencies.hasOwnProperty(contractName)) {
-        for (let dep of dependencies[contractName]) {
-          const name = `${dep}.${functionName}`;
-          if (digraph.getNode(name)) {
-            return name;
-          }
-        }
-      }
-
-      return `${contractName}.${functionName}`;
-    }
-
-    function functionName(node) {
-      let name;
-      if (node.isConstructor) {
-        name = '<Constructor>';
-      } else if (node.isFallback) {
-        name = '<Fallback>';
-      } else if (node.isReceiveEther) {
-        name = '<Receive Ether>';
-      } else {
-        name = node.name;
-      }
-
-      return name;
-    }
-
+    // find all the contracts, and create anode for them
     parser.visit(ast, {
       ContractDefinition(node) {
-        contractName = node.name;
-
-        cluster = digraph.getCluster(`"cluster${contractName}"`);
-      },
-
-      FunctionDefinition(node) {
-        const name = functionName(node);
-
-        let opts = { label: name };
-
-        if (node.visibility === 'public' || node.visibility === 'default') {
-          opts.color = colorScheme.visibility.public;
-        } else if (node.visibility === 'external') {
-          opts.color = colorScheme.visibility.external;
-        } else if (node.visibility === 'private') {
-          opts.color = colorScheme.visibility.private;
-        } else if (node.visibility === 'internal') {
-          opts.color = colorScheme.visibility.internal;
-        }
-
-        if(colorScheme.visibility.isFilled){
-          if(node.stateMutability==="payable"){
-            opts.fillcolor = opts.color;
-            opts.color = colorScheme.nodeType.payable;
-          } else {
-            opts.fillcolor = opts.color;
-          }
-        }
-          
-        cluster.addNode(nodeName(name, contractName), opts);
-      },
-
-      ModifierDefinition(node) {
-        const name = node.name;
-
-        let opts = {
-          label: name,
-          color: colorScheme.nodeType.modifier
-        };
-        if(colorScheme.nodeType.isFilled){
-          opts.fillcolor = opts.color;
-        }
-        if(colorScheme.nodeType.shape){
-          opts.shape = colorScheme.nodeType.shape;
-        }
-
-        cluster.addNode(nodeName(name, contractName), opts);
+        node = digraph.addNode(node.name);
       }
     });
 
@@ -254,10 +257,12 @@ export function graphSimple(files, options = {}) {
     let tempUserDefinedStateVars = {};
     let tempStateVars = {};
 
+    
     parser.visit(ast, {
+
       ContractDefinition(node) {
         contractName = node.name;
-
+        callingScope = contractName;
         for (let dep of dependencies[contractName]) {
           Object.assign(tempUserDefinedStateVars, userDefinedStateVars[dep]);
           Object.assign(tempStateVars, stateVars[dep]);
@@ -274,9 +279,8 @@ export function graphSimple(files, options = {}) {
       },
 
       FunctionDefinition(node) {
-        const name = functionName(node);
 
-        callingScope = nodeName(name, contractName);
+        callingScope = contractName;
       },
 
       'FunctionDefinition:exit': function(node) {
@@ -286,13 +290,14 @@ export function graphSimple(files, options = {}) {
       },
 
       ModifierDefinition(node) {
-        callingScope = nodeName(node.name, contractName);
+        callingScope = contractName;
       },
 
       'ModifierDefinition:exit': function(node) {
         callingScope = null;
       },
 
+      // not sure what this is doing
       ParameterList(node) {
         for (let parameter of node.parameters) {
           if (parameter.name === null) {
@@ -304,7 +309,8 @@ export function graphSimple(files, options = {}) {
           }
         }
       },
-
+      
+      // not sure what this is doing
       VariableDeclaration(node) {
         if (callingScope && node.name === null) {
           return;
@@ -319,11 +325,11 @@ export function graphSimple(files, options = {}) {
         }
       },
 
-      ModifierInvocation(node) {
-        if (options.enableModifierEdges && callingScope) {
-          digraph.addEdge(callingScope, nodeName(node.name, contractName), { color: 'yellow' });
-        }
-      },
+      // ModifierInvocation(node) {
+      //   if (options.enableModifierEdges && callingScope) {
+      //     digraph.addEdge(callingScope, contractName);
+      //   }
+      // },
 
       FunctionCall(node) {
         if (!callingScope) {
@@ -435,30 +441,34 @@ export function graphSimple(files, options = {}) {
           return;
         }
 
-        let externalCluster;
+        let externalNode;
 
-        if(!(externalCluster = digraph.getCluster(`"cluster${localContractName}"`))) {
-          externalCluster = digraph.addCluster(`"cluster${localContractName}"`);
+        if(!(externalNode = digraph.getNode(localContractName))) {
+          externalNode = digraph.addNode(localContractName);
 
-          externalCluster.set('label', localContractName);
-          externalCluster.set('color', colorScheme.contract.undefined.color);
+          externalNode.set('label', localContractName);
+          externalNode.set('color', colorScheme.contract.undefined.color);
           if(colorScheme.contract.undefined.fontcolor){
-            externalCluster.set('fontcolor', colorScheme.contract.undefined.fontcolor);
+            externalNode.set('fontcolor', colorScheme.contract.undefined.fontcolor);
           }
           if(colorScheme.contract.undefined.style){
-            externalCluster.set('style', colorScheme.contract.undefined.style || "filled");
-            colorScheme.contract.undefined.bgcolor && externalCluster.set('bgcolor', colorScheme.contract.undefined.bgcolor );
+            externalNode.set('style', colorScheme.contract.undefined.style || "filled");
+            colorScheme.contract.undefined.bgcolor && externalNode.set('bgcolor', colorScheme.contract.undefined.bgcolor );
           } 
         }
         
 
-        let localNodeName = nodeName(name, localContractName);
-
-        if (!digraph.getNode(localNodeName) && externalCluster) {
-          externalCluster.addNode(localNodeName, { label: name});
+        if (!digraph.getNode(localContractName) && externalNode) {
+          digraph.addNode(localContractName, { label: name});
         }
-
-        digraph.addEdge(callingScope, localNodeName, opts);
+      
+        let nodeExists = false;
+        let edges = digraph.edges;
+        for (let edge of edges) {
+          nodeExists = (callingScope == edge.nodeOne.id) && (externalNode == edge.nodeTwo.id);
+        }
+        // digraph.addEdge(callingScope, externalNode, opts);
+        if (!nodeExists) digraph.addEdge(callingScope, externalNode, opts);
       }
     });
   }
@@ -497,6 +507,7 @@ key:i1:e -> key2:i1:w [color="${colorScheme.call.regular}"]
 key:i2:e -> key2:i2:w [color="${colorScheme.call.default}"]
 }
 `;
+  debugger;
   let finalDigraph = utils.insertBeforeLastOccurrence(digraph.to_dot(), '}', legendDotString);
 
   return finalDigraph;
