@@ -92,7 +92,7 @@ export const defaultColorSchemeDark = {
 
 };
 
-export function graph(files, options = {}) {
+export function graphSimple(files, options = {}) {
   if (files.length === 0) {
     throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`);
   }
@@ -159,82 +159,6 @@ export function graph(files, options = {}) {
         throw err;
       }
     })();
-
-    fileASTs.push(ast);
-
-    let contractName = null;
-    let cluster = null;
-
-    parser.visit(ast, {
-      ContractDefinition(node) {
-        contractName = node.name;
-        contractNames.push(contractName);
-        
-        let kind="";
-        if (node.kind=="interface"){
-          kind="  (iface)";
-        } else if(node.kind=="library"){
-          kind="  (lib)";
-        }
-
-        userDefinedStateVars[contractName] = {};
-        stateVars[contractName] = {};
-        functionsPerContract[contractName] = [];
-        contractUsingFor[contractName] = {};
-
-        if(!(cluster = digraph.getCluster(`"cluster${contractName}"`))) {
-          cluster = digraph.addCluster(`"cluster${contractName}"`);
-
-          cluster.set('label', contractName + kind);
-          cluster.set('color', colorScheme.contract.defined.color);
-          if(colorScheme.contract.defined.fontcolor){
-            cluster.set('fontcolor', colorScheme.contract.undefined.fontcolor);
-          }
-          
-          if (colorScheme.contract.defined.style) {
-            cluster.set('style', colorScheme.contract.defined.style || "filled");
-            cluster.set('bgcolor', colorScheme.contract.defined.color);
-          } else {
-            cluster.set('style', 'filled');
-          }
-
-          colorScheme.contract.defined.bgcolor && cluster.set('bgcolor', colorScheme.contract.defined.bgcolor);
-          
-        } else {
-          if (colorScheme.contract.defined.style) {
-            cluster.set('style', colorScheme.contract.defined.style);
-          } else {
-            cluster.set('style', 'filled');
-          } 
-        }
-
-        dependencies[contractName] = node.baseContracts.map(spec =>
-          spec.baseName.namePath
-        );
-      },
-
-      StateVariableDeclaration(node) {
-        for (let variable of node.variables) {
-          if (parserHelpers.isUserDefinedDeclaration(variable)) {
-            userDefinedStateVars[contractName][variable.name] = variable.typeName.namePath;
-          } else if (parserHelpers.isElementaryTypeDeclaration(variable)) {
-            stateVars[contractName][variable.name] = variable.typeName.name;
-          } else if (parserHelpers.isArrayDeclaration(variable)) {
-            stateVars[contractName][variable.name] = variable.typeName.baseTypeName.namePath;
-          } else if (parserHelpers.isMappingDeclaration(variable)) {
-            stateVars[contractName][variable.name] = variable.typeName.valueType.name;
-          }
-        }
-      },
-
-      FunctionDefinition(node) {
-        functionsPerContract[contractName].push(node.name);
-      },
-
-      UsingForDeclaration(node) {
-        contractUsingFor[contractName][node.typeName.name] = node.libraryName;
-      }
-    });
   }
 
   dependencies = linearize(dependencies, {reverse: true});
