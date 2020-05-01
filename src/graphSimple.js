@@ -465,10 +465,20 @@ export function graphSimple(files, options = {}) {
         let nodeExists = false;
         let edges = digraph.edges;
         for (let edge of edges) {
-          nodeExists = (callingScope == edge.nodeOne.id) && (externalNode == edge.nodeTwo.id);
+          if( callingScope == edge.nodeOne.id && externalNode.id == edge.nodeTwo.id) {
+            nodeExists = true;
+            break;
+          }
+          // debugger;
+          // console.log(callingScope, edge.nodeOne.id);
+          // console.log(externalNode.id, edge.nodeTwo.id);
+          // console.log(nodeExists)
         }
         // digraph.addEdge(callingScope, externalNode, opts);
-        if (!nodeExists) digraph.addEdge(callingScope, externalNode, opts);
+        if (!nodeExists) { 
+          // console.log('adding', callingScope, externalNode.id);
+          digraph.addEdge(callingScope, externalNode.id, opts) 
+        };
       }
     });
   }
