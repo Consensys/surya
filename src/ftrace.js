@@ -124,7 +124,10 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       },
 
       UsingForDeclaration(node) {
-        contractUsingFor[contractName][node.typeName.name] = node.libraryName;
+        if(!contractUsingFor[contractName][node.typeName.name]){
+          contractUsingFor[contractName][node.typeName.name] = new Set([]);
+        }
+        contractUsingFor[contractName][node.typeName.name].add(node.libraryName);
       }
     });
   }
@@ -395,20 +398,21 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           variableType = variableType === 'uint' ? 'uint256' : variableType;
 
           // if variable type is not null let's replace "object" for the actual library name
-          if(
-            variableType !== null &&
+          if (variableType !== null && 
             contractUsingFor[contractName].hasOwnProperty(variableType) &&
-            functionsPerContract
-              .hasOwnProperty(contractUsingFor[contractName][variableType]) &&
-            functionsPerContract[
-              contractUsingFor[contractName][variableType]
-            ].includes(name)
-          ) {
-            if(!options.libraries) {
-              object = contractUsingFor[contractName][variableType];
-            } else {
-              return;
-            }
+            functionsPerContract.hasOwnProperty(contractUsingFor[contractName][variableType])) {
+
+              // check which usingFor contract the method resolves to (best effort first match)
+              let matchingContracts = [...contractUsingFor[contractName][variableType]].filter(contract => functionsPerContract[contract].includes(name));
+            
+              if(matchingContracts.length > 0){
+                // we found at least one matching contract. use the first. dont know what to do if multiple are matching :/
+                if (!options.libraries) {
+                  object = contractUsingFor[contractName][variableType][0];
+                } else {
+                  return;
+                }
+              }
           }
           // END
 
@@ -418,7 +422,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           } else if (object === 'super') {
             // "super" in this context is gonna be the 2nd element of the dependencies array
             // since the first is the contract itself
-            localContractName = dependencies[localContractName][1];
+            localContractName = dependencies[contractName][1];
           } else if (tempUserDefinedStateVars[object] !== undefined) {
             localContractName = tempUserDefinedStateVars[object];
           } else if (userDefinedLocalVars[object] !== undefined) {
@@ -447,6 +451,11 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   // Function to recursively generate the tree to show in the console
   function constructCallTree(reduceJobContractName, reduceJobFunctionName, parentObject) {
     let tempIterable;
+
+    if(functionCallsTree[reduceJobContractName]===undefined){
+      //unknown method. do not resolve further
+      return;
+    }
 
     if (functionCallsTree[reduceJobContractName][reduceJobFunctionName] === undefined) {
       return;
@@ -482,11 +491,15 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
             constructCallTree(functionCallObject.contract, functionCallName, parentObject[keyString]);
           }
         } else {
-          parentObject[keyString] = Object.keys(functionCallsTree[functionCallObject.contract][functionCallName]).length === 0 ?
+          if(functionCallsTree[functionCallObject.contract] === undefined){
+            parentObject[keyString] = {};
+          } else {
+            parentObject[keyString] = Object.keys(functionCallsTree[functionCallObject.contract][functionCallName]).length === 0 ?
                                       {} :
                                       noColorOutput ?
                                         '..[Repeated Ref]..' :
                                         '..[Repeated Ref]..'.red;
+          }
         }
       }
     });
