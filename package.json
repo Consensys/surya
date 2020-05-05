@@ -1,7 +1,7 @@
 {
   "name": "surya",
   "description": "Sūrya, The Sun God: A set of utilities for inspecting the structure of Solidity contracts.",
-  "version": "0.3.6-dev.8",
+  "version": "0.3.6-dev.9",
   "main": "lib/index.js",
   "author": [
     "GNSPS"
