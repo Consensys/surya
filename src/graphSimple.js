@@ -182,10 +182,11 @@ export function graphSimple(files, options = {}) {
         functionsPerContract[contractName] = [];
         contractUsingFor[contractName] = {};
 
-        if (!(contractNode = digraph.getNode('contractName'))) {
-          contractNode = digraph.addNode('contractName');
+        if (!(contractNode = digraph.getNode(contractName))) {
+          contractNode = digraph.addNode(contractName);
+        }
 
-          contractNode.set('label', contractName + kind);
+          contractNode.set('label', contractName);
           contractNode.set('color', colorScheme.contract.defined.color);
           if (colorScheme.contract.defined.fontcolor) {
             contractNode.set('fontcolor', colorScheme.contract.undefined.fontcolor);
@@ -200,13 +201,6 @@ export function graphSimple(files, options = {}) {
 
           // colorScheme.contract.defined.bgcolor && contractNode.set('bgcolor', colorScheme.contract.defined.bgcolor);
 
-        } else {
-          if (colorScheme.contract.defined.style) {
-            contractNode.set('style', colorScheme.contract.defined.style);
-          } else {
-            contractNode.set('style', 'filled');
-          }
-        }
 
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
@@ -247,7 +241,21 @@ export function graphSimple(files, options = {}) {
     // find all the contracts, and create anode for them
     parser.visit(ast, {
       ContractDefinition(node) {
-        node = digraph.addNode(node.name);
+        if (!(node = digraph.getNode(node.name))) {
+          node = digraph.addNode(node.name);
+          node.set('label', contractName);
+          node.set('color', colorScheme.contract.defined.color);
+          if (colorScheme.contract.defined.fontcolor) {
+            contranodectNode.set('fontcolor', colorScheme.contract.undefined.fontcolor);
+          }
+
+        if (colorScheme.contract.defined.style) {
+            node.set('style', colorScheme.contract.defined.style || "filled");
+            // contractNode.set('bgcolor', colorScheme.contract.defined.color);
+          } else {
+            node.set('style', 'filled');
+          }
+        }
       }
     });
 
