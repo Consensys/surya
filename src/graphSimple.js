@@ -315,13 +315,19 @@ export function graphSimple(files, options = {}) {
             // check if member access is a function of a "using for" declaration
             // START
             if(localVars.hasOwnProperty(object)) {
+              /** tin: Bail - ignore usingFor BaseType in simpleGraph
               variableType = localVars[object];
+              */
+              return;
             } else if(userDefinedLocalVars.hasOwnProperty(object)) {
               variableType = userDefinedLocalVars[object];
             } else if(tempUserDefinedStateVars.hasOwnProperty(object)) {
               variableType = tempUserDefinedStateVars[object];
             } else if(tempStateVars.hasOwnProperty(object)) {
+              /** tin: Bail - ignore usingFor BaseType in simpleGraph
               variableType = tempStateVars[object];
+              */
+              return;
             }
           }
 
@@ -404,7 +410,7 @@ export function graphSimple(files, options = {}) {
         if (!nodeExists) { 
           // console.log('adding', callingScope, externalNode.id);
           digraph.addEdge(callingScope, externalNode.id, opts) 
-        };
+        }
       }
     });
   }
