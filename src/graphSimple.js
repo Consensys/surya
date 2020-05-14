@@ -385,7 +385,8 @@ export function graphSimple(files, options = {}) {
           }
           if(colorScheme.contract.undefined.style){
             externalNode.set('style', colorScheme.contract.undefined.style || "filled");
-            colorScheme.contract.undefined.bgcolor && externalNode.set('bgcolor', colorScheme.contract.undefined.bgcolor );
+            /* tin: node.bgcolor is not allowed */
+            //colorScheme.contract.undefined.bgcolor && externalNode.set('bgcolor', colorScheme.contract.undefined.bgcolor );
           } 
         }
         
