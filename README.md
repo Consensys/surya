@@ -65,6 +65,7 @@ surya graph contracts/**/*.sol | dot -Tpng > MyContract.png
 
 * `-i`/`--import` - Resolve all imports automatically by fetching the right files.
 * `-c`/`--content` - Allow passing in file contents as arguments instead of file paths.
+* `-s`/`--simple` -  Only show calls between contracts, without specifying the functions.
 * `-m`/`--modifiers` - **Enable** printing edges from functions to modifiers (when the latter are invoked in the function definitions).
 * `-l`/`--libraries` - **Disable** printing edges from functions to libraries when the "Using ... for" syntax is in use (to prevent libraries like SafeMath from polluting the call graph).
 
