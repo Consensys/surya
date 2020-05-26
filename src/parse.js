@@ -1,7 +1,7 @@
 "use strict";
 
 const fs = require('fs');
-const parser = require('solidity-parser-diligence');
+const parser = require('@solidity-parser/parser');
 const treeify = require('treeify');
 
 export function parse(file) {

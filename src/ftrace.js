@@ -2,7 +2,7 @@
 
 const parserHelpers = require('./utils/parserHelpers');
 const fs = require('fs');
-const parser = require('solidity-parser-diligence');
+const parser = require('@solidity-parser/parser');
 const { linearize } = require('c3-linearization');
 const treeify = require('treeify');
 const importer = require('../lib/utils/importer');
