@@ -3,7 +3,7 @@
 const parserHelpers = require('./utils/parserHelpers');
 const utils = require('./utils/utils');
 const fs = require('fs');
-const parser = require('solidity-parser-diligence');
+const parser = require('@solidity-parser/parser');
 const graphviz = require('graphviz');
 const { linearize } = require('c3-linearization');
 const importer = require('../lib/utils/importer');

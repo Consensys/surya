@@ -1,7 +1,7 @@
 "use strict";
 
 const fs = require('fs');
-const parser = require('solidity-parser-diligence');
+const parser = require('@solidity-parser/parser');
 const { linearize } = require('c3-linearization');
 const importer = require('../lib/utils/importer');
 
