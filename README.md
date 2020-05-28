@@ -61,6 +61,8 @@ surya graph contracts/**/*.sol | dot -Tpng > MyContract.png
 
 <img src="https://user-images.githubusercontent.com/4008213/39415345-fbac4e3a-4c39-11e8-8260-0d9670c352d6.png" height="236">
 
+There is new flag (`-s`/`--simple`) that amkes the command chart only the *contract* call graph, instead of the function call graph. It's super useful for higher-level analyses!
+
 **Accepted flags**
 
 * `-i`/`--import` - Resolve all imports automatically by fetching the right files.
