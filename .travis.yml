@@ -1,6 +1,7 @@
 dist: trusty
 sudo: false
 language: node_js
+version: 1.0
 node_js:
 - node
 cache:
@@ -21,6 +22,7 @@ deploy:
       branch: master
       tags: true
   - provider: script
+    edge: true
     script: .travis/prerelease_pu.sh
     on:
       repo: ConsenSys/surya
