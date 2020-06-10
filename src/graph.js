@@ -250,6 +250,7 @@ export function graph(files, options = {}) {
     let localVars = {};
     let tempUserDefinedStateVars = {};
     let tempStateVars = {};
+    let eventDefinitions = [];
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -262,6 +263,10 @@ export function graph(files, options = {}) {
 
         Object.assign(tempUserDefinedStateVars, userDefinedStateVars[contractName]);
         Object.assign(tempStateVars, stateVars[contractName]);
+      },
+
+      EventDefinition(node) {
+        eventDefinitions.push(node.name);
       },
 
       'ContractDefinition:exit': function(node) {
@@ -453,7 +458,16 @@ export function graph(files, options = {}) {
         let localNodeName = nodeName(name, localContractName);
 
         if (!digraph.getNode(localNodeName) && externalCluster) {
-          externalCluster.addNode(localNodeName, { label: name});
+          let _opts = {
+            label: name
+          };
+          if(colorScheme.event && eventDefinitions.includes(name)){
+            //emit event
+            _opts.color = colorScheme.event.color;
+            _opts.shape = colorScheme.event.shape;
+            _opts.style = colorScheme.event.style;
+          }
+          externalCluster.addNode(localNodeName, _opts);
         }
 
         digraph.addEdge(callingScope, localNodeName, opts);
