@@ -22,6 +22,9 @@ export const defaultColorScheme = {
         regular: "green",
         this: "green"
     },
+    event: {
+        style: "dotted"
+    },
     contract: {
         defined: {
             bgcolor: "lightgray",
@@ -66,6 +69,9 @@ export const defaultColorSchemeDark = {
         default: "white",
         regular: "#1bc6a6",
         this: "#80e097"
+    },
+    event: {
+        style: "dotted"
     },
     contract: {
         defined: {
