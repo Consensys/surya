@@ -150,10 +150,13 @@ export function graph(files, options = {}) {
       },
 
       UsingForDeclaration(node) {
-        if(!contractUsingFor[contractName][node.typeName.name]){
-          contractUsingFor[contractName][node.typeName.name] = new Set([]);
+        // Check if the using for declaration is targeting a specific type or all types with "*"
+        let typeNameName = node.typeName.hasOwnProperty(name) ? node.typeName.name : '*';
+
+        if(!contractUsingFor[contractName][typeNameName]){
+          contractUsingFor[contractName][typeNameName] = new Set([]);
         }
-        contractUsingFor[contractName][node.typeName.name].add(node.libraryName);
+        contractUsingFor[contractName][typeNameName].add(node.libraryName);
       }
     });
   }
@@ -399,21 +402,45 @@ export function graph(files, options = {}) {
           variableType = variableType === 'uint' ? 'uint256' : variableType;
 
           // if variable type is not null let's replace "object" for the actual library name
-          if (variableType !== null && 
-            contractUsingFor[contractName].hasOwnProperty(variableType) &&
-            functionsPerContract.hasOwnProperty(contractUsingFor[contractName][variableType])) {
+          if (variableType !== null) {
+            // Incase there is a "using for" declaration for this specific variable type we get its definition
+            if (contractUsingFor[contractName].hasOwnProperty(variableType) &&
+              functionsPerContract.hasOwnProperty(contractUsingFor[contractName][variableType])) {
+
+              // If there were any library declarations done to all the types with "*"
+              // we will add them to the list of matching contracts
+              let contractUsingForDefinitions = new Set(...contractUsingFor[contractName][variableType]);
+              if (contractUsingFor[contractName].hasOwnProperty('*') &&
+                functionsPerContract.hasOwnProperty(contractUsingFor[contractName]['*'])) {
+                  contractUsingForDefinitions = new Set(...contractUsingFor[contractName][variableType], ...contractUsingFor[contractName]['*']);
+              }
 
               // check which usingFor contract the method resolves to (best effort first match)
-              let matchingContracts = [...contractUsingFor[contractName][variableType]].filter(contract => functionsPerContract[contract].includes(name));
+              let matchingContracts = [...contractUsingForDefinitions].filter(contract => functionsPerContract[contract].includes(name));
             
               if(matchingContracts.length > 0){
-                // we found at least one matching contract. use the first. dont know what to do if multiple are matching :/
+                // we found at least one matching contract. use the first. don't know what to do if multiple are matching :/
                 if (!options.libraries) {
-                  object = contractUsingFor[contractName][variableType][0];
+                  object = matchingContracts[0];
                 } else {
                   return;
                 }
               }
+            }
+          // In case there is not, we can just shortcircuit the search to only the "*" variable type, incase it exists
+          } else if (contractUsingFor[contractName].hasOwnProperty('*') &&
+          functionsPerContract.hasOwnProperty(contractUsingFor[contractName]['*'])) {
+            // check which usingFor contract the method resolves to (best effort first match)
+            let matchingContracts = [...contractUsingFor[contractName]['*']].filter(contract => functionsPerContract[contract].includes(name));
+            
+            if(matchingContracts.length > 0){
+              // we found at least one matching contract. use the first. don't know what to do if multiple are matching :/
+              if (!options.libraries) {
+                object = matchingContracts[0];
+              } else {
+                return;
+              }
+            }
           }
           // END
 
