@@ -125,7 +125,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
       UsingForDeclaration(node) {
         // Check if the using for declaration is targeting a specific type or all types with "*"
-        let typeNameName = node.typeName.hasOwnProperty(name) ? node.typeName.name : '*';
+        let typeNameName = node.typeName != null ? node.typeName.name : '*';
 
         if(!contractUsingFor[contractName][typeNameName]){
           contractUsingFor[contractName][typeNameName] = new Set([]);

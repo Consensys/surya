@@ -5,6 +5,7 @@ contract Tester {
     using Lib1 for uint256;
     using Lib2 for uint128;
     using Lib3 for address;
+    using Lib1 for *;
     
     uint public myNum;
     bytes32 public myBytes32 = hex"aabbcc";
