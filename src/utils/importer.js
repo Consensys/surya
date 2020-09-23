@@ -73,6 +73,7 @@ export function resolveImportPath(baseFilePath, importedFilePath, projectDir = p
   const topmostDirArray = projectDir.split(path.sep);
   let resolvedPath;
   let baseDirPath = path.dirname(baseFilePath);
+  console.log(baseDirPath);
   // if it's a relative or absolute path:
   if (
     importedFilePath.slice(0,1) === '.'
@@ -85,8 +86,10 @@ export function resolveImportPath(baseFilePath, importedFilePath, projectDir = p
     let currentDir = path.resolve(baseDirPath, '..');
     let currentDirArray = baseDirPath.split(path.sep);
     let currentDirName = currentDirArray.pop();
-
-    while (currentDirName != 'contracts') {
+    
+    // while (currentDirName != 'contracts') {
+    while (!fs.readdirSync(currentDir).includes('node_modules')) {
+      console.log(currentDir);
       // since we already know the current file is inside the project dir we can check if the
       // folder array length for the current dir is smaller than the top-most one, i.e. we are 
       // still inside the project dir. If not, throw
@@ -95,7 +98,7 @@ export function resolveImportPath(baseFilePath, importedFilePath, projectDir = p
         project dir: ${projectDir}
         path: ${currentDir}`);
       }
-      // if we still aren't in a folder called 'contracts' go up one level
+      // if we still aren't in a folder containing 'node_modules' go up one level
       currentDirName = currentDirArray.pop();
       currentDir = path.resolve(currentDir, '..');
     }
