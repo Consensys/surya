@@ -30,7 +30,7 @@
     "sinon": "^5.1.1"
   },
   "dependencies": {
-    "@solidity-parser/parser": "^0.8.0",
+    "@solidity-parser/parser": "^0.8.1",
     "c3-linearization": "^0.3.0",
     "colors": "^1.4.0",
     "graphviz": "0.0.9",
