@@ -59,10 +59,10 @@
   resolved "https://registry.yarnpkg.com/@sinonjs/text-encoding/-/text-encoding-0.7.1.tgz#8da5c6530915653f3a1f38fd5f101d8c3f8079c5"
   integrity sha512-+iTbntw2IZPb/anVDbypzfQa+ay64MW0Zo8aJ8gZPWMMK6/OubMVb6lUPMagqjOPnmtauXnFCACVl3O7ogjeqQ==
 
-"@solidity-parser/parser@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@solidity-parser/parser/-/parser-0.8.0.tgz#e56fe5f0e29753f928c8fb1ddf5f59e5d71363e9"
-  integrity sha512-4Eg1iWe6ZuJC9Ynfd8D2cnu06So0QL6V3i+fgQRqT8twPMr+N+kUvS5K7ILgWpuoAag/jb3r0wBDfmpib+yvaw==
+"@solidity-parser/parser@^0.8.1":
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/@solidity-parser/parser/-/parser-0.8.1.tgz#1b606578af86b9ad10755409804a6ba83f9ce8a4"
+  integrity sha512-DF7H6T8I4lo2IZOE2NZwt3631T8j1gjpQLjmvY2xBNK50c4ltslR4XPKwT6RkeSd4+xCAK0GHC/k7sbRDBE4Yw==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.0"
