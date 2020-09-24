@@ -35,6 +35,8 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   let dependencies = {};
 
   let functionsPerContract = {};
+  let eventsPerContract = {};
+  let structsPerContract = {};
   let contractUsingFor = {};
   let contractNames = [];
 
@@ -96,6 +98,8 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
         userDefinedStateVars[contractName] = {};
         stateVars[contractName] = {};
         functionsPerContract[contractName] = [];
+        eventsPerContract[contractName] = [];
+        structsPerContract[contractName] = [];
         contractUsingFor[contractName] = {};
 
         contractASTIndex[contractName] = fileASTs.length - 1;
@@ -121,6 +125,14 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
       FunctionDefinition(node) {
         functionsPerContract[contractName].push(node.name);
+      },
+
+      EventDefinition(node) {
+        eventsPerContract[contractName].push(node.name);
+      },
+
+      StructDefinition(node) {
+        structsPerContract[contractName].push(node.name);
       },
 
       UsingForDeclaration(node) {
@@ -319,10 +331,19 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
         let localContractName;
         let visibility;
 
+        // Construct an array with the event and struct names in the whole dependencies tree of the current contract
+        let eventsOfDependencies = [];
+        let structsOfDependencies = [];
+        if (dependencies.hasOwnProperty(contractName)) {
+          for (let dep of dependencies[contractName]) {
+            eventsOfDependencies = eventsOfDependencies.concat(eventsPerContract[dep]);
+            structsOfDependencies = structsOfDependencies.concat(structsPerContract[dep]);
+          }
+        }
         // The following block is a nested switch statement for creation of the call tree
         // START BLOCK
         if(
-          parserHelpers.isRegularFunctionCall(node, contractNames)
+          parserHelpers.isRegularFunctionCall(node, contractNames, eventsOfDependencies, structsOfDependencies)
         ) {
           name = expr.name;
 

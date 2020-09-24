@@ -44,6 +44,8 @@ export function graph(files, options = {}) {
   let dependencies = {};
   let fileASTs = [];
   let functionsPerContract = {};
+  let eventsPerContract = {};
+  let structsPerContract = {};
   let contractUsingFor = {};
   let contractNames = [];
 
@@ -98,6 +100,8 @@ export function graph(files, options = {}) {
         userDefinedStateVars[contractName] = {};
         stateVars[contractName] = {};
         functionsPerContract[contractName] = [];
+        eventsPerContract[contractName] = [];
+        structsPerContract[contractName] = [];
         contractUsingFor[contractName] = {};
 
         if(!(cluster = digraph.getCluster(`"cluster${contractName}"`))) {
@@ -147,6 +151,14 @@ export function graph(files, options = {}) {
 
       FunctionDefinition(node) {
         functionsPerContract[contractName].push(node.name);
+      },
+
+      EventDefinition(node) {
+        eventsPerContract[contractName].push(node.name);
+      },
+
+      StructDefinition(node) {
+        structsPerContract[contractName].push(node.name);
       },
 
       UsingForDeclaration(node) {
@@ -343,9 +355,19 @@ export function graph(files, options = {}) {
         let opts = {
           color: colorScheme.call.default
         };
+
+        // Construct an array with the event and struct names in the whole dependencies tree of the current contract
+        let eventsOfDependencies = [];
+        let structsOfDependencies = [];
+        if (dependencies.hasOwnProperty(contractName)) {
+          for (let dep of dependencies[contractName]) {
+            eventsOfDependencies = eventsOfDependencies.concat(eventsPerContract[dep]);
+            structsOfDependencies = structsOfDependencies.concat(structsPerContract[dep]);
+          }
+        }
         
         if(
-          parserHelpers.isRegularFunctionCall(node, contractNames)
+          parserHelpers.isRegularFunctionCall(node, contractNames, eventsOfDependencies, structsOfDependencies)
         ) {
           opts.color = colorScheme.call.regular;
           name = expr.name;

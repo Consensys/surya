@@ -10,10 +10,12 @@ function isLowerCase(str) {
 }
 
 const parserHelpers = {
-  isRegularFunctionCall: (node, contractNames) => {
+  isRegularFunctionCall: (node, contractNames, eventNames, structNames) => {
     const expr = node.expression;
     return expr && expr.type === 'Identifier'
         && !contractNames.includes(expr.name)
+        && !eventNames.includes(expr.name)
+        && !structNames.includes(expr.name)
         && !BUILTINS.includes(expr.name);
   },
 
