@@ -51,7 +51,7 @@ export function importProfiler(files, projectDir = process.cwd(), importedFiles 
     parser.visit(ast, {
       ImportDirective(node) {
         let newFile = resolveImportPath(file, node.path, projectDir);
-        newFiles.push(newFile);
+        if (!importedFiles.has(newFile)) newFiles.push(newFile);
       }
     });
     // Run through the array of files found in this file
@@ -85,8 +85,10 @@ export function resolveImportPath(baseFilePath, importedFilePath, projectDir = p
     let currentDir = path.resolve(baseDirPath, '..');
     let currentDirArray = baseDirPath.split(path.sep);
     let currentDirName = currentDirArray.pop();
+    let nodeModulesDir = '';
 
-    while (currentDirName != 'contracts') {
+    // while (currentDirName != 'contracts') {
+    while (!fs.readdirSync(currentDir).includes('node_modules') && !nodeModulesDir) {
       // since we already know the current file is inside the project dir we can check if the
       // folder array length for the current dir is smaller than the top-most one, i.e. we are 
       // still inside the project dir. If not, throw
@@ -95,13 +97,15 @@ export function resolveImportPath(baseFilePath, importedFilePath, projectDir = p
         project dir: ${projectDir}
         path: ${currentDir}`);
       }
-      // if we still aren't in a folder called 'contracts' go up one level
+      // if we still aren't in a folder containing 'node_modules' go up one level
       currentDirName = currentDirArray.pop();
       currentDir = path.resolve(currentDir, '..');
     }
+    // if we've reached this point, then we have found the dir containing node_modules
+    nodeModulesDir = path.join(currentDir, 'node_modules');
 
     // join it all to get the file path
-    resolvedPath = path.join(currentDir, 'node_modules', importedFilePath);
+    resolvedPath = path.join(nodeModulesDir, importedFilePath);
   }
 
   // verify that the resolved path is actually a file
