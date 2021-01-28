@@ -44,6 +44,8 @@ export function graphSimple(files, options = {}) {
   let dependencies = {};
   let fileASTs = [];
   let functionsPerContract = {};
+  let eventsPerContract = {};
+  let structsPerContract = {};
   let contractUsingFor = {};
   let contractNames = [];
 
@@ -98,11 +100,12 @@ export function graphSimple(files, options = {}) {
         userDefinedStateVars[contractName] = {};
         stateVars[contractName] = {};
         functionsPerContract[contractName] = [];
+        eventsPerContract[contractName] = [];
+        structsPerContract[contractName] = [];
         contractUsingFor[contractName] = {};
 
         if (!(contractNode = digraph.getNode(contractName))) {
           contractNode = digraph.addNode(contractName);
-        }
 
           contractNode.set('label', contractName);
           contractNode.set('color', colorScheme.contract.defined.color);
@@ -118,7 +121,14 @@ export function graphSimple(files, options = {}) {
           }
 
           // colorScheme.contract.defined.bgcolor && contractNode.set('bgcolor', colorScheme.contract.defined.bgcolor);
-
+          
+        } else {
+          if (colorScheme.contract.defined.style) {
+            contractNode.set('style', colorScheme.contract.defined.style);
+          } else {
+            contractNode.set('style', 'filled');
+          } 
+        }
 
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
@@ -143,8 +153,22 @@ export function graphSimple(files, options = {}) {
         functionsPerContract[contractName].push(node.name);
       },
 
+      EventDefinition(node) {
+        eventsPerContract[contractName].push(node.name);
+      },
+
+      StructDefinition(node) {
+        structsPerContract[contractName].push(node.name);
+      },
+
       UsingForDeclaration(node) {
-        contractUsingFor[contractName][node.typeName.name] = node.libraryName;
+        // Check if the using for declaration is targeting a specific type or all types with "*"
+        let typeNameName = node.typeName != null ? node.typeName.name : '*';
+
+        if(!contractUsingFor[contractName][typeNameName]){
+          contractUsingFor[contractName][typeNameName] = new Set([]);
+        }
+        contractUsingFor[contractName][typeNameName].add(node.libraryName);
       }
     });
   }
@@ -182,7 +206,7 @@ export function graphSimple(files, options = {}) {
     let localVars = {};
     let tempUserDefinedStateVars = {};
     let tempStateVars = {};
-
+    let eventDefinitions = [];
     
     parser.visit(ast, {
 
@@ -271,8 +295,18 @@ export function graphSimple(files, options = {}) {
           color: colorScheme.call.default
         };
         
+        // Construct an array with the event and struct names in the whole dependencies tree of the current contract
+        let eventsOfDependencies = [];
+        let structsOfDependencies = [];
+        if (dependencies.hasOwnProperty(contractName)) {
+          for (let dep of dependencies[contractName]) {
+            eventsOfDependencies = eventsOfDependencies.concat(eventsPerContract[dep]);
+            structsOfDependencies = structsOfDependencies.concat(structsPerContract[dep]);
+          }
+        }
+
         if(
-          parserHelpers.isRegularFunctionCall(node, contractNames)
+          parserHelpers.isRegularFunctionCall(node, contractNames, eventsOfDependencies, structsOfDependencies)
         ) {
           opts.color = colorScheme.call.regular;
           name = expr.name;
