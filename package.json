@@ -1,7 +1,7 @@
 {
   "name": "surya",
   "description": "Sūrya, The Sun God: A set of utilities for inspecting the structure of Solidity contracts.",
-  "version": "0.4.2",
+  "version": "0.4.3-dev.3",
   "main": "lib/index.js",
   "author": [
     "GNSPS"
@@ -32,7 +32,7 @@
     "sinon": "^5.1.1"
   },
   "dependencies": {
-    "@solidity-parser/parser": "^0.11.0",
+    "@solidity-parser/parser": "^0.13.2",
     "c3-linearization": "^0.3.0",
     "colors": "^1.4.0",
     "graphviz": "0.0.9",
