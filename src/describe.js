@@ -82,7 +82,7 @@ export function describe(files, options = {}, noColorOutput = false) {
 
         if (node.isConstructor) {
           name = noColorOutput ? '<Constructor>' : '<Constructor>'.gray;
-        } else if (!node.isFallback) {
+        } else if (node.isFallback) {
           name = noColorOutput ? '<Fallback>' : '<Fallback>'.gray;
         } else if (node.isReceiveEther) {
           name = noColorOutput ? '<Receive Ether>' : '<Receive Ether>'.gray;
