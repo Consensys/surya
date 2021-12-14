@@ -47,7 +47,7 @@ export function graph(files, options = {}) {
   let eventsPerContract = {};
   let structsPerContract = {};
   let contractUsingFor = {};
-  let contractNames = [];
+  let contractNames = ['0_global'];
 
   for (let file of files) {
 
@@ -82,7 +82,7 @@ export function graph(files, options = {}) {
 
     fileASTs.push(ast);
 
-    let contractName = null;
+    let contractName = '0_global';
     let cluster = null;
 
     parser.visit(ast, {
@@ -130,9 +130,15 @@ export function graph(files, options = {}) {
           } 
         }
 
+        dependencies[contractName] = ['0_global'];
+
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
         );
+      },
+
+      'ContractDefinition:exit': function(node) {
+        contractName = '0_global';
       },
 
       StateVariableDeclaration(node) {
@@ -177,7 +183,7 @@ export function graph(files, options = {}) {
 
   for (let ast of fileASTs) {
 
-    let contractName = null;
+    let contractName = '0_global';
     let cluster = null;
 
     function nodeName(functionName, contractName) {
@@ -213,6 +219,10 @@ export function graph(files, options = {}) {
         contractName = node.name;
 
         cluster = digraph.getCluster(`"cluster${contractName}"`);
+      },
+
+      'ContractDefinition:exit': function(node) {
+        contractName = '0_global';
       },
 
       FunctionDefinition(node) {
@@ -285,7 +295,7 @@ export function graph(files, options = {}) {
       },
 
       'ContractDefinition:exit': function(node) {
-        contractName = null; 
+        contractName = '0_global'; 
         tempUserDefinedStateVars = {};
         tempStateVars = {};
       },

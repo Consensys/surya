@@ -38,7 +38,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   let eventsPerContract = {};
   let structsPerContract = {};
   let contractUsingFor = {};
-  let contractNames = [];
+  let contractNames = ['0_global'];
 
   let modifiers = {};
   let functionDecorators = {};
@@ -88,7 +88,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
     fileASTs.push(ast);
 
-    let contractName = null;
+    let contractName = '0_global';
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -104,9 +104,15 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
         contractASTIndex[contractName] = fileASTs.length - 1;
 
+        dependencies[contractName] = ['0_global'];
+
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
         );
+      },
+
+      'ContractDefinition:exit': function(node) {
+        contractName = '0_global';
       },
 
       StateVariableDeclaration(node) {
@@ -205,7 +211,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   }
 
   function constructPerFileFunctionCallTree(ast) {
-    let contractName = null;
+    let contractName = '0_global';
     let functionName = null;
 
     let userDefinedLocalVars = {};
@@ -230,7 +236,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
       },
 
       'ContractDefinition:exit': function(node) {
-        contractName = null;
+        contractName = '0_global';
         tempUserDefinedStateVars = {};
         tempStateVars = {};
       },
@@ -468,9 +474,9 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           if(object === null) {
             return;
           } else if (object === 'super') {
-            // "super" in this context is gonna be the 2nd element of the dependencies array
-            // since the first is the contract itself
-            localContractName = dependencies[contractName][1];
+            // "super" in this context is gonna be the 3rd element of the dependencies array
+            // since the first is the global scope and the second is the contract itself
+            localContractName = dependencies[contractName][2];
           } else if (tempUserDefinedStateVars[object] !== undefined) {
             localContractName = tempUserDefinedStateVars[object];
           } else if (userDefinedLocalVars[object] !== undefined) {
