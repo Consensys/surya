@@ -129,12 +129,12 @@ export function graph(files, options = {}) {
             cluster.set('style', 'filled');
           } 
         }
-
-        dependencies[contractName] = ['0_global'];
-
+        
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
         );
+
+        dependencies[contractName].unshift('0_global');
       },
 
       'ContractDefinition:exit': function(node) {
