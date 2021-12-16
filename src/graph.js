@@ -43,9 +43,9 @@ export function graph(files, options = {}) {
   let stateVars = {};
   let dependencies = {};
   let fileASTs = [];
-  let functionsPerContract = {};
-  let eventsPerContract = {};
-  let structsPerContract = {};
+  let functionsPerContract = {'0_global':[]};
+  let eventsPerContract = {'0_global':[]};
+  let structsPerContract = {'0_global':[]};
   let contractUsingFor = {};
   let contractNames = ['0_global'];
 
@@ -129,12 +129,12 @@ export function graph(files, options = {}) {
             cluster.set('style', 'filled');
           } 
         }
-
-        dependencies[contractName] = ['0_global'];
-
+        
         dependencies[contractName] = node.baseContracts.map(spec =>
           spec.baseName.namePath
         );
+
+        dependencies[contractName].unshift('0_global');
       },
 
       'ContractDefinition:exit': function(node) {

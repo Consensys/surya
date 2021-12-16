@@ -43,9 +43,9 @@ export function graphSimple(files, options = {}) {
   let stateVars = {};
   let dependencies = {};
   let fileASTs = [];
-  let functionsPerContract = {};
-  let eventsPerContract = {};
-  let structsPerContract = {};
+  let functionsPerContract = {null:[]};
+  let eventsPerContract = {null:[]};
+  let structsPerContract = {null:[]};
   let contractUsingFor = {};
   let contractNames = [];
 

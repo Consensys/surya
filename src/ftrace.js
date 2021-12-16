@@ -34,9 +34,9 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   let stateVars = {};
   let dependencies = {};
 
-  let functionsPerContract = {};
-  let eventsPerContract = {};
-  let structsPerContract = {};
+  let functionsPerContract = {'0_global':[]};
+  let eventsPerContract = {'0_global':[]};
+  let structsPerContract = {'0_global':[]};
   let contractUsingFor = {};
   let contractNames = ['0_global'];
 

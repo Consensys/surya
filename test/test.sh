@@ -24,6 +24,10 @@ echo "node ./bin/surya parse ./test/contracts/V060.sol 2>&1 > /dev/null"
 node ./bin/surya parse ./test/contracts/V060.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
+echo "node ./bin/surya parse ./test/contracts/Global.sol 2>&1 > /dev/null"
+node ./bin/surya parse ./test/contracts/Global.sol 2>&1 > /dev/null
+echo "Passed ✅"
+echo ""
 echo ""
 
 
@@ -45,6 +49,10 @@ echo "Passed ✅"
 echo ""
 echo "node ./bin/surya describe ./test/contracts/V060.sol 2>&1 > /dev/null"
 node ./bin/surya describe ./test/contracts/V060.sol 2>&1 > /dev/null
+echo "Passed ✅"
+echo ""
+echo "node ./bin/surya describe ./test/contracts/Global.sol 2>&1 > /dev/null"
+node ./bin/surya describe ./test/contracts/Global.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
 # All at once
@@ -80,6 +88,10 @@ echo "node ./bin/surya dependencies Generic ./test/contracts/V060.sol 2>&1 > /de
 node ./bin/surya dependencies Generic ./test/contracts/V060.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
+echo "node ./bin/surya dependencies GlobalDeclarations ./test/contracts/Global.sol 2>&1 > /dev/null"
+node ./bin/surya dependencies GlobalDeclarations ./test/contracts/Global.sol 2>&1 > /dev/null
+echo "Passed ✅"
+echo ""
 # All at once
 echo "node ./bin/surya dependencies Child ./test/contracts/*.sol 2>&1 > /dev/null"
 node ./bin/surya dependencies Child ./test/contracts/*.sol 2>&1 > /dev/null
@@ -113,6 +125,10 @@ echo "node ./bin/surya inheritance ./test/contracts/V060.sol 2>&1 > /dev/null"
 node ./bin/surya inheritance ./test/contracts/V060.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
+echo "node ./bin/surya inheritance ./test/contracts/Global.sol 2>&1 > /dev/null"
+node ./bin/surya inheritance ./test/contracts/Global.sol 2>&1 > /dev/null
+echo "Passed ✅"
+echo ""
 # All at once
 echo "node ./bin/surya inheritance ./test/contracts/*.sol 2>&1 > /dev/null"
 node ./bin/surya inheritance ./test/contracts/*.sol 2>&1 > /dev/null
@@ -144,6 +160,10 @@ echo "Passed ✅"
 echo ""
 echo "node ./bin/surya graph ./test/contracts/V060.sol 2>&1 > /dev/null"
 node ./bin/surya graph ./test/contracts/V060.sol 2>&1 > /dev/null
+echo "Passed ✅"
+echo ""
+echo "node ./bin/surya graph ./test/contracts/Global.sol 2>&1 > /dev/null"
+node ./bin/surya graph ./test/contracts/Global.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
 # All at once
@@ -211,6 +231,10 @@ echo "node ./bin/surya ftrace Tester::useLib3 external ./test/contracts/Library.
 node ./bin/surya ftrace Tester::useLib3 external ./test/contracts/Library.sol 2>&1 > /dev/null
 echo "Passed ✅"
 echo ""
+echo "node ./bin/surya ftrace GlobalDeclarations::extCall external ./test/contracts/Global.sol 2>&1 > /dev/null"
+node ./bin/surya ftrace GlobalDeclarations::extCall external ./test/contracts/Global.sol 2>&1 > /dev/null
+echo "Passed ✅"
+echo ""
 # With -i flag
 echo "node ./bin/surya ftrace Tester::useLib3 all -i ./test/contracts/*.sol 2>&1 > /dev/null"
 node ./bin/surya ftrace Tester::useLib3 all -i ./test/contracts/*.sol 2>&1 > /dev/null
@@ -240,6 +264,11 @@ rm testreport.md
 echo ""
 echo "node ./bin/surya mdreport testreport.md ./test/contracts/V060.sol 2>&1"
 node ./bin/surya mdreport testreport.md ./test/contracts/V060.sol 2>&1
+echo "Passed ✅"
+rm testreport.md
+echo ""
+echo "node ./bin/surya mdreport testreport.md ./test/contracts/Global.sol 2>&1"
+node ./bin/surya mdreport testreport.md ./test/contracts/Global.sol 2>&1
 echo "Passed ✅"
 rm testreport.md
 echo ""
