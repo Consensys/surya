@@ -76,6 +76,11 @@ export function mdreport(infiles, options = {}) {
         if (modifiers.indexOf(node.name) == -1){
           modifiers.push(node.name);
         }
+      },
+      ModifierDefinition: function ModifierDefinition(node){
+        if (modifiers.indexOf(node.name) == -1){
+          modifiers.push(node.name);
+        }
       }
     });
 
