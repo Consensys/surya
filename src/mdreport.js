@@ -27,7 +27,7 @@ export function mdreport(infiles, options = {}) {
 `;
 
   // make the files array unique by typecasting them to a Set and back
-  // this is not needed in case the importer flag is on, because the 
+  // this is not needed in case the importer flag is on, because the
   // importer module already filters the array internally
   if(!options.contentsInFilePath && options.importer) {
     infiles = importer.importProfiler(infiles);
@@ -72,7 +72,7 @@ export function mdreport(infiles, options = {}) {
     var isConstructor = false;
 
     parser.visit(ast, {
-      ModifierDefinition: function ModifierDefinition(node){
+      ModifierInvocation: function ModifierInvocation(node){
         if (modifiers.indexOf(node.name) == -1){
           modifiers.push(node.name);
         }
@@ -155,7 +155,7 @@ export function mdreport(infiles, options = {}) {
             }
           added = [];
         }
-        
+
         contractsTable += ` |
 `;
       },
@@ -164,7 +164,7 @@ export function mdreport(infiles, options = {}) {
         doesModifierExist = true;
         contractsTable += ` ${node.name}`;
         added.push(node.name);
-        
+
       }
     });
   }
@@ -186,6 +186,6 @@ ${'#'.repeat(options.deepness + 1)} Legend
 |    🛑    | Function can modify state |
 |    💵    | Function is payable |
 `;
-  
+
   return reportContents;
 }
