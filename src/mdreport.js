@@ -12,6 +12,9 @@ export function mdreport(infiles, options = {}) {
     throw new Error(`\nNo files were specified for analysis in the arguments. Bailing...\n`);
   }
 
+  var modifiers = []
+  var added = []
+
   let filesTable = `
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
@@ -67,6 +70,14 @@ export function mdreport(infiles, options = {}) {
     var isPublic = false;
     var doesModifierExist = false;
     var isConstructor = false;
+
+    parser.visit(ast, {
+      ModifierDefinition: function ModifierDefinition(node){
+        if (modifiers.indexOf(node.name) == -1){
+          modifiers.push(node.name);
+        }
+      }
+    });
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -136,7 +147,15 @@ export function mdreport(infiles, options = {}) {
       'FunctionDefinition:exit': function(node) {
         if (!isConstructor && isPublic && !doesModifierExist) {
           contractsTable += 'NO❗️';
+        }else if (isPublic && options.negModifiers){
+          for (var i = 0; i < modifiers.length; i++){
+              if (added.indexOf(modifiers[i]) == -1){
+                contractsTable += ' ~~'+modifiers[i]+'~~ ';
+              }
+            }
+          added = [];
         }
+        
         contractsTable += ` |
 `;
       },
@@ -144,6 +163,7 @@ export function mdreport(infiles, options = {}) {
       ModifierInvocation(node) {
         doesModifierExist = true;
         contractsTable += ` ${node.name}`;
+        added.push(node.name);
         
       }
     });
