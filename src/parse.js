@@ -4,7 +4,7 @@ const fs = require('fs');
 const parser = require('@solidity-parser/parser');
 const treeify = require('treeify');
 
-export function parse(file) {
+export function parse(file, options = {}) {
     const content = fs.readFileSync(file).toString('utf-8');
     const ast = (() => {
         try {
@@ -14,6 +14,8 @@ export function parse(file) {
             throw err;
         }
     })();
-
+    if (options.jsonOutput) {
+        return JSON.stringify(ast);
+    }
     return treeify.asTree(ast, true);
 }
