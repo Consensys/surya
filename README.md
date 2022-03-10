@@ -154,6 +154,10 @@ surya dependencies Exchange Exchange.sol
 
 The `parse` command outputs a _treefied_ AST object coming from the parser.
 
+**Accepted flags**
+
+* `-j`/`--json` - Return a JSON object instead of a _treefied_ object.
+
 ```shell
 surya parse MyContract.sol
 ```
