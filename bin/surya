@@ -125,9 +125,13 @@ require('yargs') // eslint-disable-line
       .positional('file', {
         describe: 'file to parse',
         type: 'string'
+      }).option('j', {
+        describe: 'Return json file',
+        alias: 'json',
+        type: 'boolean'
       });
   }, (argv) => {
-    console.log(parse(argv.file));
+    console.log(parse(argv.file, {jsonOutput: argv.j}));
   })
   .command('ftrace <function_identifier> <function_visibility_restrictor> <files..>', 'output the selected function call trace in a textual tree format. External calls are marked in `orange` and internal calls are `uncolored`.', (yargs) => {
     yargs
