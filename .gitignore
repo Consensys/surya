@@ -37,3 +37,4 @@ nbproject
 .idea
 .node_history
 .vscode/
+package-lock.json
