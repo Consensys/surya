@@ -190,10 +190,14 @@ require('yargs') // eslint-disable-line
         alias: 'title-deepness',
         type: 'number',
         default: 2
+      }).option('n', {
+        alias: 'negative-modifiers',
+        type: 'boolean',
+        default: false
       });
   }, (argv) => {
     try {
-      fs.writeFileSync(argv.outfile, mdreport(argv.infiles, {importer: argv.i, deepness: argv.d, contentsInFilePath: argv.c}), {flag: 'w',});
+      fs.writeFileSync(argv.outfile, mdreport(argv.infiles, {importer: argv.i, deepness: argv.d, contentsInFilePath: argv.c, negModifiers: argv.n}), {flag: 'w',});
     } catch (err) {
         console.log('Error in writing report file');
         console.log(err);
