@@ -545,7 +545,8 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
             constructCallTree(functionCallObject.contract, functionCallName, parentObject[keyString]);
           }
         } else {
-          if(functionCallsTree[functionCallObject.contract] === undefined){
+          if(functionCallsTree[functionCallObject.contract] === undefined || 
+             functionCallsTree[functionCallObject.contract][functionCallName] === undefined){
             parentObject[keyString] = {};
           } else {
             parentObject[keyString] = Object.keys(functionCallsTree[functionCallObject.contract][functionCallName]).length === 0 ?
