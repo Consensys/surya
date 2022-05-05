@@ -9,7 +9,21 @@ export function parse(file) {
     const content = fs.readFileSync(file).toString('utf-8');
     const ast = (() => {
         try {
-            return parser.parse(content);
+            if (options.tolerance && !options.location && !options.range) {
+                return parser.parse(content, {tolerance: true});
+            } else if (options.tolerance && options.location && !options.range) {
+                return parser.parse(content, {tolerance: true, location: true});
+            } else if (options.tolerance && options.location && options.range) {
+                return parser.parse(content, {tolerance: true, location: true, range: true});
+            } else if (!options.tolerance && options.location && options.range) {
+                return parse.parse(content, {location: true, range: true});
+            } else if (!options.tolerance && options.location && !options.range) {
+                return parse.parse(content, {location: true});
+            } else if (!options.tolerance && !options.location && options.range) {
+                return parse.parse(content, {range: true});
+            } else {
+                return parser.parse(content);
+            }
         } catch (err) {
             console.log(`Error found while parsing the following file: ${file}`);
             throw err;

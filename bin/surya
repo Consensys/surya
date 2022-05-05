@@ -129,9 +129,22 @@ require('yargs') // eslint-disable-line
         describe: 'Return json file',
         alias: 'json',
         type: 'boolean'
-      });
+      }).option('t', {
+        describe: 'Parses adding tolerance info',
+        alias: 'tolerance',
+        type: 'boolean'
+      }).option('l', {
+        describe: 'Parses adding location info',
+        alias: 'loc',
+        type: 'boolean'
+      }).option('r', {
+        describe: 'Parses adding range info',
+        alias: 'range',
+        type: 'boolean'
+      })
+        ;
   }, (argv) => {
-    console.log(parse(argv.file, {jsonOutput: argv.j}));
+    console.log(parse(argv.file, {jsonOutput: argv.j, tolerance: argv.t, location: argv.l, range: argv.r}));
   })
   .command('ftrace <function_identifier> <function_visibility_restrictor> <files..>', 'output the selected function call trace in a textual tree format. External calls are marked in `orange` and internal calls are `uncolored`.', (yargs) => {
     yargs

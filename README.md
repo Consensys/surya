@@ -157,6 +157,10 @@ The `parse` command outputs a _treefied_ AST object coming from the parser.
 **Accepted flags**
 
 * `-j`/`--json` - Return a JSON object instead of a _treefied_ object.
+* `-t`/`--tolerance` - Parses `*.sol` file with tolerance added to parsed output.
+* `-l`/`--loc` - Parses `*.sol` file with location added to parsed output.
+* `-l`/`--range` - Parses `*.sol` file with range added to parsed output.
+
 
 ```shell
 surya parse MyContract.sol
