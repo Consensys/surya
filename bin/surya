@@ -145,10 +145,15 @@ require('yargs') // eslint-disable-line
         alias: 'range',
         type: 'boolean',
         default : false
+      }).option('c', {
+        describe: 'Parses adding function call info at the start of the AST',
+        alias: 'callinfo',
+        type: 'boolean',
+        default : false
       })
         ;
   }, (argv) => {
-    console.log(parse(argv.file, {jsonOutput: argv.j, tolerance: argv.t, location: argv.l, range: argv.r}));
+    console.log(parse(argv.file, {jsonOutput: argv.j, tolerance: argv.t, location: argv.l, range: argv.r, callinfo: argv.c}));
   })
   .command('ftrace <function_identifier> <function_visibility_restrictor> <files..>', 'output the selected function call trace in a textual tree format. External calls are marked in `orange` and internal calls are `uncolored`.', (yargs) => {
     yargs
