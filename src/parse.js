@@ -136,7 +136,7 @@ function parse(file) {
         for (var i = 1; i < contractNames.length; i++) {
             callAdditionalInformation += "Contract: "+contractNames[i] + ";\n";
             callAdditionalInformation += "Global variables: "+JSON.stringify(stateVars[contractNames[i]]) + ";\n"
-            callAdditionalInformation += "Global variables: "+JSON.stringify(functionsPerContract[contractNames[i]]) + ";\n"
+            callAdditionalInformation += "functions: "+JSON.stringify(functionsPerContract[contractNames[i]]) + ";\n"
         }
         callAdditionalInformation += ""
     } else {
