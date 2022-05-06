@@ -1,5 +1,9 @@
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.parse = parse;
 var fs = require('fs');
 var parser = require('@solidity-parser/parser');
 var treeify = require('treeify');
@@ -20,6 +24,8 @@ function parse(file) {
     if (options.callinfo) {
         var userDefinedStateVars = {};
         var stateVars = {};
+        var dependencies = {};
+        var fileASTs = [];
         var functionsPerContract = {};
         var eventsPerContract = { '0_global': [] };
         var structsPerContract = { '0_global': [] };
@@ -118,7 +124,6 @@ function parse(file) {
                 structsPerContract[contractName].push(node.name);
             },
             UsingForDeclaration: function UsingForDeclaration(node) {
-                // Check if the using for declaration is targeting a specific type or all types with "*"
                 var typeNameName = node.typeName != null ? node.typeName.name : '*';
 
                 if (!contractUsingFor[contractName][typeNameName]) {
@@ -127,21 +132,21 @@ function parse(file) {
                 contractUsingFor[contractName][typeNameName].add(node.libraryName);
             }
         });
-        
-        // var test = functionsPerContract[contractNames[i]].JSON
+
         for (var i = 1; i < contractNames.length; i++) {
-            callAdditionalInformation += contractNames[i] + "\n";
-            callAdditionalInformation += JSON.stringify(stateVars[contractNames[i]]) + "\n"
-            callAdditionalInformation += JSON.stringify(functionsPerContract[contractNames[i]]) + "\n"
+            callAdditionalInformation += contractNames[i] + ";\n";
+            callAdditionalInformation += JSON.stringify(stateVars[contractNames[i]]) + ";\n"
+            callAdditionalInformation += JSON.stringify(functionsPerContract[contractNames[i]]) + ";\n"
         }
-        callAdditionalInformation += ";"
+        callAdditionalInformation += ""
     } else {
         callAdditionalInformation += ""
     }
     if (options.jsonOutput) {
+
         return callAdditionalInformation + JSON.stringify(ast);
     } else {
 
-        return callAdditionalInformation + treeify.asTree(ast, true);
+        return callAdditionalInformation +treeify.asTree(ast, true);
     }
 }
