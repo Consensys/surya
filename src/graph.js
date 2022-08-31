@@ -48,6 +48,7 @@ export function graph(files, options = {}) {
   let structsPerContract = {'0_global':[]};
   let contractUsingFor = {};
   let contractNames = ['0_global'];
+  let customErrorNames = [];
 
   for (let file of files) {
 
@@ -157,6 +158,11 @@ export function graph(files, options = {}) {
 
       FunctionDefinition(node) {
         functionsPerContract[contractName].push(node.name);
+      },
+
+      CustomErrorDefinition(node) {
+        functionsPerContract[contractName].push(node.name);
+        customErrorNames.push(node.name);
       },
 
       EventDefinition(node) {
@@ -377,9 +383,12 @@ export function graph(files, options = {}) {
         }
         
         if(
-          parserHelpers.isRegularFunctionCall(node, contractNames, eventsOfDependencies, structsOfDependencies)
+          parserHelpers.isRegularFunctionCall(node, contractNames, eventsOfDependencies, structsOfDependencies, customErrorNames)
         ) {
           opts.color = colorScheme.call.regular;
+          name = expr.name;
+        } else if(customErrorNames.includes(node.expression.name)) {
+          opts.color = colorScheme.call.error;
           name = expr.name;
         } else if(parserHelpers.isMemberAccess(node)) {
           let object = null;
@@ -520,11 +529,20 @@ export function graph(files, options = {}) {
           let _opts = {
             label: name
           };
-          if(colorScheme.event && eventDefinitions.includes(name)){
-            //emit event
-            _opts.color = colorScheme.event.color;
-            _opts.shape = colorScheme.event.shape;
-            _opts.style = colorScheme.event.style;
+          if(eventDefinitions.includes(name)){
+            if(colorScheme.event){
+              _opts = colorScheme.event;
+            } else {
+              _opts.style = 'dotted';
+            }
+            
+          } else if (customErrorNames.includes(node.expression.name)) {
+            if(colorScheme.event){
+              _opts = colorScheme.error;
+            } else {
+              _opts.color = 'brown2';
+              _opts.shape = 'box';
+            }
           }
           externalCluster.addNode(localNodeName, _opts);
         }
@@ -549,6 +567,7 @@ label = "Legend";
 key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
   <tr><td align="right" port="i1">Internal Call</td></tr>
   <tr><td align="right" port="i2">External Call</td></tr>
+  <tr><td align="right" port="i2">Custom Error Call</td></tr>
   <tr><td align="right" port="i3">Defined Contract</td></tr>
   <tr><td align="right" port="i4">Undefined Contract</td></tr>
   </table>>]
@@ -566,6 +585,7 @@ key2 [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
   </table>>]
 key:i1:e -> key2:i1:w [color="${colorScheme.call.regular}"]
 key:i2:e -> key2:i2:w [color="${colorScheme.call.default}"]
+key:i2:e -> key2:i2:w [color="${colorScheme.call.error}"]
 }
 `;
   let finalDigraph = utils.insertBeforeLastOccurrence(digraph.to_dot(), '}', legendDotString);

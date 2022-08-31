@@ -10,18 +10,20 @@ function isLowerCase(str) {
 }
 
 const parserHelpers = {
-  isRegularFunctionCall: (node, contractNames, eventNames, structNames) => {
+  isRegularFunctionCall: (node, contractNames, eventNames, structNames, customErrorNames) => {
     const expr = node.expression;
     return expr && expr.type === 'Identifier'
         && !contractNames.includes(expr.name)
         && !eventNames.includes(expr.name)
         && !structNames.includes(expr.name)
+        && !customErrorNames.includes(expr.name)
         && !BUILTINS.includes(expr.name);
   },
 
   isMemberAccess: node => {
     const expr = node.expression;
-    return expr.type === 'MemberAccess' && !['push', 'pop', 'encode', 'encodePacked', 'encodeWithSelector', 'encodeWithSignature', 'decode'].includes(expr.memberName);
+    return expr.type === 'MemberAccess'
+        && !['push', 'pop', 'encode', 'encodePacked', 'encodeWithSelector', 'encodeWithSignature', 'decode'].includes(expr.memberName);
   },
 
   isIndexAccess: node => {
@@ -38,7 +40,7 @@ const parserHelpers = {
 
   isAContractTypecast: (node, contractNames) => {
     const expr = node.expression.expression;
-    // @TODO: replace lowercase for better filtering
+
     return expr.type === 'FunctionCall'
         && expr.expression.hasOwnProperty('name')
         && contractNames.includes(expr.expression.name[0]);
