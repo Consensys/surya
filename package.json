@@ -3,9 +3,7 @@
   "description": "Sūrya, The Sun God: A set of utilities for inspecting the structure of Solidity contracts.",
   "version": "0.4.6",
   "main": "lib/index.js",
-  "author": [
-    "GNSPS"
-  ],
+  "author": "GNSPS",
   "repository": "ConsenSys/surya",
   "license": "Apache-2.0",
   "bin": {
@@ -25,19 +23,19 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
-    "chai": "^4.2.0",
-    "coveralls": "^3.1.0",
-    "husky": "^2.2.0",
-    "mocha": "^5.2.0",
-    "sinon": "^5.1.1"
+    "chai": "^4.3.10",
+    "coveralls": "^3.1.1",
+    "husky": "^8.0.3",
+    "mocha": "^10.2.0",
+    "sinon": "^16.0.0"
   },
   "dependencies": {
-    "@solidity-parser/parser": "^0.14.1",
+    "@solidity-parser/parser": "^0.16.1",
     "c3-linearization": "^0.3.0",
     "colors": "^1.4.0",
-    "graphviz": "0.0.9",
+    "graphviz": "^0.0.9",
     "sha1-file": "^1.0.4",
     "treeify": "^1.1.0",
-    "yargs": "^11.1.1"
+    "yargs": "^17.7.2"
   }
 }
