@@ -1,5 +1,5 @@
 {
-  "name": "surya",
+  "name": "@hexpayday/surya",
   "description": "Sūrya, The Sun God: A set of utilities for inspecting the structure of Solidity contracts.",
   "version": "0.4.6",
   "main": "lib/index.js",
