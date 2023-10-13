@@ -21,7 +21,8 @@ const parserHelpers = {
 
   isMemberAccess: node => {
     const expr = node.expression;
-    return expr.type === 'MemberAccess' && !['push', 'pop', 'encode', 'encodePacked', 'encodeWithSelector', 'encodeWithSignature', 'decode'].includes(expr.memberName);
+    return expr.type === 'MemberAccess'
+        && !['push', 'pop', 'encode', 'encodePacked', 'encodeWithSelector', 'encodeWithSignature', 'decode'].includes(expr.memberName);
   },
 
   isIndexAccess: node => {
@@ -32,8 +33,8 @@ const parserHelpers = {
   isMemberAccessOfAddress: node => {
     const expr = node.expression.expression;
     return expr.type === 'FunctionCall'
-        && expr.expression.hasOwnProperty('typeName')
-        && expr.expression.typeName.name === 'address';
+        && expr.expression.hasOwnProperty('name')
+        && expr.expression.name === 'address';
   },
 
   isAContractTypecast: (node, contractNames) => {
