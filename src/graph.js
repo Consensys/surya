@@ -396,7 +396,7 @@ export function graph(files, options = {}) {
           } else if(parserHelpers.isMemberAccessOfAddress(node)) {
             if(name === 'call') {
               if(node.arguments !== undefined && node.arguments.length > 0) {
-                name = content.substring(node.arguments[0].range[0], node.arguments[0].range[1]).replace(/"/g,"");
+                name = content.substring(node.arguments[0].range[0], node.arguments[0].range[1]+1).replace(/"/g,"");
                 console.log(userDefinedLocalVars[name]+'\n');
               } else {
                 name = '<Fallback>';
@@ -408,7 +408,7 @@ export function graph(files, options = {}) {
             } else if(expr.expression.arguments[0].type === 'NumberLiteral') {
               object = 'address('+expr.expression.arguments[0].number+')';
             } else {
-              object = content.substring(expr.expression.arguments[0].range[0], expr.expression.arguments[0].range[1]).replace(/"/g,"");
+              object = content.substring(expr.expression.arguments[0].range[0], expr.expression.arguments[0].range[1]+1).replace(/"/g,"");
             }
 
           // checking if it is a typecasting to a user-defined contract type
