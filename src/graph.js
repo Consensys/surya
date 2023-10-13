@@ -1,5 +1,7 @@
 "use strict";
 
+import exp from 'constants';
+
 const parserHelpers = require('./utils/parserHelpers');
 const utils = require('./utils/utils');
 const fs = require('fs');
@@ -48,10 +50,9 @@ export function graph(files, options = {}) {
   let structsPerContract = {'0_global':[]};
   let contractUsingFor = {};
   let contractNames = ['0_global'];
+  let content;
 
   for (let file of files) {
-
-    let content;
     if(!options.contentsInFilePath) {
       try {
         content = fs.readFileSync(file).toString('utf-8');
@@ -69,7 +70,7 @@ export function graph(files, options = {}) {
 
     const ast = (() => {
       try {
-        return parser.parse(content);
+        return parser.parse(content, {range: true});
       } catch (err) {
         if(!options.contentsInFilePath) {
           console.error(`\nError found while parsing the following file: ${file}\n`);
@@ -333,6 +334,7 @@ export function graph(files, options = {}) {
       },
 
       VariableDeclaration(node) {
+        console.log(JSON.stringify(node));
         if (callingScope && node.name === null) {
           return;
         } else if (callingScope && parserHelpers.isUserDefinedDeclaration(node)) {
@@ -386,32 +388,32 @@ export function graph(files, options = {}) {
           let variableType = null;
 
           name = expr.memberName;
-
           
           // checking if the member expression is a simple identifier
           if(expr.expression.hasOwnProperty('name')) {
             object = expr.expression.name;
-
           // checking if it is a member of `address` and pass along it's contents
           } else if(parserHelpers.isMemberAccessOfAddress(node)) {
+            if(name === 'call') {
+              if(node.arguments !== undefined && node.arguments.length > 0) {
+                name = content.substring(node.arguments[0].range[0], node.arguments[0].range[1]).replace(/"/g,"");
+                console.log(userDefinedLocalVars[name]+'\n');
+              } else {
+                name = '<Fallback>';
+              }
+            }
+
             if(expr.expression.arguments[0].hasOwnProperty('name')) {
               object = expr.expression.arguments[0].name;
             } else if(expr.expression.arguments[0].type === 'NumberLiteral') {
               object = 'address('+expr.expression.arguments[0].number+')';
             } else {
-              object = JSON.stringify(expr.expression.arguments).replace(/"/g,"");
+              object = content.substring(expr.expression.arguments[0].range[0], expr.expression.arguments[0].range[1]).replace(/"/g,"");
             }
 
           // checking if it is a typecasting to a user-defined contract type
           } else if(parserHelpers.isAContractTypecast(node, contractNames)) {
-            if(
-              node.expression.expression.expression.hasOwnProperty('name')
-              && node.expression.expression.expression.name[0] === 'this'
-            ) {
-              object = localContractName;
-            } else {
-              object = expr.expression.expression.name;
-            }
+            object = expr.expression.expression.name;
           }
 
           // check if member expression is a special var and get its canonical type
