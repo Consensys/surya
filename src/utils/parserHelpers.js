@@ -21,7 +21,8 @@ const parserHelpers = {
 
   isMemberAccess: node => {
     const expr = node.expression;
-    return expr.type === 'MemberAccess' && !['push', 'pop', 'encode', 'encodePacked', 'encodeWithSelector', 'encodeWithSignature', 'decode'].includes(expr.memberName);
+    return expr.type === 'MemberAccess'
+        && !['push', 'pop', 'encode', 'encodePacked', 'encodeWithSelector', 'encodeWithSignature', 'decode', 'call'].includes(expr.memberName);
   },
 
   isIndexAccess: node => {
@@ -41,7 +42,10 @@ const parserHelpers = {
     // @TODO: replace lowercase for better filtering
     return expr.type === 'FunctionCall'
         && expr.expression.hasOwnProperty('name')
-        && contractNames.includes(expr.expression.name[0]);
+        && (
+          expr.expression.name[0] === 'this'
+          || contractNames.includes(expr.expression.name[0])
+        );
   },
 
   isUserDefinedDeclaration: node => {

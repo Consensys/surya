@@ -404,7 +404,14 @@ export function graph(files, options = {}) {
 
           // checking if it is a typecasting to a user-defined contract type
           } else if(parserHelpers.isAContractTypecast(node, contractNames)) {
-            object = expr.expression.expression.name;
+            if(
+              node.expression.expression.expression.hasOwnProperty('name')
+              && node.expression.expression.expression.name[0] === 'this'
+            ) {
+              object = localContractName;
+            } else {
+              object = expr.expression.expression.name;
+            }
           }
 
           // check if member expression is a special var and get its canonical type

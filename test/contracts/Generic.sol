@@ -35,7 +35,13 @@ contract Generic is Boring {
   }
 
   function () public payable zounds {
+    address boringAddr = Boring(0x0);
+
     bar();
+
+    address(this).call();
+
+    address(boringAddr).call(bytes4(keccak256("wockawocka(uint256)")), 1);
   }
 }
 
