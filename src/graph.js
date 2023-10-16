@@ -334,7 +334,6 @@ export function graph(files, options = {}) {
       },
 
       VariableDeclaration(node) {
-        console.log(JSON.stringify(node));
         if (callingScope && node.name === null) {
           return;
         } else if (callingScope && parserHelpers.isUserDefinedDeclaration(node)) {
@@ -397,7 +396,6 @@ export function graph(files, options = {}) {
             if(name === 'call') {
               if(node.arguments !== undefined && node.arguments.length > 0) {
                 name = content.substring(node.arguments[0].range[0], node.arguments[0].range[1]+1).replace(/"/g,"");
-                console.log(userDefinedLocalVars[name]+'\n');
               } else {
                 name = '<Fallback>';
               }
