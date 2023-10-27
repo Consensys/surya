@@ -16,3 +16,17 @@ contract FourthParent {}
 // Linearization is _something_ like this:
 // Child
 // └─ FirstParent <- SecondParent <- ThirdParent <- FourthParent <- IThirdParent
+
+abstract contract A {
+    function fooA() public pure returns (string memory) {
+        return "A";
+    }
+}
+
+abstract contract B {}
+
+contract C is A, B {
+    function fooC() public pure returns (string memory) {
+        return super.fooA();
+    }
+}
