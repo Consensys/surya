@@ -486,9 +486,13 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
           if(object === null) {
             return;
           } else if (object === 'super') {
-            // "super" in this context is gonna be the 3rd element of the dependencies array
-            // since the first is the global scope and the second is the contract itself
-            localContractName = dependencies[contractName][2];
+            let matchingContracts = [...dependencies[contractName]].filter(contract => functionsPerContract[contract].includes(name));
+
+            if(matchingContracts.length > 0){
+              localContractName = matchingContracts[0];
+            } else {
+              return;
+            }
           } else if (tempUserDefinedStateVars[object] !== undefined) {
             localContractName = tempUserDefinedStateVars[object];
           } else if (userDefinedLocalVars[object] !== undefined) {

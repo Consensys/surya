@@ -500,9 +500,13 @@ export function graph(files, options = {}) {
           } else if(object === 'this') {
             opts.color = colorScheme.call.this;
           } else if (object === 'super') {
-            // "super" in this context is gonna be the 2nd element of the dependencies array
-            // since the first is the contract itself
-            localContractName = dependencies[contractName][1];
+            let matchingContracts = [...dependencies[contractName]].filter(contract => functionsPerContract[contract].includes(name));
+
+            if(matchingContracts.length > 0){
+              localContractName = matchingContracts[0];
+            } else {
+              return;
+            }
           } else if (tempUserDefinedStateVars[object] !== undefined) {
             localContractName = tempUserDefinedStateVars[object];
           } else if (userDefinedLocalVars[object] !== undefined) {
