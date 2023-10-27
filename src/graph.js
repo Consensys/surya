@@ -85,6 +85,12 @@ export function graph(files, options = {}) {
 
     let contractName = '0_global';
     let cluster = null;
+    userDefinedStateVars[contractName] = {};
+    stateVars[contractName] = {};
+    functionsPerContract[contractName] = [];
+    eventsPerContract[contractName] = [];
+    structsPerContract[contractName] = [];
+    contractUsingFor[contractName] = {};
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -169,8 +175,13 @@ export function graph(files, options = {}) {
       },
 
       UsingForDeclaration(node) {
+        let typeNameName = '*';
         // Check if the using for declaration is targeting a specific type or all types with "*"
-        let typeNameName = node.typeName != null ? node.typeName.name : '*';
+        if(node.typeName != null && node.typeName.hasOwnProperty('name')){
+          typeNameName = node.typeName.name;
+        } else if(node.typeName != null && node.typeName.hasOwnProperty('namePath')){
+          typeNameName = node.typeName.namePath;
+        }
 
         if(!contractUsingFor[contractName][typeNameName]){
           contractUsingFor[contractName][typeNameName] = new Set([]);

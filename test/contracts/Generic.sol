@@ -1,9 +1,5 @@
 pragma solidity ^0.4.0;
 
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-
-import "./LiquidityProvider.sol";
-
 using EnumerableSet for EnumerableSet.UintSet;
 
 contract Boring {
