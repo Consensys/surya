@@ -1,5 +1,7 @@
 pragma solidity ^0.4.0;
 
+using EnumerableSet for EnumerableSet.UintSet;
+
 contract Boring {
   function wockawocka(uint _input) public pure returns(uint){
     return _input += (2**256 - 2);
