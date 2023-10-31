@@ -199,7 +199,10 @@ export function graph(files, options = {}) {
     let cluster = null;
 
     function nodeName(functionName, contractName) {
-      if (dependencies.hasOwnProperty(contractName)) {
+      if (
+        functionName !== '<Fallback>' && functionName !== '<Receive Ether>' && functionName !== '<Constructor>'
+        && dependencies.hasOwnProperty(contractName)
+      ) {
         for (let dep of dependencies[contractName]) {
           const name = `${dep}.${functionName}`;
           if (digraph.getNode(name)) {
