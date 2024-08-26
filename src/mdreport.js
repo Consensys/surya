@@ -36,7 +36,7 @@ export function mdreport(infiles, options = {}) {
   }
 
   for (let file of infiles) {
-    filesTable += `| ${file} | ${sha1File(file)} |
+    filesTable += `| ${file} | ${sha1File.sync(file)} |
 `;
 
     if(!options.contentsInFilePath) {
