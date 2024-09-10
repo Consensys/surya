@@ -57,12 +57,16 @@ require('yargs') // eslint-disable-line
         alias: 'simple',
         type: 'boolean',
         default: false,
+      }).option('e', {
+        alias: 'custom-errors',
+        type: 'boolean',
+        default: false,
       });
   }, (argv) => {
     if (argv.s) {
       console.log(graphSimple(argv.files, {importer: argv.i, libraries: argv.l, enableModifierEdges: argv.m, contentsInFilePath: argv.c}));
     } else {
-      console.log(graph(argv.files, {importer: argv.i, libraries: argv.l, enableModifierEdges: argv.m, contentsInFilePath: argv.c}));
+      console.log(graph(argv.files, {importer: argv.i, libraries: argv.l, enableModifierEdges: argv.m, contentsInFilePath: argv.c, customErrors: argv.e}));
     }
   })
   .command('inheritance <files..>', 'generate graph of contract inheritance tree.', (yargs) => {

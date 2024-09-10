@@ -15,15 +15,20 @@ export const defaultColorScheme = {
         internal: "white"
     },
     nodeType: {
-        modifier: "yellow",
+        modifier: "yellow"
     },
     call: {
         default: "orange",
         regular: "green",
-        this: "green"
+        this: "green",
+        error: "red"
     },
     event: {
         style: "dotted"
+    },
+    error: {
+        color: "brown2",
+        shape: "box"
     },
     contract: {
         defined: {
@@ -68,10 +73,15 @@ export const defaultColorSchemeDark = {
     call: {
         default: "white",
         regular: "#1bc6a6",
-        this: "#80e097"
+        this: "#80e097",
+        error: "crimson"
     },
     event: {
         style: "dotted"
+    },
+    error: {
+        color: "crimson",
+        shape: "box"
     },
     contract: {
         defined: {

@@ -39,6 +39,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
   let structsPerContract = {'0_global':[]};
   let contractUsingFor = {};
   let contractNames = ['0_global'];
+  let customErrorNames = [];
 
   let modifiers = {};
   let functionDecorators = {};
@@ -138,6 +139,11 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
 
       FunctionDefinition(node) {
         functionsPerContract[contractName].push(node.name);
+      },
+
+      CustomErrorDefinition(node) {
+        functionsPerContract[contractName].push(node.name);
+        customErrorNames.push(node.name);
       },
 
       EventDefinition(node) {
@@ -361,7 +367,7 @@ export function ftrace(functionId, accepted_visibility, files, options = {}, noC
         // The following block is a nested switch statement for creation of the call tree
         // START BLOCK
         if(
-          parserHelpers.isRegularFunctionCall(node, contractNames, eventsOfDependencies, structsOfDependencies)
+          parserHelpers.isRegularFunctionCall(node, contractNames, eventsOfDependencies, structsOfDependencies, customErrorNames)
         ) {
           name = expr.name;
 
