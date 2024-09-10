@@ -4,49 +4,45 @@ const fs = require('fs');
 const path = require('path');
 const parser = require('@solidity-parser/parser');
 
-
 /**
- * Given a list of solidity files, returns a list of imports to those files, and all files imported
- * by those files.  For security, this function throws if a path is resolved to a higher level than 
- * projectDir, and it not a file name ending in .sol 
+ * Given a list of Solidity files, returns a list of imports from those files and all files imported by those files.
+ * This function throws an error if a path is resolved to a higher level than projectDir and if it's not a .sol file.
  *
- * @param      {Array}   files          files to parse for imports
- * @param      {string}  projectDir     the highest level directory accessible
- * @param      {Set}     importedFiles  files already parsed 
- * @return     {Array}   importPaths    A list of importPaths 
+ * @param {Array}   files          - Solidity files to parse for imports.
+ * @param {string}  projectDir     - The highest level directory accessible.
+ * @param {Set}     importedFiles  - Files already parsed.
+ * @returns {Array} importPaths    - A list of importPaths.
  */
 export function importProfiler(files, projectDir = process.cwd(), importedFiles = new Set()) {
-  for (let file of files){
-    // Checks for a valid solidity file
+  for (let file of files) {
+    // Check for a valid Solidity file.
     file = path.resolve(projectDir, file);
-    if (file.indexOf(projectDir) != 0) {
-      throw new Error(`\nImports must be found in sub dirs of the project directory.
-      project dir: ${projectDir}
-      path: ${file}\n`);
+    if (file.indexOf(projectDir) !== 0 || !file.endsWith('.sol')) {
+      throw new Error(`Invalid import path: ${file}`);
     }
     let content;
     try {
-      content = fs.readFileSync(file).toString('utf-8');
+      content = fs.readFileSync(file, 'utf-8');
     } catch (e) {
       if (e.code === 'EISDIR') {
-        console.error(`Skipping directory ${file}`);
-        return importedFiles; // empty Set
+        console.error(`Skipping directory: ${file}`);
+        return importedFiles; // Empty Set
       } else {
         throw e;
       }
     }
-    // Having verified that it indeed is a solidity file, add it to set of importedFiles
+    // Add the valid Solidity file to the set of importedFiles.
     importedFiles.add(file);
     const ast = (() => {
       try {
-        return parser.parse(content, {tolerant: true});
+        return parser.parse(content, { tolerant: true });
       } catch (err) {
-        console.error(`\nError found while parsing the following file: ${file}\n`);
+        console.error(`Error found while parsing file: ${file}\n`);
         throw err;
       }
     })();
-    
-    // create an array to hold the imported files
+
+    // Create an array to hold the imported files.
     const newFiles = [];
     parser.visit(ast, {
       ImportDirective(node) {
@@ -54,66 +50,56 @@ export function importProfiler(files, projectDir = process.cwd(), importedFiles 
         if (!importedFiles.has(newFile)) newFiles.push(newFile);
       }
     });
-    // Run through the array of files found in this file
-    module.exports.importProfiler(newFiles, projectDir, importedFiles);
+    // Recursively process the array of imported files.
+    importProfiler(newFiles, projectDir, importedFiles);
   }
-    // Convert the set to an array for easy consumption
+  // Convert the set to an array for easy consumption.
   const importedFilesArray = Array.from(importedFiles);
   return importedFilesArray;
 }
 
-/// Takes a filepath, and an import path found within it, and finds the corresponding source code
-/// file. Throws an error if the resolved path is not a file.
-///
-/// @param      {string}  baseFilePath      The base file path
-/// @param      {string}  importedFilePath  The imported file path
-/// @param      {string}  projectDir        The top-most directory we will search in
-///
+/**
+ * Takes a filepath, an import path found within it, and finds the corresponding source code file.
+ * Throws an error if the resolved path is not a file.
+ *
+ * @param {string} baseFilePath      - The base file path.
+ * @param {string} importedFilePath  - The imported file path.
+ * @param {string} projectDir        - The top-most directory to search in.
+ * @returns {string} resolvedPath   - The resolved file path.
+ */
 export function resolveImportPath(baseFilePath, importedFilePath, projectDir = process.cwd()) {
+  // Split the project directory path.
   const topmostDirArray = projectDir.split(path.sep);
   let resolvedPath;
   let baseDirPath = path.dirname(baseFilePath);
-  // if it's a relative or absolute path:
-  if (
-    importedFilePath.slice(0,1) === '.'
-    || importedFilePath.slice(0,1) === '/'
-  ) {
+
+  // If it's a relative or absolute path:
+  if (importedFilePath.slice(0, 1) === '.' || importedFilePath.slice(0, 1) === '/') {
     resolvedPath = path.resolve(baseDirPath, importedFilePath);
-  // else it's most likely a special case using a remapping to node_modules dir in Truffle
   } else {
-    // we use a string and not the array alone because of different windows and UNIX path roots
+    // It's most likely a special case using a remapping to node_modules directory.
     let currentDir = path.resolve(baseDirPath, '..');
     let currentDirArray = baseDirPath.split(path.sep);
     let currentDirName = currentDirArray.pop();
     let nodeModulesDir = '';
 
-    // while (currentDirName != 'contracts') {
     while (!fs.readdirSync(currentDir).includes('node_modules') && !nodeModulesDir) {
-      // since we already know the current file is inside the project dir we can check if the
-      // folder array length for the current dir is smaller than the top-most one, i.e. we are 
-      // still inside the project dir. If not, throw
       if (topmostDirArray.length >= currentDirArray.length) {
-        throw new Error(`Import statement seems to be a Truffle "'node_modules' remapping" but no 'contracts' truffle dir could be found in the project's child dirs. Have you ran 'npm install', already?
-        project dir: ${projectDir}
-        path: ${currentDir}`);
+        throw new Error(`Import statement seems to be a Truffle "node_modules remapping," but no 'node_modules' directory could be found.`);
       }
-      // if we still aren't in a folder containing 'node_modules' go up one level
       currentDirName = currentDirArray.pop();
       currentDir = path.resolve(currentDir, '..');
     }
-    // if we've reached this point, then we have found the dir containing node_modules
-    nodeModulesDir = path.join(currentDir, 'node_modules');
 
-    // join it all to get the file path
+    // We've found the directory containing node_modules.
+    nodeModulesDir = path.join(currentDir, 'node_modules');
     resolvedPath = path.join(nodeModulesDir, importedFilePath);
   }
 
-  // verify that the resolved path is actually a file
-  if (
-    !fs.existsSync(resolvedPath) 
-    || !fs.statSync(resolvedPath).isFile()
-  ) {
-    throw new Error(`Import path (${resolvedPath}) not resolved to a file`);
+  // Verify that the resolved path is actually a file.
+  if (!fs.existsSync(resolvedPath) || !fs.statSync(resolvedPath).isFile()) {
+    throw new Error(`Import path not resolved to a file: ${resolvedPath}`);
   }
+
   return resolvedPath;
 }

@@ -34,8 +34,8 @@ const parserHelpers = {
   isMemberAccessOfAddress: node => {
     const expr = node.expression.expression;
     return expr.type === 'FunctionCall'
-        && expr.expression.hasOwnProperty('typeName')
-        && expr.expression.typeName.name === 'address';
+        && expr.expression.hasOwnProperty('name')
+        && expr.expression.name === 'address';
   },
 
   isAContractTypecast: (node, contractNames) => {

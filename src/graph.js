@@ -1,5 +1,7 @@
 "use strict";
 
+import exp from 'constants';
+
 const parserHelpers = require('./utils/parserHelpers');
 const utils = require('./utils/utils');
 const fs = require('fs');
@@ -49,10 +51,9 @@ export function graph(files, options = {}) {
   let contractUsingFor = {};
   let contractNames = ['0_global'];
   let customErrorNames = [];
+  let content;
 
   for (let file of files) {
-
-    let content;
     if(!options.contentsInFilePath) {
       try {
         content = fs.readFileSync(file).toString('utf-8');
@@ -70,7 +71,7 @@ export function graph(files, options = {}) {
 
     const ast = (() => {
       try {
-        return parser.parse(content);
+        return parser.parse(content, {range: true});
       } catch (err) {
         if(!options.contentsInFilePath) {
           console.error(`\nError found while parsing the following file: ${file}\n`);
@@ -85,6 +86,12 @@ export function graph(files, options = {}) {
 
     let contractName = '0_global';
     let cluster = null;
+    userDefinedStateVars[contractName] = {};
+    stateVars[contractName] = {};
+    functionsPerContract[contractName] = [];
+    eventsPerContract[contractName] = [];
+    structsPerContract[contractName] = [];
+    contractUsingFor[contractName] = {};
 
     parser.visit(ast, {
       ContractDefinition(node) {
@@ -174,8 +181,13 @@ export function graph(files, options = {}) {
       },
 
       UsingForDeclaration(node) {
+        let typeNameName = '*';
         // Check if the using for declaration is targeting a specific type or all types with "*"
-        let typeNameName = node.typeName != null ? node.typeName.name : '*';
+        if(node.typeName != null && node.typeName.hasOwnProperty('name')){
+          typeNameName = node.typeName.name;
+        } else if(node.typeName != null && node.typeName.hasOwnProperty('namePath')){
+          typeNameName = node.typeName.namePath;
+        }
 
         if(!contractUsingFor[contractName][typeNameName]){
           contractUsingFor[contractName][typeNameName] = new Set([]);
@@ -193,7 +205,10 @@ export function graph(files, options = {}) {
     let cluster = null;
 
     function nodeName(functionName, contractName) {
-      if (dependencies.hasOwnProperty(contractName)) {
+      if (
+        functionName !== '<Fallback>' && functionName !== '<Receive Ether>' && functionName !== '<Constructor>'
+        && dependencies.hasOwnProperty(contractName)
+      ) {
         for (let dep of dependencies[contractName]) {
           const name = `${dep}.${functionName}`;
           if (digraph.getNode(name)) {
@@ -395,20 +410,26 @@ export function graph(files, options = {}) {
           let variableType = null;
 
           name = expr.memberName;
-
           
           // checking if the member expression is a simple identifier
           if(expr.expression.hasOwnProperty('name')) {
             object = expr.expression.name;
-
           // checking if it is a member of `address` and pass along it's contents
           } else if(parserHelpers.isMemberAccessOfAddress(node)) {
+            if(name === 'call') {
+              if(node.arguments !== undefined && node.arguments.length > 0) {
+                name = content.substring(node.arguments[0].range[0], node.arguments[0].range[1]+1).replace(/"/g,"");
+              } else {
+                name = '<Fallback>';
+              }
+            }
+
             if(expr.expression.arguments[0].hasOwnProperty('name')) {
               object = expr.expression.arguments[0].name;
             } else if(expr.expression.arguments[0].type === 'NumberLiteral') {
               object = 'address('+expr.expression.arguments[0].number+')';
             } else {
-              object = JSON.stringify(expr.expression.arguments).replace(/"/g,"");
+              object = content.substring(expr.expression.arguments[0].range[0], expr.expression.arguments[0].range[1]+1).replace(/"/g,"");
             }
 
           // checking if it is a typecasting to a user-defined contract type
@@ -491,9 +512,13 @@ export function graph(files, options = {}) {
           } else if(object === 'this') {
             opts.color = colorScheme.call.this;
           } else if (object === 'super') {
-            // "super" in this context is gonna be the 2nd element of the dependencies array
-            // since the first is the contract itself
-            localContractName = dependencies[contractName][1];
+            let matchingContracts = [...dependencies[contractName]].filter(contract => functionsPerContract[contract].includes(name));
+
+            if(matchingContracts.length > 0){
+              localContractName = matchingContracts[0];
+            } else {
+              return;
+            }
           } else if (tempUserDefinedStateVars[object] !== undefined) {
             localContractName = tempUserDefinedStateVars[object];
           } else if (userDefinedLocalVars[object] !== undefined) {
